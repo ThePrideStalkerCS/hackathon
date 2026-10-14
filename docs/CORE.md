@@ -16,14 +16,16 @@ question, the official term ("Amtsdeutsch") explained in plain words, big answer
 
 ## Design principles (frontend)
 
-1. **The web page is the main window.** The authority's page fills the screen; the assistant is a layer on top of it, not a side panel.
-2. **Official, not "AI".** Ink on white, the red-white-red mark, the red progress bar. No gradients, glass, glowing orbs or sparkles. Modern comes from typography, space and motion.
-3. **Two visual layers.** Authority = ink, white, red identity. Assistant = one sober blue for highlights and hint cards, plus the voice mark (the red-white-red stripes moving like a level meter while it speaks). The citizen always sees what is the official form and what is help.
+1. **The web page is the main window.** The authority's form page fills the screen; the assistant is a layer on top of it, not a side panel.
+2. **"Glasraum", but official.** A night-blue room with frosted glass sheets (dark by default, a light variant for contrast). Identity: the "oesterreich.gv.at 2030" wordmark, the red-white-red mark, the red progress bar, "Simulation" labels. No neon, no sparkles, no chat bubbles.
+3. **Two visual layers.** Authority = glass sheets and red identity. Assistant = light: luminous edges on the active field and the hint card, the ghost cursor, the voice mark (red-white-red stripes moving like a level meter).
 4. **A card only when the citizen must act** (ask, appointment, review, done, blocked). Everything else plays by itself and is narrated in the dock.
-5. **Few controls.** Visible at all times: "Beratung" (human help), the profile menu (test person, language, text size, voice, speed), the dock (voice mark = pause, captions, keyboard, mic). Nothing else.
-6. **One question, plain words.** The card asks the question the way a person would ("Was ist mit Ihrem bisherigen Pass?"), explains each option, and only then names the official term ("Im Formular heißt das: Antragsgrund"). Never explain a term with itself.
-7. **Voice first, never voice only.** Everything spoken is in the captions; everything answerable by voice is also clickable.
-8. **Learning effect.** The page looks like a real portal and is filled in the order a person would do it, so next time the citizen recognises it.
+5. **Hold to submit.** The citizen holds the fingerprint until the ring is full (keyboard: hold Space or Enter). A deliberate act; the AI can never do it.
+6. **Fair nudging (reward layer).** Time saved (estimates, labelled as such) and the Stempelpass: every finished errand earns an ink stamp on real-looking paper. Rules: voluntary, private (no ranking, no comparison), only positive, only official errands, openly explained. Code: `src/shared/stamps.ts`, `src/walkthrough/overview.ts`, `frontend/reward.tsx`.
+7. **One question, plain words.** Ask the way a person would, explain each option, name the official term last ("Im Formular heißt das: …"). Never explain a term with itself.
+8. **Voice first, never voice only.** Everything spoken is in the captions; everything answerable by voice is also clickable.
+
+Logo: we deliberately use a text wordmark, not the Federal Chancellery's logo or the federal coat of arms (protected by the Wappengesetz). If the Chancellery provides its logo for the demo, swap it into `.brand` in `frontend/App.tsx`.
 
 ## Architecture
 
@@ -129,6 +131,7 @@ npx tsc --noEmit && npx tsc --noEmit -p frontend/tsconfig.json
 ```
 
 Voice: `cp .dev.vars.example .dev.vars`, paste the ElevenLabs key, restart `pnpm dev`.
+No Cloudflare login (or it expired)? `pnpm dev:offline` runs everything except the AI chat.
 `GET /api/voice/status` tells you whether ElevenLabs is active.
 
 ## Known limitations (as of this commit)

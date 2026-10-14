@@ -6,6 +6,7 @@ by step (simulated portal + ghost cursor + narration), answers only what the sys
 submits with a button.
 
 **Read [docs/CORE.md](docs/CORE.md) before changing the walkthrough, the agent or the UI.**
+**Working on the UI? The design is decided: the Laufzettel. Read [docs/redesign/LAUFZETTEL.md](docs/redesign/LAUFZETTEL.md) first** (identity, engine mapping, build checklist with the current status). Background: [docs/redesign/README.md](docs/redesign/README.md).
 Open tasks are in [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md). Ask the team about design decisions
 (tone, model, new services) instead of silently picking a solution.
 
@@ -29,6 +30,7 @@ Open tasks are in [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md). Ask the team a
 - `src/agent/run-assistant.ts`: non-streaming run of the same agent, used by `/api/evals/chat`.
 - `src/walkthrough/`: the core. `engine.ts` (pure step logic), `controller.ts` (backend I/O, submit), `guides.ts` (plain-language texts), `proactive.ts` (suggestions from the profile).
 - `src/shared/walkthrough.ts`: walkthrough types shared with the frontend.
+- `src/shared/stamps.ts` + `src/walkthrough/overview.ts`: reward layer (Stempelpass, time saved, life-areas ring), `getOverview` callable. `frontend/reward.tsx` renders it.
 - `src/voice/elevenlabs.ts`: `/api/voice/tts|stt|status` (ElevenLabs, key in `.dev.vars` / wrangler secret).
 - `src/gov/service.ts`: business logic, used by both the Hono routes and the tools. Add new backend features here first.
 - `src/gov/db.ts`: D1 schema + lazy seeding. After changing the schema or personas, call `POST /api/gov/admin/reset`.
@@ -72,6 +74,7 @@ These caused real bugs while building the template:
 | Command | Purpose |
 |---|---|
 | `pnpm dev` | Local development (Vite + Worker), http://localhost:5173 |
+| `pnpm dev:offline` | Same without a Cloudflare connection (no login needed, AI chat disabled) |
 | `pnpm run deploy` | Build and deploy |
 | `pnpm cf-typegen` | Generate `Env` types |
 | `pnpm test` | Backend unit tests |

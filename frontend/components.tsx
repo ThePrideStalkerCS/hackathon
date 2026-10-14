@@ -59,7 +59,7 @@ export function VoiceMark({ state, size = "md" }: { state: VoiceState; size?: "s
 }
 
 /** Microphone button with its own listening state. */
-function MicButton({ recorder, t, big }: { recorder: Recorder; t: UIText; big?: boolean }) {
+export function MicButton({ recorder, t, big }: { recorder: Recorder; t: UIText; big?: boolean }) {
 	const listening = recorder.state === "listening";
 	return (
 		<button
@@ -209,6 +209,9 @@ export function ProfileMenu(props: {
 	onVoice: (on: boolean) => void;
 	onRate: (rate: number) => void;
 	onRestart: () => void;
+	/** Optional: the Laufzettel identity has one light look, so the app no longer passes these. */
+	theme?: "dark" | "light";
+	onTheme?: (theme: "dark" | "light") => void;
 }) {
 	const { t } = props;
 	const [open, setOpen] = useState(false);
@@ -262,17 +265,6 @@ export function ProfileMenu(props: {
 					</label>
 
 					<div className="menu-row">
-						<span>{t.language}</span>
-						<div className="segmented" role="group" aria-label={t.language}>
-							{(["de", "en"] as Language[]).map((l) => (
-								<button key={l} type="button" aria-pressed={props.language === l} onClick={() => props.onLanguage(l)}>
-									{l === "de" ? "Deutsch" : "English"}
-								</button>
-							))}
-						</div>
-					</div>
-
-					<div className="menu-row">
 						<span>{t.textSize}</span>
 						<div className="segmented" role="group" aria-label={t.textSize}>
 							{[1, 1.2, 1.4].map((s) => (
@@ -282,6 +274,19 @@ export function ProfileMenu(props: {
 							))}
 						</div>
 					</div>
+
+					{props.theme && props.onTheme && (
+						<div className="menu-row">
+							<span>{t.theme}</span>
+							<div className="segmented" role="group" aria-label={t.theme}>
+								{(["dark", "light"] as const).map((th) => (
+									<button key={th} type="button" aria-pressed={props.theme === th} onClick={() => props.onTheme?.(th)}>
+										{th === "dark" ? t.themeDark : t.themeLight}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
 
 					<div className="menu-row">
 						<span>{t.voice}</span>

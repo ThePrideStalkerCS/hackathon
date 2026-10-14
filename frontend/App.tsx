@@ -1,10 +1,11 @@
 /**
- * The citizen-facing app. The authority's web page is the main window; the assistant is a layer
- * on top of it (see docs/CORE.md):
+ * The citizen-facing app in the Laufzettel identity (docs/redesign/LAUFZETTEL.md):
  *
- *   Start page     portal home: greeting, one big "what do you need?" bar (voice or text), "For you" cards
- *   Walkthrough    the form page (Portal) with the assistant's card attached to the active field,
- *                  a video-style progress bar on top and the voice dock (captions + mic) at the bottom
+ *   Start page     the desk (Desk.tsx): open routing slips from proactive suggestions, one "say it" line
+ *                  (voice first), finished stamps and the time kept
+ *   Walkthrough    the routing slip (Slip.tsx): one row per station, offices stamp in blue while the
+ *                  narration plays as subtitles (CaptionBar.tsx), the citizen answers in the row and
+ *                  signs with a red seal (hold to sign)
  *
  * State lives in the agent (Durable Object) and is synced here via useAgent. This component never
  * changes the walkthrough itself: it calls the agent's @callable methods (agent.call("answer", …)).
@@ -17,18 +18,21 @@ import { useAgent } from "agents/react";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_STATE, type AssistantSettings, type AssistantState } from "../src/shared/types";
 import type { Suggestion } from "../src/shared/walkthrough";
+import type { Overview } from "../src/shared/stamps";
 import { api, type HandoffResult, type Persona } from "./api";
-import { CommandBar, Dock, HandoffSheet, messageText, ProfileMenu, runningToolLabel, VoiceMark, type VoiceState } from "./components";
-import { Icon, SERVICE_ICON } from "./icons";
-import { TEXT, tpl } from "./i18n";
+import { HandoffSheet, messageText, ProfileMenu, runningToolLabel } from "./components";
+import { InkFilter, Lockup } from "./brand/Brand";
+import { CaptionBar } from "./laufzettel/CaptionBar";
+import { Desk } from "./laufzettel/Desk";
+import { Slip } from "./laufzettel/Slip";
+import { Icon } from "./icons";
+import { TEXT } from "./i18n";
 import { GOALS, loadProgress, percent, saveProgress, type Goal, type Progress as GoalProgress } from "./goals/data";
 import { GoalCelebration } from "./goals/GoalCelebration";
 import { GoalDetail } from "./goals/GoalDetail";
 import { GoalsOverview } from "./goals/GoalsOverview";
 import { useNarrator, useRecorder } from "./voice";
-import { Coach, needsCoach, type WalkthroughActions } from "./walkthrough/Coach";
-import { Portal } from "./walkthrough/Portal";
-import { Progress } from "./walkthrough/Progress";
+import type { WalkthroughActions } from "./walkthrough/Coach";
 
 function getSessionId(reset = false): string {
 	let id = localStorage.getItem("sessionId");
@@ -43,7 +47,8 @@ export function App() {
 	const [sessionId, setSessionId] = useState(() => getSessionId());
 	const [state, setState] = useState<AssistantState>(DEFAULT_STATE);
 	const [personas, setPersonas] = useState<Persona[]>([]);
-	const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+	const [overview, setOverview] = useState<(Overview & { suggestions: Suggestion[] }) | null>(null);
+	// The Laufzettel identity is paper and ink: one light look (index.html sets data-theme="paper").
 	const [handoff, setHandoff] = useState<HandoffResult | null>(null);
 	const [fontScale, setFontScale] = useState(1);
 	const [playing, setPlaying] = useState(true);
@@ -121,7 +126,7 @@ export function App() {
 	const walkthroughOpen = Boolean(state.walkthrough);
 	useEffect(() => {
 		if (walkthroughOpen) return;
-		call<Suggestion[]>("getSuggestions").then(setSuggestions).catch(() => setSuggestions([]));
+		call<Overview & { suggestions: Suggestion[] }>("getOverview").then(setOverview).catch(() => setOverview(null));
 	}, [call, state.personaId, state.language, sessionId, walkthroughOpen]);
 
 	// Accessibility: keep <html lang> and font size in sync with the settings.
@@ -238,36 +243,27 @@ export function App() {
 		setSessionId(getSessionId(true));
 	}
 
-	const voice: VoiceState =
-		recorder.state === "listening" ? "listening" : busy || recorder.state === "transcribing" ? "thinking" : !playing ? "paused" : narrator.speaking ? "speaking" : "idle";
-
 	return (
 		<>
+			<InkFilter />
 			<a className="skip-link" href="#main">
 				{t.skip}
 			</a>
 
-			<header className="topbar">
-				<div className="topbar-row">
-					<button type="button" className="brand" onClick={w ? actions.close : undefined} aria-label={t.toStart} title={t.toStart}>
-						<span className="brand-mark" aria-hidden="true" />
-						<span className="brand-name">{t.brand}</span>
+			<header className="lz-top">
+				<div className="lz-top-in">
+					<button type="button" className="lz-home" onClick={w ? actions.close : () => go("")} aria-label={t.toStart} title={t.toStart}>
+						<Lockup />
 					</button>
 
-					{w ? (
-						<div className="address" aria-hidden="true">
-							<Icon name="lock" size={15} />
-							<span className="address-url">{w.portalUrl}</span>
-							<span className="address-sim">{t.simulation}</span>
-						</div>
-					) : (
-						<span className="address-sim standalone">{t.simulation}</span>
-					)}
-
-					<div className="topbar-actions">
+					<div className="lz-top-tools">
+						<button type="button" className="lz-top-link" onClick={askHuman} title={t.humanLong} aria-label={t.humanLong}>
+							<Icon name="headset" size={20} />
+							<span>{t.human}</span>
+						</button>
 						<button
 							type="button"
-							className="human-button nav-goals"
+							className="lz-top-link"
 							aria-pressed={route === "goals"}
 							aria-label={t.goalsButton}
 							title={t.goalsButton}
@@ -276,10 +272,13 @@ export function App() {
 							<Icon name="checkCircle" size={20} />
 							<span>{t.goalsButton}</span>
 						</button>
-						<button type="button" className="human-button" onClick={askHuman} title={t.humanLong} aria-label={t.humanLong}>
-							<Icon name="headset" size={20} />
-							<span>{t.human}</span>
-						</button>
+						<div className="lz-lang" role="group" aria-label={t.language}>
+							{(["en", "de"] as const).map((l) => (
+								<button key={l} type="button" lang={l} aria-pressed={state.language === l} onClick={() => updateSettings({ language: l })}>
+									{l.toUpperCase()}
+								</button>
+							))}
+						</div>
 						<ProfileMenu
 							t={t}
 							persona={persona}
@@ -301,88 +300,33 @@ export function App() {
 						/>
 					</div>
 				</div>
-				{w && !goalsPage && <Progress w={w} t={t} onGoTo={(i) => void call("goTo", [i])} />}
 			</header>
 
-			<main id="main" className={w && !goalsPage ? "main walkthrough" : "main home"}>
+			<main id="main" className={w && !goalsPage ? "lz-main is-slip" : "lz-main"}>
 				{goalsPage ? (
 					goalsPage
 				) : w ? (
-					<Portal
-						w={w}
-						t={t}
-						coach={needsCoach(step) ? <Coach w={w} t={t} actions={actions} queueNext={state.queue[0]?.name} /> : null}
-						onEditField={actions.editField}
-						onSubmit={actions.submit}
-					/>
+					<Slip w={w} t={t} actions={actions} citizenName={persona?.name} queueNext={state.queue[0]?.name} />
 				) : (
-					<section className="home">
-						<p className="eyebrow">
-							<VoiceMark state={voice} size="sm" /> {t.eyebrow}
-						</p>
-						<h1>{tpl(t.greeting, { name: persona?.name.split(" ")[0] ?? "" })}</h1>
-						<p className="home-question">{t.homeQuestion}</p>
-
-						<CommandBar t={t} recorder={recorder} busy={busy} onSend={send} />
-						<p className="home-hint">{t.homeHint}</p>
-
-						{(busy || messageText(lastAssistant)) && (
-							<div className="answer" aria-live="polite">
-								<VoiceMark state={busy ? "thinking" : "idle"} size="sm" />
-								<p>{busy ? (toolLabel ?? t.thinking) : messageText(lastAssistant)}</p>
-							</div>
-						)}
-
-						{suggestions.length > 0 && (
-							<section className="for-you" aria-labelledby="for-you-title">
-								<h2 id="for-you-title" className="section-title">
-									{t.forYou}
-								</h2>
-								<div className="tasks">
-									{suggestions.map((s) => (
-										<button key={s.serviceId} type="button" className={`task ${s.urgency}`} onClick={() => void call("startWalkthrough", [s.serviceId])}>
-											<span className="task-icon">
-												<Icon name={SERVICE_ICON[s.serviceId] ?? "home"} />
-											</span>
-											<span className="task-text">
-												<strong>
-													{s.title}
-													{s.urgency === "high" && <span className="task-badge">{t.urgent}</span>}
-												</strong>
-												<span>{s.reason}</span>
-											</span>
-											<span className="task-go">
-												{t.startTask} <Icon name="arrowRight" size={18} />
-											</span>
-										</button>
-									))}
-								</div>
-							</section>
-						)}
-
-						<section className="examples" aria-labelledby="examples-title">
-							<h2 id="examples-title" className="section-title">
-								{t.examplesTitle}
-							</h2>
-							<div className="example-list">
-								{t.examples.map((ex) => (
-									<button key={ex} type="button" className="example" onClick={() => send(ex)} disabled={busy}>
-										„{ex}“
-									</button>
-								))}
-							</div>
-						</section>
-
-						<p className="home-footer">{t.footer}</p>
-					</section>
+					<Desk
+						t={t}
+						lang={state.language}
+						firstName={persona?.name.split(" ")[0] ?? ""}
+						overview={overview}
+						busy={busy}
+						reply={busy ? (toolLabel ?? t.thinking) : messageText(lastAssistant)}
+						recorder={recorder}
+						onSend={send}
+						onStart={(serviceId) => void call("startWalkthrough", [serviceId])}
+					/>
 				)}
 			</main>
 
 			{w && !goalsPage && (
-				<Dock
+				<CaptionBar
 					t={t}
 					caption={busy ? (toolLabel ?? t.thinking) : caption}
-					voice={voice}
+					speaking={narrator.speaking}
 					paused={!playing}
 					busy={busy}
 					recorder={recorder}

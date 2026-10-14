@@ -1,0 +1,494 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Earlier design exploration: three ways without a chat window (A narrated page, B search, C margin notes) + district coalitions. Team leaned towards A but was not satisfied. See ../README.md -->
+<title>Assistent ohne Chatfenster</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&family=Public+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: a working document for the team. Neutral page chrome; inside, browser-window mockups
+   of the real app in one calm official look (Public Sans, ink, the national red). */
+:root {
+	--bg: #f2f3f5;
+	--surface: #ffffff;
+	--fg: #15181d;
+	--fg-2: #4a505a;
+	--fg-3: #777d88;
+	--line: #dcdfe4;
+	--chip: #eaecef;
+	--accent: #c8102e;
+	--ok: #1d7a4b;
+	--f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+	--f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme="light"]) { --bg: #101215; --surface: #181b20; --fg: #eceef2; --fg-2: #b8bdc6; --fg-3: #8c929c; --line: #2b2f36; --chip: #23272e; --accent: #ff5468; --ok: #4cc38a; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #101215; --surface: #181b20; --fg: #eceef2; --fg-2: #b8bdc6; --fg-3: #8c929c; --line: #2b2f36; --chip: #23272e; --accent: #ff5468; --ok: #4cc38a; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 48px 20px 80px; display: flex; flex-direction: column; gap: 60px; }
+h1, h2, h3 { margin: 0; line-height: 1.15; text-wrap: balance; letter-spacing: -0.015em; }
+p { margin: 0; }
+.kicker { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
+.lead { font-size: 19px; color: var(--fg-2); max-width: 66ch; }
+.intro { display: flex; flex-direction: column; gap: 16px; }
+.intro h1 { font-size: clamp(32px, 5vw, 50px); font-weight: 700; letter-spacing: -0.03em; }
+.done-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.done-list span { font-size: 13.5px; padding: 5px 11px; border-radius: 8px; background: var(--chip); color: var(--fg-2); }
+.done-list span::before { content: "✓ "; color: var(--ok); font-weight: 700; }
+
+.proposal { display: flex; flex-direction: column; gap: 26px; padding-top: 40px; border-top: 1px solid var(--line); }
+.p-head { display: grid; grid-template-columns: auto 1fr; gap: 6px 20px; align-items: baseline; }
+.p-letter { grid-row: span 2; font-family: var(--f-mono); font-size: 14px; color: var(--fg-3); padding-top: 10px; }
+.p-head h2 { font-size: clamp(28px, 3.6vw, 38px); font-weight: 700; letter-spacing: -0.025em; }
+.p-head p { color: var(--fg-2); font-size: 18px; max-width: 72ch; }
+
+.frames { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 540px), 1fr)); gap: 24px; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.scroll { overflow-x: auto; border-radius: 12px; }
+figcaption { font-size: 14px; color: var(--fg-2); }
+figcaption b { font-weight: 600; color: var(--fg); }
+
+.details { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.panel h3 { font-family: var(--f-mono); font-weight: 500; font-size: 13px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); }
+.panel ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; color: var(--fg-2); }
+.panel li b { color: var(--fg); font-weight: 600; }
+
+.compare { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+table { border-collapse: collapse; width: 100%; min-width: 660px; font-size: 15px; }
+th, td { text-align: left; padding: 13px 18px; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th { font-family: var(--f-mono); font-weight: 500; font-size: 12.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); }
+tbody th { font-weight: 600; width: 30%; }
+tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+.dots { font-family: var(--f-mono); letter-spacing: 2px; color: var(--accent); margin-right: 8px; white-space: nowrap; }
+.note { color: var(--fg-2); }
+
+.reco { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.reco h2 { font-size: 26px; }
+.reco p { color: var(--fg-2); max-width: 78ch; }
+.reco ol { margin: 0; padding-left: 20px; color: var(--fg-2); display: flex; flex-direction: column; gap: 6px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+.rules div { padding: 12px 14px; border-radius: 10px; background: var(--chip); font-size: 14.5px; color: var(--fg-2); }
+.rules b { display: block; color: var(--fg); font-weight: 600; }
+
+/* ============================ Mockup: browser window ============================ */
+.browser { min-width: 540px; border-radius: 12px; overflow: hidden; border: 1px solid #cfd3d9; background: #fff; box-shadow: 0 24px 50px -30px rgb(0 0 0 / 45%); container-type: inline-size; }
+.chrome { display: flex; align-items: center; gap: 8px; height: 28px; padding: 0 12px; background: #eceef1; border-bottom: 1px solid #d8dbe0; }
+.chrome i { width: 9px; height: 9px; border-radius: 50%; background: #c9cdd3; }
+.m { position: relative; aspect-ratio: 16 / 10.4; overflow: hidden; font-family: "Public Sans", "Segoe UI", system-ui, sans-serif; font-size: 1.62cqw; color: #16191d; background: #f6f7f8; line-height: 1.4; }
+.m * { box-sizing: border-box; }
+.m-top { display: flex; align-items: center; gap: 0.7em; height: 3.4em; padding: 0 1.6em; background: #fff; border-bottom: 1px solid #e1e4e8; position: relative; }
+.m-top::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 0.25em; background: linear-gradient(90deg, #c8102e 0 33.3%, #fff 33.3% 66.6%, #c8102e 66.6%); }
+.m-flag { width: 1.6em; height: 1.1em; border-radius: 0.15em; background: linear-gradient(#c8102e 0 33.3%, #fff 33.3% 66.6%, #c8102e 66.6%); box-shadow: inset 0 0 0 1px rgb(0 0 0 / 15%); }
+.m-brand { font-weight: 700; font-size: 1.1em; letter-spacing: -0.01em; }
+.m-brand span { font-weight: 400; color: #5b616b; }
+.m-y { font-size: 0.75em; font-weight: 700; color: #c8102e; border: 1px solid #f0c6cd; border-radius: 0.3em; padding: 0 0.35em; }
+.m-sp { flex: 1; }
+.m-lang { display: flex; border: 1px solid #d5d9de; border-radius: 0.4em; overflow: hidden; font-size: 0.8em; font-weight: 700; }
+.m-lang i { font-style: normal; padding: 0.25em 0.6em; color: #5b616b; }
+.m-lang i.on { background: #16191d; color: #fff; }
+.m-help { font-size: 0.82em; font-weight: 600; border: 1px solid #d5d9de; border-radius: 0.4em; padding: 0.3em 0.7em; }
+.m-av { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; background: #16191d; color: #fff; font-size: 0.75em; font-weight: 700; }
+.m-body { padding: 1.4em 3.2em; }
+.m-crumbs { font-size: 0.78em; color: #6b717b; }
+.m-h1 { font-size: 1.85em; font-weight: 800; letter-spacing: -0.02em; margin: 0.25em 0 0.15em; }
+.m-sub { font-size: 0.9em; color: #4f5560; }
+.m-progress { display: flex; gap: 0.25em; margin: 0.9em 0 1em; }
+.m-progress i { flex: 1; height: 0.28em; border-radius: 0.2em; background: #dfe2e6; }
+.m-progress i.d { background: #16191d; }
+.m-progress i.c { background: #c8102e; }
+.m-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 0.6em; }
+.m-field { display: grid; grid-template-columns: 1fr auto; gap: 0.2em 1em; align-items: center; padding: 0.7em 1em; border-bottom: 1px solid #edf0f2; }
+.m-field:last-child { border-bottom: none; }
+.m-label { font-size: 0.75em; color: #6b717b; font-weight: 600; grid-column: 1 / -1; }
+.m-val { font-size: 1em; font-weight: 600; }
+.m-src { font-size: 0.72em; color: #1d7a4b; font-weight: 600; }
+.m-field.faded .m-val { color: #a3a8b0; font-weight: 400; }
+.m-ico { width: 1.2em; height: 1.2em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; vertical-align: -0.2em; }
+.cursor { position: absolute; width: 1.6em; height: 2em; filter: drop-shadow(0 0.1em 0.15em rgb(0 0 0 / 35%)); }
+
+/* A: narrated page */
+.m-field.active { background: #fff; box-shadow: inset 0.25em 0 0 #c8102e; }
+.m-options { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 0.6em; margin-top: 0.35em; }
+.m-opt { border: 1.5px solid #cfd4da; border-radius: 0.5em; padding: 0.6em 0.8em; display: flex; flex-direction: column; gap: 0.1em; }
+.m-opt b { font-size: 0.95em; }
+.m-opt span { font-size: 0.75em; color: #6b717b; }
+.m-opt.sel { border-color: #16191d; box-shadow: inset 0 0 0 1px #16191d; }
+.lower-third { position: absolute; left: 50%; bottom: 1.5em; transform: translateX(-50%); width: 64%; padding: 0.6em 1.1em; border-radius: 0.4em; background: rgb(14 17 22 / 86%); color: #fff; text-align: center; font-size: 1.05em; line-height: 1.35; }
+.lower-third small { display: block; font-size: 0.68em; letter-spacing: 0.08em; text-transform: uppercase; color: #ffb4bf; margin-bottom: 0.15em; font-weight: 700; }
+.talk { position: absolute; right: 2em; bottom: 1.3em; display: flex; flex-direction: column; align-items: center; gap: 0.25em; font-size: 0.72em; font-weight: 600; color: #3f444d; }
+.talk span.k { width: 3.6em; height: 3.6em; border-radius: 50%; display: grid; place-items: center; background: #16191d; color: #fff; box-shadow: 0 0 0 0.35em rgb(22 25 29 / 10%); }
+.talk span.k .m-ico { width: 1.6em; height: 1.6em; }
+.typelink { position: absolute; left: 2em; bottom: 1.7em; font-size: 0.75em; color: #4f5560; text-decoration: underline; }
+.confirm { display: grid; grid-template-columns: 1fr auto; gap: 1em; padding: 1.2em 1.4em; align-items: center; }
+.confirm h3 { font-size: 1.45em; font-weight: 800; letter-spacing: -0.02em; }
+.confirm .ref { font-family: ui-monospace, Menlo, monospace; font-size: 1em; font-weight: 600; margin-top: 0.3em; }
+.confirm ul { list-style: none; margin: 0.6em 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.35em; font-size: 0.85em; color: #3f444d; }
+.confirm li::before { content: "✓"; color: #1d7a4b; font-weight: 800; margin-right: 0.5em; }
+.seal { width: 8.5em; height: 8.5em; position: relative; color: #c8102e; }
+.seal svg { width: 100%; height: 100%; }
+.next { display: flex; justify-content: space-between; align-items: center; margin-top: 0.8em; padding: 0.7em 1em; font-size: 0.88em; }
+.btn-ink { background: #16191d; color: #fff; border-radius: 0.4em; padding: 0.4em 0.9em; font-weight: 700; font-size: 0.9em; white-space: nowrap; }
+
+/* B: omnibox */
+.omni-top .m-search { flex: 1; max-width: 46%; margin: 0 auto; display: flex; align-items: center; gap: 0.6em; height: 2.3em; padding: 0 0.5em 0 0.9em; border: 1.5px solid #16191d; border-radius: 0.5em; font-size: 0.95em; background: #fff; }
+.m-search > span:first-child { flex: 1; min-width: 0; color: #16191d; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-search .mic { flex: none; width: 1.8em; height: 1.8em; border-radius: 0.35em; display: grid; place-items: center; background: #16191d; color: #fff; }
+.results { position: absolute; top: 3.6em; left: 27%; width: 46%; background: #fff; border: 1px solid #d5d9de; border-radius: 0.6em; box-shadow: 0 1.2em 2.4em -1em rgb(0 0 0 / 30%); overflow: hidden; z-index: 2; }
+.res { display: grid; grid-template-columns: 2.2em 1fr auto; gap: 0.7em; align-items: center; padding: 0.7em 0.9em; border-bottom: 1px solid #edf0f2; }
+.res:last-child { border-bottom: none; }
+.res .ic { width: 2.2em; height: 2.2em; border-radius: 0.45em; display: grid; place-items: center; background: #f1f2f4; }
+.res.top { background: #fafbfb; }
+.res.top .ic { background: #fbe7ea; color: #c8102e; }
+.res b { display: block; font-size: 0.95em; }
+.res small { font-size: 0.75em; color: #6b717b; }
+.res .go { font-size: 0.78em; font-weight: 700; }
+.res-head { font-size: 0.68em; letter-spacing: 0.08em; text-transform: uppercase; color: #6b717b; font-weight: 700; padding: 0.6em 0.9em 0.2em; }
+.dim { filter: blur(0.08em); opacity: 0.45; }
+.twocol { display: grid; grid-template-columns: 1fr 15em; gap: 1.2em; align-items: start; }
+.radio { display: flex; flex-direction: column; gap: 0.45em; grid-column: 1 / -1; margin-top: 0.3em; }
+.radio span { display: flex; align-items: center; gap: 0.55em; font-size: 0.92em; }
+.radio i { width: 1em; height: 1em; border-radius: 50%; border: 1.5px solid #8a9099; }
+.radio i.on { border: 0.3em solid #16191d; }
+.qmark { display: inline-grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; background: #16191d; color: #fff; font-size: 0.8em; font-weight: 800; margin-left: 0.35em; vertical-align: 0.05em; }
+.pop { position: absolute; width: 17em; padding: 0.8em 0.9em; background: #fff; border: 1px solid #d5d9de; border-radius: 0.5em; box-shadow: 0 1em 2em -1em rgb(0 0 0 / 35%); font-size: 0.82em; z-index: 2; }
+.pop b { display: block; margin-bottom: 0.2em; }
+.pop::before { content: ""; position: absolute; left: -0.45em; top: 1em; width: 0.8em; height: 0.8em; background: #fff; border-left: 1px solid #d5d9de; border-bottom: 1px solid #d5d9de; transform: rotate(45deg); }
+.pop .listen { margin-top: 0.4em; font-weight: 700; display: inline-flex; gap: 0.3em; align-items: center; }
+.acct { padding: 0.9em 1em; display: flex; flex-direction: column; gap: 0.5em; font-size: 0.85em; }
+.acct h4 { margin: 0; font-size: 0.75em; letter-spacing: 0.08em; text-transform: uppercase; color: #6b717b; }
+.acct .big { font-size: 1.7em; font-weight: 800; letter-spacing: -0.02em; }
+.acct .row { display: flex; align-items: center; gap: 0.5em; }
+.mini-seal { width: 1.6em; height: 1.6em; border-radius: 50%; border: 0.12em double #c8102e; color: #c8102e; display: grid; place-items: center; font-size: 0.7em; font-weight: 800; }
+.coal { margin-top: 0.3em; padding-top: 0.6em; border-top: 1px solid #edf0f2; }
+.bar { height: 0.45em; border-radius: 0.3em; background: #e6e8eb; overflow: hidden; margin: 0.3em 0; }
+.bar i { display: block; height: 100%; width: 62%; background: #c8102e; }
+
+/* C: margin guide */
+.sheetwrap { display: grid; grid-template-columns: 1fr 15.5em; gap: 0; position: relative; }
+.sheet { background: #fff; border: 1px solid #dcdfe4; border-radius: 0.3em; padding: 1.2em 1.4em; box-shadow: 0 0.5em 1.5em -1em rgb(0 0 0 / 25%); }
+.sheet .doc-head { display: flex; justify-content: space-between; font-size: 0.72em; color: #6b717b; border-bottom: 2px solid #16191d; padding-bottom: 0.4em; margin-bottom: 0.6em; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.sheet .doc-title { font-size: 1.3em; font-weight: 800; margin-bottom: 0.5em; }
+.sf { display: grid; grid-template-columns: 1.6em 1fr; gap: 0.5em; padding: 0.5em 0; border-bottom: 1px dotted #c9ced4; align-items: baseline; }
+.sf .n { font-size: 0.75em; color: #8a9099; font-weight: 700; }
+.sf .l { font-size: 0.72em; color: #6b717b; display: block; }
+.sf .v { font-weight: 600; }
+.sf.act { background: #fff7f8; box-shadow: inset 0.22em 0 0 #c8102e; }
+.sf.fut .v { color: #b1b5bc; font-weight: 400; }
+.margin { position: relative; padding-left: 1.4em; display: flex; flex-direction: column; gap: 0.55em; }
+.note { position: relative; font-size: 0.8em; padding: 0.55em 0.75em; border-radius: 0.4em; background: #fff; border: 1px solid #e1e4e8; color: #3f444d; }
+.note::before { content: ""; position: absolute; left: -1.75em; top: 1em; width: 1.7em; border-top: 1px dashed #b6bcc4; }
+.note.ok { color: #1d7a4b; background: #f4faf6; border-color: #cfe6d8; }
+.note.act { border: 1.5px solid #16191d; box-shadow: 0 0.8em 1.6em -1em rgb(0 0 0 / 35%); }
+.note.act b { display: block; font-size: 1.12em; color: #16191d; margin-bottom: 0.15em; }
+.note .opts { display: flex; gap: 0.4em; margin-top: 0.5em; }
+.note .opts span { flex: 1; text-align: center; border: 1.5px solid #cfd4da; border-radius: 0.35em; padding: 0.3em; font-weight: 700; color: #16191d; }
+.note .opts span.sel { background: #16191d; color: #fff; border-color: #16191d; }
+.note .lst { display: inline-flex; gap: 0.25em; align-items: center; margin-top: 0.45em; font-weight: 700; color: #16191d; }
+.note.fut { color: #8a9099; background: transparent; border-style: dashed; }
+.stamp-doc { position: absolute; left: 47%; top: 50%; width: 8em; height: 8em; border-radius: 50%; border: 0.32em double #c8102e; color: #c8102e; display: grid; place-items: center; text-align: center; font-weight: 800; text-transform: uppercase; font-size: 0.78em; letter-spacing: 0.04em; line-height: 1.15; transform: rotate(-10deg); mix-blend-mode: multiply; opacity: 0.92; }
+.sigline { margin-top: 0.8em; display: flex; justify-content: space-between; align-items: end; font-size: 0.72em; color: #6b717b; }
+.sigline .sig { width: 45%; border-top: 1px solid #16191d; padding-top: 0.2em; }
+
+/* Coalition mock */
+.coal-card { min-width: 540px; background: #fff; color: #16191d; border: 1px solid #cfd3d9; border-radius: 12px; padding: 22px 26px; font-family: "Public Sans", system-ui, sans-serif; display: grid; grid-template-columns: 1.2fr 1fr; gap: 26px; box-shadow: 0 24px 50px -30px rgb(0 0 0 / 45%); }
+.coal-card h4 { margin: 0 0 4px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #6b717b; }
+.coal-card .num { font-size: 40px; font-weight: 800; letter-spacing: -0.03em; }
+.coal-card .bar { height: 10px; border-radius: 6px; margin: 10px 0 6px; }
+.coal-card .small { font-size: 13px; color: #5b616b; }
+.coal-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; font-size: 14px; }
+.coal-list li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #edf0f2; padding-bottom: 8px; }
+.coal-list li:last-child { border-bottom: none; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+	<defs>
+		<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></symbol>
+		<symbol id="i-speaker" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" /></symbol>
+		<symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 11L12 4l8.5 7v8.5a1 1 0 0 1-1 1h-5v-6h-5v6h-5a1 1 0 0 1-1-1z" /></symbol>
+		<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6" /></symbol>
+		<symbol id="i-out" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" /></symbol>
+		<symbol id="i-cursor" viewBox="0 0 22 28"><path d="M1 1 L1 22 L7 17 L11 26 L15 24 L11 15 L19 15 Z" fill="#111" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" /></symbol>
+	</defs>
+</svg>
+
+<main class="wrap">
+
+	<header class="intro">
+		<p class="kicker">Digital Assistants 2030 · Alternativen</p>
+		<h1>Assistent ohne Chatfenster</h1>
+		<p class="lead">Drei Wege, wie der Assistent arbeitet, ohne wie ein Chatbot auszusehen. Alle drei nutzen denselben Kern und dieselbe ruhige, amtliche Gestaltung. Sie unterscheiden sich darin, wo der Assistent lebt. Die Mockups zeigen die englische Showcase-Version mit derselben Szene: Lena meldet ihren Umzug nach Wien.</p>
+		<div class="done-list" aria-label="Bereits umgesetzt">
+			<span>Englisch als Standard</span><span>DE/EN-Umschalter in der Kopfzeile</span><span>Sprachwechsel übersetzt einen laufenden Amtsweg</span><span>Keine Prototyp-Labels mehr</span>
+		</div>
+	</header>
+
+	<!-- ============================== A ============================== -->
+	<section class="proposal" aria-labelledby="a-title">
+		<div class="p-head">
+			<span class="p-letter">A</span>
+			<h2 id="a-title">Erzählte Seite</h2>
+			<p>Das Formular selbst ist die Bühne. Der Assistent spricht und zeigt Untertitel wie in einem Video, unten mittig, ohne Verlauf und ohne Eingabefeld. Fragen werden direkt im Formular beantwortet: das aktive Feld klappt zu großen Antworten auf. Zum Sprechen gibt es eine einzige Taste.</p>
+		</div>
+		<div class="frames">
+			<figure>
+				<div class="scroll"><div class="browser"><div class="chrome"><i></i><i></i><i></i></div>
+					<div class="m">
+						<div class="m-top"><span class="m-flag"></span><span class="m-brand">oesterreich<span>.gv.at</span></span><span class="m-y">2030</span><span class="m-sp"></span><span class="m-lang"><i class="on">EN</i><i>DE</i></span><span class="m-help">Talk to a person</span><span class="m-av">LH</span></div>
+						<div class="m-body">
+							<div class="m-crumbs">Home › Housing › Register your address</div>
+							<div class="m-h1">Register your new address</div>
+							<div class="m-progress"><i class="d"></i><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i></div>
+							<div class="m-card">
+								<div class="m-field"><span class="m-label">New address</span><span class="m-val">Neubaugasse 12/4, 1070 Vienna</span><span class="m-src">from your rental contract</span></div>
+								<div class="m-field"><span class="m-label">Moved in</span><span class="m-val">1 October 2026</span><span class="m-src">you said</span></div>
+								<div class="m-field active"><span class="m-label">Type of residence</span>
+									<div class="m-options"><span class="m-opt sel"><b>Main residence</b><span>Where you mainly live</span></span><span class="m-opt"><b>Secondary residence</b><span>An extra home, you mainly live elsewhere</span></span></div>
+								</div>
+								<div class="m-field faded"><span class="m-label">Landlord's confirmation</span><span class="m-val">We'll ask Ms Berger for you</span></div>
+							</div>
+						</div>
+						<svg class="cursor" style="left: 30%; top: 66%"><use href="#i-cursor" /></svg>
+						<span class="typelink">Type instead</span>
+						<div class="lower-third"><small>Assistant</small>Is Vienna now your main home? That's where you mainly live.</div>
+						<div class="talk"><span class="k"><svg class="m-ico"><use href="#i-mic" /></svg></span>Hold to talk</div>
+					</div>
+				</div></div>
+				<figcaption><b>Im Ablauf.</b> Kein Fenster, keine Blasen. Untertitel wie im Fernsehen, die Antwortmöglichkeiten sitzen im Feld selbst.</figcaption>
+			</figure>
+			<figure>
+				<div class="scroll"><div class="browser"><div class="chrome"><i></i><i></i><i></i></div>
+					<div class="m">
+						<div class="m-top"><span class="m-flag"></span><span class="m-brand">oesterreich<span>.gv.at</span></span><span class="m-y">2030</span><span class="m-sp"></span><span class="m-lang"><i class="on">EN</i><i>DE</i></span><span class="m-help">Talk to a person</span><span class="m-av">LH</span></div>
+						<div class="m-body">
+							<div class="m-crumbs">Home › Housing › Register your address › Confirmation</div>
+							<div class="m-card confirm" style="margin-top: 1em">
+								<div>
+									<h3>Your new address is registered</h3>
+									<div class="ref">MEL-2026-482913</div>
+									<ul><li>Registration confirmation is in your inbox</li><li>Old address in Graz deregistered</li><li>About 45 minutes saved compared with the office visit</li></ul>
+								</div>
+								<div class="seal" aria-hidden="true">
+									<svg viewBox="0 0 120 120"><defs><path id="ring-a" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0" /></defs><circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="2" /><circle cx="60" cy="60" r="50" fill="none" stroke="currentColor" stroke-width="1" /><circle cx="60" cy="60" r="33" fill="none" stroke="currentColor" stroke-width="1" /><text font-family="Public Sans, sans-serif" font-size="9.5" font-weight="700" letter-spacing="2" fill="currentColor"><textPath href="#ring-a">REGISTERED · VIENNA · 15 OCT 2026 ·</textPath></text><rect x="44" y="49" width="32" height="22" rx="2" fill="#fff" stroke="currentColor" stroke-width="1" /><rect x="44" y="49" width="32" height="7.3" fill="currentColor" /><rect x="44" y="63.7" width="32" height="7.3" fill="currentColor" /></svg>
+								</div>
+							</div>
+							<div class="m-card next"><span>Moving also affects your <b>vehicle registration</b>. Update it with one tap?</span><span class="btn-ink">Update</span></div>
+						</div>
+						<div class="lower-third"><small>Assistant</small>Done. You don't need to do anything else.</div>
+					</div>
+				</div></div>
+				<figcaption><b>Erledigt.</b> Das Siegel gehört zur amtlichen Bestätigung, nicht zu einem eigenen Spiel. Die gesparte Zeit steht als Fakt in der Liste.</figcaption>
+			</figure>
+		</div>
+		<div class="details">
+			<div class="panel"><h3>Warum kein Chatbot</h3><ul><li>Kein Verlauf, keine Sprechblasen, kein Eingabefeld.</li><li>Die Stimme ist eine <b>Erzählung</b>, wie im Video-Tutorial.</li><li>Geantwortet wird im Formular, also dort, wo es hingehört.</li></ul></div>
+			<div class="panel"><h3>Belohnung integriert</h3><ul><li>Rundes Amtssiegel direkt auf der Bestätigung.</li><li>Gesparte Zeit als nüchterne Zeile.</li><li>Nächster sinnvoller Weg mit einem Tipp.</li></ul></div>
+			<div class="panel"><h3>Aufwand</h3><ul><li><b>Gering.</b> Unser Kern bleibt, die Karte wird zum aufklappenden Feld, das Dock zu Untertiteln plus Sprechtaste.</li></ul></div>
+		</div>
+	</section>
+
+	<!-- ============================== B ============================== -->
+	<section class="proposal" aria-labelledby="b-title">
+		<div class="p-head">
+			<span class="p-letter">B</span>
+			<h2 id="b-title">Suchfeld statt Chat</h2>
+			<p>Der Assistent ist unsichtbar. Er steckt in der Suche ganz oben, die normale Sprache versteht, auch gesprochen. Als Antwort kommen keine Sätze, sondern fertige Handlungen. Erklärungen erscheinen genau dort, wo sie gebraucht werden, als kleines Fragezeichen am Feld.</p>
+		</div>
+		<div class="frames">
+			<figure>
+				<div class="scroll"><div class="browser"><div class="chrome"><i></i><i></i><i></i></div>
+					<div class="m">
+						<div class="m-top omni-top"><span class="m-flag"></span><span class="m-brand">oesterreich<span>.gv.at</span></span><span class="m-search"><span>i moved to vienna last week</span><span class="mic"><svg class="m-ico"><use href="#i-mic" /></svg></span></span><span class="m-lang"><i class="on">EN</i><i>DE</i></span><span class="m-av">LH</span></div>
+						<div class="results">
+							<div class="res-head">Prepared for you</div>
+							<div class="res top"><span class="ic"><svg class="m-ico"><use href="#i-home" /></svg></span><span><b>Register your new address</b><small>Filled in from your data · about 2 minutes</small></span><span class="btn-ink">Start</span></div>
+							<div class="res"><span class="ic"><svg class="m-ico"><use href="#i-doc" /></svg></span><span><b>Deregister Graz</b><small>Included in the registration</small></span><span class="go">Included</span></div>
+							<div class="res"><span class="ic"><svg class="m-ico"><use href="#i-out" /></svg></span><span><b>What changes when you move</b><small>Guide · 3 minutes</small></span><span class="go">Read</span></div>
+						</div>
+						<div class="m-body dim">
+							<div class="m-h1">Good afternoon, Lena</div>
+							<div class="m-sub">Two things are due this month.</div>
+							<div class="twocol" style="margin-top: 1em">
+								<div class="m-card"><div class="m-field"><span class="m-label">Due</span><span class="m-val">Register your new address</span></div><div class="m-field"><span class="m-label">Next</span><span class="m-val">ID card expires in March 2027</span></div></div>
+								<div class="m-card acct"><h4>Your year</h4><span class="big">2 h 15 min</span><span>saved in 2026</span></div>
+							</div>
+						</div>
+					</div>
+				</div></div>
+				<figcaption><b>Start.</b> „i moved to vienna last week“ ergibt keine Antwort im Chat, sondern den vorbereiteten Antrag als erstes Ergebnis.</figcaption>
+			</figure>
+			<figure>
+				<div class="scroll"><div class="browser"><div class="chrome"><i></i><i></i><i></i></div>
+					<div class="m">
+						<div class="m-top omni-top"><span class="m-flag"></span><span class="m-brand">oesterreich<span>.gv.at</span></span><span class="m-search"><span style="color:#8a9099;font-weight:400">Search or say what you need</span><span class="mic"><svg class="m-ico"><use href="#i-mic" /></svg></span></span><span class="m-lang"><i class="on">EN</i><i>DE</i></span><span class="m-av">LH</span></div>
+						<div class="m-body">
+							<div class="m-h1" style="font-size:1.55em">Register your new address</div>
+							<div class="m-progress"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i></div>
+							<div class="twocol">
+								<div class="m-card">
+									<div class="m-field"><span class="m-label">New address</span><span class="m-val">Neubaugasse 12/4, 1070 Vienna</span><span class="m-src">from your contract</span></div>
+									<div class="m-field"><span class="m-label">Type of residence <span class="qmark">?</span></span>
+										<div class="radio"><span><i class="on"></i>Main residence</span><span><i></i>Secondary residence</span></div>
+									</div>
+									<div class="m-field"><span class="m-label">Moved in</span><span class="m-val">1 October 2026</span></div>
+								</div>
+								<div class="m-card acct">
+									<h4>Your account</h4>
+									<div class="row"><span class="mini-seal">✓</span><span>Passport renewed · 2024</span></div>
+									<div class="row"><span class="mini-seal">✓</span><span>Voter card · 2024</span></div>
+									<div class="row"><span>2 h 15 min saved in 2026</span></div>
+									<div class="coal"><h4>Neubau district</h4><div class="bar"><i></i></div><span>1,240 of 2,000 hours saved together</span></div>
+								</div>
+							</div>
+						</div>
+						<div class="pop" style="left: 33%; top: 47%"><b>Main residence</b>Where you mainly live and spend most of your time. You can only have one.<span class="listen"><svg class="m-ico"><use href="#i-speaker" /></svg>Listen</span></div>
+					</div>
+				</div></div>
+				<figcaption><b>Im Formular.</b> Hilfe erscheint am Feld, gesprochen auf Wunsch. Rechts das Konto: erledigte Wege mit Siegel, gesparte Zeit und der Bezirk.</figcaption>
+			</figure>
+		</div>
+		<div class="details">
+			<div class="panel"><h3>Warum kein Chatbot</h3><ul><li>Es gibt nur eine <b>Suche</b>, wie man sie von jeder Website kennt.</li><li>Ergebnisse sind Handlungen und Seiten, keine Antworten in Blasen.</li><li>Der Assistent ist Infrastruktur, nicht Figur.</li></ul></div>
+			<div class="panel"><h3>Belohnung integriert</h3><ul><li>Konto-Übersicht wie ein Kontoauszug: erledigte Wege mit kleinem Siegel.</li><li>Gesparte Zeit pro Jahr.</li><li>Bezirks-Koalition als stiller Fortschrittsbalken.</li></ul></div>
+			<div class="panel"><h3>Aufwand</h3><ul><li><b>Mittel.</b> Suchfeld mit Ergebnisliste, Hilfe-Popover am Feld, Konto-Seite. Der geführte Ablauf bleibt, aber ohne Erzählung im Vordergrund.</li></ul></div>
+		</div>
+	</section>
+
+	<!-- ============================== C ============================== -->
+	<section class="proposal" aria-labelledby="c-title">
+		<div class="p-head">
+			<span class="p-letter">C</span>
+			<h2 id="c-title">Randnotizen</h2>
+			<p>Das Formular wird als amtliches Dokument gezeigt. Der Assistent schreibt seine Erklärungen an den Rand, wie eine erfahrene Sachbearbeiterin mit Bleistift. Jede Notiz gehört zu einem Feld. Die aktuelle Notiz enthält die Frage und die Antworten, erledigte Notizen schrumpfen zu einem Häkchen.</p>
+		</div>
+		<div class="frames">
+			<figure>
+				<div class="scroll"><div class="browser"><div class="chrome"><i></i><i></i><i></i></div>
+					<div class="m">
+						<div class="m-top"><span class="m-flag"></span><span class="m-brand">oesterreich<span>.gv.at</span></span><span class="m-y">2030</span><span class="m-sp"></span><span class="m-lang"><i class="on">EN</i><i>DE</i></span><span class="m-help">Talk to a person</span><span class="m-av">LH</span></div>
+						<div class="m-body" style="padding-top: 1.1em">
+							<div class="sheetwrap">
+								<div class="sheet">
+									<div class="doc-head"><span>Registration form · Meldezettel</span><span>Vienna 7.</span></div>
+									<div class="doc-title">Registration of residence</div>
+									<div class="sf"><span class="n">1</span><span><span class="l">Surname, first name</span><span class="v">Huber, Lena</span></span></div>
+									<div class="sf"><span class="n">2</span><span><span class="l">New address</span><span class="v">Neubaugasse 12/4, 1070 Vienna</span></span></div>
+									<div class="sf act"><span class="n">3</span><span><span class="l">Main or secondary residence</span><span class="v">Main residence</span></span></div>
+									<div class="sf fut"><span class="n">4</span><span><span class="l">Accommodation provider</span><span class="v">……………</span></span></div>
+									<div class="sigline"><span>Vienna, 15 October 2026</span><span class="sig">Confirmed by you</span></div>
+								</div>
+								<div class="margin">
+									<div class="note ok">✓ From your ID</div>
+									<div class="note ok">✓ From your rental contract</div>
+									<div class="note act"><b>Is Vienna now your main home?</b>Main residence means where you mainly live.<div class="opts"><span class="sel">Yes</span><span>No</span></div><span class="lst"><svg class="m-ico"><use href="#i-speaker" /></svg>Listen</span></div>
+									<div class="note fut">I'll ask your landlord for you.</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div></div>
+				<figcaption><b>Im Ablauf.</b> Links das echte Formular, rechts die Notizen. Amtsdeutsch steht im Formular, die Übersetzung am Rand.</figcaption>
+			</figure>
+			<figure>
+				<div class="scroll"><div class="browser"><div class="chrome"><i></i><i></i><i></i></div>
+					<div class="m">
+						<div class="m-top"><span class="m-flag"></span><span class="m-brand">oesterreich<span>.gv.at</span></span><span class="m-y">2030</span><span class="m-sp"></span><span class="m-lang"><i class="on">EN</i><i>DE</i></span><span class="m-help">Talk to a person</span><span class="m-av">LH</span></div>
+						<div class="m-body" style="padding-top: 1.1em">
+							<div class="sheetwrap">
+								<div class="sheet">
+									<div class="doc-head"><span>Registration form · Meldezettel</span><span>Vienna 7.</span></div>
+									<div class="doc-title">Registration of residence</div>
+									<div class="sf"><span class="n">1</span><span><span class="l">Surname, first name</span><span class="v">Huber, Lena</span></span></div>
+									<div class="sf"><span class="n">2</span><span><span class="l">New address</span><span class="v">Neubaugasse 12/4, 1070 Vienna</span></span></div>
+									<div class="sf"><span class="n">3</span><span><span class="l">Main or secondary residence</span><span class="v">Main residence</span></span></div>
+									<div class="sf"><span class="n">4</span><span><span class="l">Accommodation provider</span><span class="v">Confirmed by M. Berger</span></span></div>
+									<div class="sigline"><span>Vienna, 15 October 2026</span><span class="sig">Confirmed by you</span></div>
+								</div>
+								<div class="margin">
+									<div class="note ok">✓ Submitted</div>
+									<div class="note act"><b>Done.</b>Reference MEL-2026-482913. About 45 minutes saved.</div>
+									<div class="note">Next for you: update your vehicle registration.</div>
+								</div>
+							</div>
+						</div>
+						<div class="stamp-doc">Received<br>Registration<br>office Vienna<br>15.10.2026</div>
+					</div>
+				</div></div>
+				<figcaption><b>Erledigt.</b> Hier passt der Stempel wirklich: Er landet auf dem Dokument, so wie früher am Amt.</figcaption>
+			</figure>
+		</div>
+		<div class="details">
+			<div class="panel"><h3>Warum kein Chatbot</h3><ul><li>Der Assistent erscheint als <b>Notiz am Dokument</b>, nicht als Gesprächspartner.</li><li>Jede Erklärung hängt sichtbar an ihrem Feld.</li><li>Stärkste Darstellung von „Amtsdeutsch übersetzt“.</li></ul></div>
+			<div class="panel"><h3>Belohnung integriert</h3><ul><li>Eingangsstempel direkt auf dem Dokument.</li><li>Gesparte Zeit in der letzten Notiz.</li><li>Der Stempelpass wird zur Sammlung dieser Dokumente.</li></ul></div>
+			<div class="panel"><h3>Aufwand</h3><ul><li><b>Mittel.</b> Neues Layout mit Randspalte. Auf dem Handy rutschen die Notizen unter das jeweilige Feld.</li></ul></div>
+		</div>
+	</section>
+
+	<!-- ============================== Koalition ============================== -->
+	<section class="proposal" aria-labelledby="k-title">
+		<div class="p-head">
+			<span class="p-letter">+</span>
+			<h2 id="k-title">Bezirks-Koalitionen, wie bei 42</h2>
+			<p>Passt in jeden der drei Entwürfe. Jede Person gehört automatisch zu ihrem Bezirk. Erledigte Wege zählen für den ganzen Bezirk, nicht für eine Rangliste von Menschen. Ein gemeinsames Ziel pro Monat, und wenn es erreicht ist, profitiert der Bezirk. Wettbewerb gibt es höchstens zwischen Bezirken, nie zwischen Personen.</p>
+		</div>
+		<div class="scroll">
+			<div class="coal-card">
+				<div>
+					<h4>Your coalition · Neubau</h4>
+					<div class="num">1,240 h</div>
+					<div class="small">saved together in October</div>
+					<div class="bar"><i></i></div>
+					<div class="small">Goal: 2,000 hours. When we get there, the district decides what the time savings fund. (Concept)</div>
+				</div>
+				<ul class="coal-list">
+					<li><span>Moves registered on time</span><b>91 %</b></li>
+					<li><span>Errands done online</span><b>78 %</b></li>
+					<li><span>Your part this month</span><b>45 min</b></li>
+				</ul>
+			</div>
+		</div>
+		<div class="rules">
+			<div><b>Nur Summen</b>Keine Namen, keine Rangliste von Personen.</div>
+			<div><b>Freiwillig sichtbar</b>Wer nicht mitmachen will, blendet es aus.</div>
+			<div><b>Kooperativ</b>Gemeinsames Ziel statt Druck auf Einzelne.</div>
+			<div><b>Machbar</b>Die Daten haben wir schon: Postleitzahl und erledigte Anträge.</div>
+		</div>
+	</section>
+
+	<!-- ============================== Vergleich ============================== -->
+	<section class="proposal" aria-labelledby="cmp-title" style="gap: 20px">
+		<div class="p-head"><span class="p-letter">⇄</span><h2 id="cmp-title">Im Vergleich</h2><p>Gemessen an eurem Ziel, nicht wie ein Chatbot auszusehen, und an den Kriterien der Challenge.</p></div>
+		<div class="compare">
+			<table>
+				<thead><tr><th scope="col">Kriterium</th><th scope="col">A · Erzählte Seite</th><th scope="col">B · Suchfeld</th><th scope="col">C · Randnotizen</th></tr></thead>
+				<tbody>
+					<tr><th scope="row">Kein Chatbot-Gefühl</th><td><span class="dots">●●●</span></td><td><span class="dots">●●●</span></td><td><span class="dots">●●●</span></td></tr>
+					<tr><th scope="row">Nähe zu unserer Idee (Tutorial, Stimme)</th><td><span class="dots">●●●</span><span class="note">wie ein Video</span></td><td><span class="dots">●○○</span><span class="note">Stimme nur am Rand</span></td><td><span class="dots">●●○</span></td></tr>
+					<tr><th scope="row">Amtsdeutsch sichtbar übersetzt</th><td><span class="dots">●●○</span></td><td><span class="dots">●●○</span></td><td><span class="dots">●●●</span><span class="note">am deutlichsten</span></td></tr>
+					<tr><th scope="row">Für Ältere und wenig Geübte</th><td><span class="dots">●●●</span><span class="note">Sprechtaste, große Antworten</span></td><td><span class="dots">●●○</span></td><td><span class="dots">●●○</span></td></tr>
+					<tr><th scope="row">Wirkt amtlich, nicht verspielt</th><td><span class="dots">●●○</span></td><td><span class="dots">●●●</span></td><td><span class="dots">●●●</span></td></tr>
+					<tr><th scope="row">Aufwand auf unserem Kern</th><td><span class="note">gering</span></td><td><span class="note">mittel</span></td><td><span class="note">mittel</span></td></tr>
+				</tbody>
+			</table>
+		</div>
+	</section>
+
+	<section class="reco" aria-labelledby="reco-title">
+		<p class="kicker">Mein Vorschlag</p>
+		<h2 id="reco-title">A für den Ablauf, B für den Einstieg</h2>
+		<p>Die erzählte Seite ist am nächsten an eurer Kernidee und am schnellsten gebaut: Untertitel statt Chatfenster, eine Sprechtaste, Antworten im Formular. Für den Einstieg nehmen wir das Suchfeld aus B, damit die Startseite wie eine echte Behördenseite wirkt und nicht wie ein Eingabefeld für einen Bot. Die Belohnung wird Teil der amtlichen Bestätigung (Siegel und gesparte Zeit), der Papier-Stempelpass fällt weg. Die Bezirks-Koalition kommt als kleiner Block in das Konto, wenn Zeit bleibt.</p>
+		<ol>
+			<li>Ihr wählt A, B, C oder die Mischung.</li>
+			<li>Ich baue sie in Englisch auf unseren Kern, Deutsch bleibt per Umschalter.</li>
+			<li>Danach Koalition als Zusatz, falls gewünscht.</li>
+		</ol>
+	</section>
+
+</main>

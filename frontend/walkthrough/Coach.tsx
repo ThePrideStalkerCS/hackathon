@@ -111,7 +111,7 @@ export function Coach({ w, t, actions, queueNext }: Props) {
 	);
 }
 
-function AskInput(props: { field: PortalField; step: WalkthroughStep; t: UIText; actions: WalkthroughActions; language: "de" | "en" }) {
+export function AskInput(props: { field: PortalField; step: WalkthroughStep; t: UIText; actions: WalkthroughActions; language: "de" | "en" }) {
 	const { field, step, t, actions } = props;
 	// Address fields: suggestions + check via Google Maps, with a "custom address" fallback.
 	const isAddress = field.type === "text" && ADDRESS_FIELDS.has(field.id);
@@ -197,7 +197,7 @@ function AskInput(props: { field: PortalField; step: WalkthroughStep; t: UIText;
 }
 
 /** Three appointments at a time (fewer choices = easier), more on request. */
-function SlotPicker({ w, step, t, actions }: { w: Walkthrough; step: WalkthroughStep; t: UIText; actions: WalkthroughActions }) {
+export function SlotPicker({ w, step, t, actions }: { w: Walkthrough; step: WalkthroughStep; t: UIText; actions: WalkthroughActions }) {
 	const [all, setAll] = useState(false);
 	const slots = step.slots ?? [];
 	if (!slots.length) {
