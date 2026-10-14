@@ -14,13 +14,17 @@
  */
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { useAgent } from "agents/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_STATE, type AssistantSettings, type AssistantState } from "../src/shared/types";
 import type { Suggestion } from "../src/shared/walkthrough";
 import { api, type HandoffResult, type Persona } from "./api";
 import { CommandBar, Dock, HandoffSheet, messageText, ProfileMenu, runningToolLabel, VoiceMark, type VoiceState } from "./components";
 import { Icon, SERVICE_ICON } from "./icons";
 import { TEXT, tpl } from "./i18n";
+import { GOALS, loadProgress, percent, saveProgress, type Goal, type Progress as GoalProgress } from "./goals/data";
+import { GoalCelebration } from "./goals/GoalCelebration";
+import { GoalDetail } from "./goals/GoalDetail";
+import { GoalsOverview } from "./goals/GoalsOverview";
 import { useNarrator, useRecorder } from "./voice";
 import { Coach, needsCoach, type WalkthroughActions } from "./walkthrough/Coach";
 import { Portal } from "./walkthrough/Portal";
@@ -49,6 +53,38 @@ export function App() {
 	const [caption, setCaption] = useState("");
 	const t = TEXT[state.language];
 	const narrator = useNarrator();
+
+	// Gamified goals pages (goals/). A tiny hash router: #/goals, #/goals/<id>, #/goals/<id>/done.
+	const [hash, setHash] = useState(() => window.location.hash);
+	const [progress, setProgress] = useState<GoalProgress>(loadProgress);
+	useEffect(() => {
+		const onHash = () => setHash(window.location.hash);
+		window.addEventListener("hashchange", onHash);
+		return () => window.removeEventListener("hashchange", onHash);
+	}, []);
+	const go = (h: string) => {
+		if (h) window.location.hash = h;
+		else history.replaceState(null, "", window.location.pathname);
+		setHash(h);
+		window.scrollTo(0, 0);
+	};
+	const [, route, goalId, goalDone] = hash.split("/");
+	const goal = GOALS.find((g) => g.id === goalId);
+	function toggleStep(g: Goal, stepId: string) {
+		const done = progress[g.id] ?? [];
+		const next = { ...progress, [g.id]: done.includes(stepId) ? done.filter((id) => id !== stepId) : [...done, stepId] };
+		setProgress(saveProgress(next));
+		// The bar is full: celebrate!
+		if (percent(g, next[g.id]) === 100) go(`#/goals/${g.id}/done`);
+	}
+	const goalProps = { t, lang: state.language, progress, go };
+	let goalsPage: ReactNode = null;
+	if (route === "goals") {
+		// The completion page only shows once the bar is really full.
+		if (goal && goalDone === "done" && percent(goal, progress[goal.id] ?? []) === 100) goalsPage = <GoalCelebration goal={goal} {...goalProps} />;
+		else if (goal) goalsPage = <GoalDetail goal={goal} {...goalProps} onToggle={(id) => toggleStep(goal, id)} />;
+		else goalsPage = <GoalsOverview {...goalProps} onReset={() => setProgress(saveProgress(null))} />;
+	}
 
 	// One agent instance per session. The server owns the state; we only receive it.
 	const agent = useAgent<AssistantState>({
@@ -229,6 +265,10 @@ export function App() {
 					)}
 
 					<div className="topbar-actions">
+						<button type="button" className="human-button" aria-pressed={route === "goals"} onClick={() => go(route === "goals" ? "" : "#/goals")}>
+							<Icon name="checkCircle" size={20} />
+							<span>{t.goalsButton}</span>
+						</button>
 						<button type="button" className="human-button" onClick={askHuman} title={t.humanLong} aria-label={t.humanLong}>
 							<Icon name="headset" size={20} />
 							<span>{t.human}</span>
@@ -254,11 +294,13 @@ export function App() {
 						/>
 					</div>
 				</div>
-				{w && <Progress w={w} t={t} onGoTo={(i) => void call("goTo", [i])} />}
+				{w && !goalsPage && <Progress w={w} t={t} onGoTo={(i) => void call("goTo", [i])} />}
 			</header>
 
-			<main id="main" className={w ? "main walkthrough" : "main home"}>
-				{w ? (
+			<main id="main" className={w && !goalsPage ? "main walkthrough" : "main home"}>
+				{goalsPage ? (
+					goalsPage
+				) : w ? (
 					<Portal
 						w={w}
 						t={t}
@@ -298,7 +340,7 @@ export function App() {
 											<span className="task-text">
 												<strong>
 													{s.title}
-													{s.urgency === "high" && <span className="badge">{t.urgent}</span>}
+													{s.urgency === "high" && <span className="task-badge">{t.urgent}</span>}
 												</strong>
 												<span>{s.reason}</span>
 											</span>
@@ -329,7 +371,7 @@ export function App() {
 				)}
 			</main>
 
-			{w && (
+			{w && !goalsPage && (
 				<Dock
 					t={t}
 					caption={busy ? (toolLabel ?? t.thinking) : caption}

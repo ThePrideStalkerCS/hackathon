@@ -39,6 +39,21 @@
 	--shadow-page: 0 1px 2px rgb(21 24 28 / 5%), 0 10px 30px -18px rgb(21 24 28 / 20%);
 	--shadow-float: 0 12px 32px -12px rgb(21 24 28 / 28%), 0 0 0 1px rgb(21 24 28 / 7%);
 
+	/* Aliases for code written against the earlier theme (frontend/goals/, AddressInput). */
+	--surface: var(--page);
+	--surface-2: var(--field);
+	--text: var(--ink);
+	--muted: var(--ink-3);
+	--border: var(--line);
+	--primary: var(--ink);
+	--primary-text: #fff;
+	--focus: var(--help);
+	--radius: var(--r-l);
+	--shadow: var(--shadow-page);
+	--ok-bg: var(--ok-soft);
+	--warn-bg: var(--warn-soft);
+	--fail-bg: var(--fail-soft);
+
 	font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 	font-size: 100%;
 	line-height: 1.5;
@@ -272,7 +287,7 @@ a {
 	transform: translateX(20px);
 }
 
-.badge {
+.task-badge {
 	display: inline-block;
 	margin-left: 0.5rem;
 	padding: 0.05rem 0.5rem;
@@ -1600,6 +1615,65 @@ a {
 }
 
 /* ---------------------------------------------------------------------------------------------
+ * Goals pages (frontend/goals/): base classes from the earlier theme, scoped to these pages
+ * ------------------------------------------------------------------------------------------- */
+
+.goals-page button,
+.field-form button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-height: 46px;
+	padding: 0.5rem 1rem;
+	border: 1.5px solid var(--line);
+	border-radius: var(--r-m);
+	background: var(--page);
+	font-weight: 600;
+}
+.goals-page button:hover:not(:disabled),
+.field-form button:hover:not(:disabled) {
+	border-color: var(--ink-3);
+}
+.goals-page button.primary,
+.field-form button.primary {
+	border-color: var(--ink);
+	background: var(--ink);
+	color: #fff;
+}
+.goals-page button.big {
+	min-height: 54px;
+	padding: 0 1.4rem;
+	font-size: 1.05rem;
+}
+.goals-page button.link-button {
+	min-height: 40px;
+	padding: 0.25rem 0;
+	border: none;
+	background: none;
+	color: var(--help);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.goals-page button[aria-pressed="true"] {
+	border-color: var(--help);
+	background: var(--help-soft);
+}
+.goals-page .fine-print {
+	font-size: 0.85rem;
+	color: var(--ink-3);
+	margin-top: 0.35rem;
+}
+.goals-page .lead {
+	font-size: 1.1rem;
+	color: var(--ink-2);
+}
+.human-button[aria-pressed="true"] {
+	border-color: var(--ink);
+	background: var(--field);
+}
+
+/* ---------------------------------------------------------------------------------------------
  * Motion
  * ------------------------------------------------------------------------------------------- */
 
@@ -1722,5 +1796,314 @@ a {
 	*::after {
 		animation: none !important;
 		transition: none !important;
+	}
+}
+
+/* Goals (gamification, frontend/goals/) ------------------------------------------------------ */
+
+.goals-page {
+	max-width: 48rem;
+	margin: 1.5rem auto 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	position: relative;
+}
+.goals-page h2 {
+	font-size: 2rem;
+}
+.goals-page > .link-button {
+	align-self: flex-start;
+}
+.goal-list,
+.goal-steps {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.goal-list {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+.goal-card {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	gap: 1rem;
+	align-items: center;
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+	border-radius: var(--radius);
+	padding: 1rem 1.25rem;
+	box-shadow: var(--shadow);
+}
+.goal-card.complete {
+	border-color: var(--ok);
+	background: var(--ok-bg);
+}
+.goal-icon {
+	width: 2.5rem;
+	height: 2.5rem;
+	color: var(--primary);
+}
+.goal-card.complete .goal-icon {
+	color: var(--ok);
+}
+.goal-title {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+.goal-head {
+	display: flex;
+	justify-content: space-between;
+	gap: 0.5rem;
+	align-items: baseline;
+}
+.goal-head h3 {
+	font-size: 1.1rem;
+	margin: 0 0 0.4rem;
+}
+.goal-pct {
+	font-size: 1.1rem;
+	color: var(--primary);
+	white-space: nowrap;
+}
+.goal-bar {
+	height: 1rem;
+	background: var(--surface-2);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	overflow: hidden;
+	flex: 1;
+}
+.goal-bar-fill {
+	height: 100%;
+	background: linear-gradient(90deg, var(--primary), #3a63c9);
+	border-radius: 999px;
+	transition: width 0.6s ease;
+}
+.goal-bar-fill.full {
+	background: linear-gradient(90deg, var(--ok), #36a35c);
+}
+.goal-summary {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+.goal-summary .goal-bar {
+	height: 1.5rem;
+}
+.goal-summary .goal-pct {
+	font-size: 1.5rem;
+}
+.goal-footer {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+	justify-content: space-between;
+	align-items: center;
+}
+
+/* Step-by-step track: numbered dots joined by a vertical line */
+.goal-steps {
+	display: flex;
+	flex-direction: column;
+}
+.goal-step {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	gap: 1rem;
+	align-items: start;
+	padding: 0.75rem 0;
+	position: relative;
+}
+.goal-step:not(:last-child)::before {
+	content: "";
+	position: absolute;
+	left: 1.25rem;
+	top: 3.25rem;
+	bottom: -0.75rem;
+	width: 3px;
+	margin-left: -1.5px;
+	background: var(--border);
+}
+.goal-step.done:not(:last-child)::before {
+	background: var(--ok);
+}
+.goal-step-dot {
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	font-weight: 700;
+	background: var(--surface);
+	border: 3px solid var(--border);
+	position: relative;
+	z-index: 1;
+}
+.goal-step.done .goal-step-dot {
+	background: var(--ok);
+	border-color: var(--ok);
+	color: #fff;
+}
+.goal-step.current .goal-step-dot {
+	border-color: var(--primary);
+	color: var(--primary);
+	box-shadow: 0 0 0 5px #e8edf9;
+}
+.goal-step-body {
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+	border-radius: var(--radius);
+	padding: 0.75rem 1rem;
+}
+.goal-step.current .goal-step-body {
+	border: 2px solid var(--primary);
+}
+.goal-step.todo .goal-step-body {
+	color: var(--muted);
+}
+.goal-step-body h4 {
+	margin: 0 0 0.25rem;
+	font-size: 1.1rem;
+}
+.goal-step-body p {
+	margin: 0;
+}
+
+/* Completion page: a calm confirmation card and an overview of completed errands */
+.completion-card {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 1rem 1.5rem;
+	align-items: center;
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+	border-top: 6px solid var(--ok);
+	border-radius: var(--radius);
+	padding: 1.5rem;
+	box-shadow: var(--shadow);
+	animation: goal-fade-in 0.4s ease both;
+}
+.completion-card h2 {
+	margin: 0 0 0.25rem;
+}
+.completion-card .lead {
+	margin: 0;
+}
+.completion-card .goal-bar {
+	grid-column: 1 / -1;
+	flex: none;
+}
+.completion-kicker {
+	margin: 0 0 0.25rem;
+	color: var(--ok);
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	font-size: 0.85rem;
+}
+.completion-seal {
+	position: relative;
+	width: 5rem;
+	height: 5rem;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	background: var(--ok-bg);
+	border: 2px solid var(--ok);
+	color: var(--ok);
+}
+.completion-seal-icon {
+	width: 2.5rem;
+	height: 2.5rem;
+}
+.completion-seal-check {
+	position: absolute;
+	right: -0.25rem;
+	bottom: -0.25rem;
+	width: 1.75rem;
+	height: 1.75rem;
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	background: var(--ok);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.95rem;
+	border: 2px solid var(--surface);
+}
+.badge-grid {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+	gap: 0.75rem;
+}
+.badge {
+	display: flex;
+	flex-direction: column;
+	gap: 0.35rem;
+	padding: 0.9rem 1rem;
+	border-radius: var(--radius);
+	background: var(--surface);
+	border: 1.5px solid var(--border);
+}
+.badge.earned {
+	border-color: var(--ok);
+	border-left-width: 6px;
+}
+.badge.open {
+	color: var(--muted);
+}
+.badge-icon {
+	width: 1.75rem;
+	height: 1.75rem;
+}
+.badge.earned .badge-icon {
+	color: var(--ok);
+}
+.badge-label {
+	font-weight: 700;
+	font-size: 0.95rem;
+	overflow-wrap: break-word;
+	hyphens: auto;
+}
+.badge.earned .badge-label {
+	color: var(--text);
+}
+.badge-status {
+	font-size: 0.85rem;
+}
+.badge.earned .badge-status {
+	color: var(--ok);
+	font-weight: 700;
+}
+@keyframes goal-fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(0.5rem);
+	}
+}
+
+@media (max-width: 40rem) {
+	.completion-card {
+		grid-template-columns: minmax(0, 1fr);
+		justify-items: start;
+	}
+	.goal-card {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+	.goal-card > button {
+		grid-column: 1 / -1;
+	}
+	.goal-step {
+		grid-template-columns: auto minmax(0, 1fr);
+	}
+	.goal-step > button {
+		grid-column: 2;
 	}
 }
