@@ -33,7 +33,7 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 	const answersLeft = stations.filter((s) => (s.step.kind === "ask" || s.step.kind === "appointment") && s.state !== "done").length;
 	const minutes = TIME_SAVED_MINUTES[w.serviceId];
 	const motif = motifFor(w.serviceId);
-	const micro = `${slipNumber(w)} · ${w.serviceName}`;
+	const serial = `Nr. ${slipNumber(w)}`;
 	const progress = [
 		tpl(t.lzStamped, { done, total }),
 		w.status === "blocked" ? null : answersLeft > 1 ? tpl(t.lzLeftMany, { n: answersLeft }) : answersLeft === 1 ? t.lzLeftOne : t.lzLeftSign,
@@ -67,7 +67,7 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 				</div>
 				{showSeal && (
 					<figure className="lz-hero-seal">
-						<Emblem motif={motif} done={done} total={total} micro={micro} label={tpl(t.lzSealLabel, { done, total })} />
+						<Emblem motif={motif} done={done} total={total} serial={serial} label={tpl(t.lzSealLabel, { done, total })} />
 						<figcaption>
 							<b>{tpl(t.lzStamped, { done, total })}</b>
 							<span>{t.lzSealWhy}</span>
@@ -291,7 +291,7 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal =
 							</div>
 						</dl>
 						<div className="lz-doc-seal">
-							{showSeal && <Emblem motif={motifFor(w.serviceId)} done={total} total={total} micro={`${slipNumber(w)} · ${w.serviceName}`} size="md" label={tpl(t.lzSealLabel, { done: total, total })} />}
+							{showSeal && <Emblem motif={motifFor(w.serviceId)} done={total} total={total} serial={`Nr. ${slipNumber(w)}`} size="md" label={tpl(t.lzSealLabel, { done: total, total })} />}
 							{seal && <Stamp spec={seal} delay={0.35} />}
 						</div>
 						{showSeal && minutes && (

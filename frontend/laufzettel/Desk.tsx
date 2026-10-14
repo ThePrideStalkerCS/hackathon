@@ -123,7 +123,7 @@ export function Desk({ t, lang, firstName, overview, busy, reply, recorder, onSe
 						{showSeal &&
 							finished.map((s) => (
 								<figure key={s.id} className="lz-collected">
-									<Emblem motif={motifFor(s.serviceId ?? "")} done={1} total={1} size="sm" micro={`${s.lines.join(" ")} ${s.date}`} label={`${s.lines.join(" ")}, ${s.date}`} />
+									<Emblem motif={motifFor(s.serviceId ?? "")} done={1} total={1} size="sm" serial={s.date} label={`${s.lines.join(" ")}, ${s.date}`} />
 									<figcaption>
 										{s.lines.join(" ")}
 										<small>{s.date}</small>

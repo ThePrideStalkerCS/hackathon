@@ -2042,16 +2042,14 @@ h3 {
 .em-paper {
 	fill: var(--papier);
 }
-.em-dot,
 .em-solid {
 	fill: currentColor;
 	stroke: none;
 }
-.em-micro {
-	font: 600 7px var(--f-mono);
-	letter-spacing: 0.4px;
+.em-serial {
+	font: 500 6.4px var(--f-mono);
+	letter-spacing: 0.9px;
 	fill: currentColor;
-	opacity: 0.85;
 }
 .em-stem {
 	opacity: 0.5;
@@ -2079,12 +2077,10 @@ h3 {
 		opacity: 1;
 	}
 }
-.em-motif {
-	opacity: calc(0.62 + 0.38 * var(--ink-share, 0));
-	transition: opacity 0.8s ease;
+.em-frame {
+	stroke-width: 1;
 }
-.lz-emblem.is-xs .em-fine,
-.lz-emblem.is-xs .em-micro {
+.lz-emblem.is-xs .em-stem {
 	display: none;
 }
 .lz-emblem.is-xs .em-edge {
