@@ -1,7 +1,9 @@
 /**
  * The Laufzettel view of a running walkthrough (the main window while a service is in progress).
  *
- *   Hero          service name, the official form name, and the seal (one ring per station)
+ *   Hero          the life event ("Register your new address"), the official form name once in small
+ *                 type, and the emblem; the slip head shows its small emblem only once this one has
+ *                 scrolled away, so there is one big emblem on screen
  *   Slip          perforated paper with the security-print band; one row per station (stations.ts)
  *                 done rows carry a blue stamp, the current row is highlighted, the one question that
  *                 needs the citizen gets the yellow marker and its answer widgets right in the row
@@ -11,7 +13,7 @@
  * The playback loop in App.tsx is unchanged: autofill rows get stamped one by one while the caption
  * bar narrates. See docs/redesign/LAUFZETTEL.md.
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Walkthrough } from "../../src/shared/walkthrough";
 import { TIME_SAVED_MINUTES, formatMinutes } from "../../src/shared/stamps";
 import { Band, Lockup, Stamp } from "../brand/Brand";
@@ -40,6 +42,21 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 		showSeal && minutes && w.status !== "blocked" ? tpl(t.lzKeepEst, { time: formatMinutes(minutes, w.language) }) : null,
 	].filter(Boolean);
 	const listRef = useRef<HTMLOListElement>(null);
+	const heroSealRef = useRef<HTMLElement>(null);
+	const [heroSealInView, setHeroSealInView] = useState(true);
+	const lifeEvent = lifeEventTitle(w);
+
+	useEffect(() => {
+		const el = heroSealRef.current;
+		if (!el) {
+			setHeroSealInView(false);
+			return;
+		}
+		const top = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--lz-top-h")) || 64;
+		const io = new IntersectionObserver(([e]) => setHeroSealInView(e.isIntersecting), { rootMargin: `-${top + 60}px 0px 0px 0px` });
+		io.observe(el);
+		return () => io.disconnect();
+	}, [showSeal, Boolean(w.result)]);
 
 	// Bring the current row into view, and put keyboard focus on a question that waits for the citizen.
 	useEffect(() => {
@@ -62,16 +79,15 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 						<i aria-hidden="true" />
 						{w.authority}
 					</p>
-					<h1 className="lz-title">{w.serviceName}</h1>
-					<p className="lz-hero-sub">{w.portalTitle}</p>
+					<h1 className="lz-title">{lifeEvent}</h1>
+					<p className="lz-hero-form">
+						{t.lzOfficialForm} <span>{w.portalTitle}</span>
+					</p>
 				</div>
 				{showSeal && (
-					<figure className="lz-hero-seal">
+					<figure className="lz-hero-seal" ref={heroSealRef}>
 						<Emblem motif={motif} done={done} total={total} serial={serial} label={tpl(t.lzSealLabel, { done, total })} />
-						<figcaption>
-							<b>{tpl(t.lzStamped, { done, total })}</b>
-							<span>{t.lzSealWhy}</span>
-						</figcaption>
+						<figcaption>{t.lzSealWhy}</figcaption>
 					</figure>
 				)}
 			</header>
@@ -79,13 +95,12 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 			<div className="lz-slip-wrap">
 				<div className="lz-slip">
 					<Band />
-					<div className="lz-slip-head">
-						{showSeal && <Emblem motif={motif} done={done} total={total} size="xs" label={tpl(t.lzSealLabel, { done, total })} />}
+					<div className={`lz-slip-head ${showSeal && heroSealInView ? "is-hero-seal" : ""}`}>
+						{showSeal && <Emblem motif={motif} done={done} total={total} size="xs" label={heroSealInView ? "" : tpl(t.lzSealLabel, { done, total })} />}
 						<div className="lz-head-text">
 							<p className="lz-head-name">
 								<span className="lz-slip-name">Laufzettel</span>
 								<span className="lz-head-no">{slipNumber(w)}</span>
-								<span className="lz-head-form">{w.portalTitle}</span>
 							</p>
 							<p className="lz-head-progress" aria-live="polite">
 								{progress.map((p, i) => (
@@ -103,6 +118,11 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 			</div>
 		</article>
 	);
+}
+
+/** The life event in the citizen's words ("Register your new address"), not the form name. */
+function lifeEventTitle(w: Walkthrough): string {
+	return w.steps.find((s) => s.kind === "intro")?.title ?? w.serviceName;
 }
 
 function Row({ s, w, t, actions, citizenName }: { s: Station; w: Walkthrough; t: UIText; actions: WalkthroughActions; citizenName?: string }) {
@@ -257,7 +277,7 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal =
 						<h1 className="lz-doc-title" id="lz-confirm-title">
 							{t.lzConfirmation}
 						</h1>
-						<p className="lz-doc-sub">{w.serviceName}</p>
+						<p className="lz-doc-sub">{lifeEventTitle(w)}</p>
 						<dl className="lz-doc-dl">
 							<div>
 								<dt>{t.referenceNumber}</dt>

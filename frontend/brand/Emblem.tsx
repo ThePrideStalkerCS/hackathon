@@ -13,15 +13,11 @@
  * Shows real progress only: no points, no levels, nothing compared with other people.
  */
 import { useId, type CSSProperties } from "react";
-import { motifLayers, SCENE_R, type Motif } from "./motifs";
+import { motifFor, motifLayers, SCENE_R, type Motif } from "./motifs";
 
+export { motifFor };
 export type { Motif };
 
-export function motifFor(serviceId: string): Motif {
-	if (serviceId === "passport-renewal") return "peaks";
-	if (serviceId === "childcare-subsidy") return "edelweiss";
-	return "pine";
-}
 
 const R_EDGE = 93;
 const R_WREATH = 77;

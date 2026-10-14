@@ -3,7 +3,8 @@
  *
  *   Mark       the "Wegmarke": the flag read as a route (two stations done, one waiting)
  *   Lockup     mark + "Laufzettel" + endorsement "oesterreich.gv.at 2030"
- *   Stamp      an office stamp in Stempelblau (or the citizen's red seal), one shape per kind of office
+ *   Stamp      an office stamp in Stempelblau (or the citizen's red seal), one hand-pressed shape per
+ *              kind of office, with a small sprig of the errand's motif
  *   Seal       the reward: guilloche rosette, one ring per station, done rings red
  *   Band       the security-print band at the head of documents
  *   InkFilter  SVG filter that gives stamps their uneven ink (render once per page)
@@ -11,6 +12,7 @@
  * Colour rule: blue = an office did it, red = Austria and the citizen's own seal, yellow = needs you.
  */
 import { useEffect, useId, useRef, type CSSProperties } from "react";
+import { sprigLayers, type Motif } from "./motifs";
 import { drawBand, drawSeal } from "./print";
 
 export function Mark({ size = 30, title, className = "" }: { size?: number; title?: string; className?: string }) {
@@ -49,34 +51,42 @@ export type StampShape = "round" | "rect" | "oct" | "oval" | "ticket";
 
 export type StampSpec = {
 	shape: StampShape;
-	/** Big word in the middle ("FILLED"), or initials for the citizen's seal. */
+	/** The word in the middle ("Filled in"), or initials for the citizen's seal. */
 	main: string;
 	/** Small line on top (office). Not used by round stamps. */
 	top?: string;
 	/** Text around the edge of round stamps, ends with " · ". */
 	ring?: string;
-	/** Short date ("15 OCT"). */
+	/** Short date ("15 Oct"). */
 	date?: string;
 	ink?: "blue" | "red";
 	/** Initials instead of a word in the middle (citizen's seal). */
 	big?: boolean;
 	/** Degrees; small and varied, like a real hand stamp. */
 	rotate?: number;
+	/** A small sprig of the errand's motif, so office stamps belong to the same life event as the emblem. */
+	sprig?: Motif;
 };
 
 const INK = { blue: "#2A44B0", red: "#C8102E" };
 
-function face(stretch: number, weight: number, size: number, spacing: number): CSSProperties {
-	return { fontFamily: "Archivo, 'Arial Narrow', Arial, sans-serif", fontStretch: `${stretch}%`, fontWeight: weight, fontSize: size, letterSpacing: spacing };
-}
-const mono = (size: number): CSSProperties => ({ fontFamily: "'Martian Mono', ui-monospace, Menlo, monospace", fontSize: size, letterSpacing: 0.3 });
-const up = (s?: string) => (s ?? "").toUpperCase();
+const display = (size: number): CSSProperties => ({ fontFamily: "Fraunces, Georgia, serif", fontWeight: 600, fontSize: size, fontVariationSettings: '"SOFT" 100, "opsz" 36' });
+const text = (size: number, weight = 600): CSSProperties => ({ fontFamily: "'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', system-ui, sans-serif", fontWeight: weight, fontSize: size, letterSpacing: 0.2 });
 
-function octagon(r: number) {
-	return Array.from({ length: 8 }, (_, k) => {
-		const a = Math.PI / 8 + (k * Math.PI) / 4;
-		return `${(60 + r * Math.cos(a)).toFixed(1)},${(60 + r * Math.sin(a)).toFixed(1)}`;
-	}).join(" ");
+/** A hand-pressed outline: a superellipse (n = 2 is an ellipse, higher is squarer) whose edge moves a little. */
+function pressed(cx: number, cy: number, a: number, b: number, n: number, seed: number, scallop = 0): string {
+	const pts: string[] = [];
+	const steps = 120;
+	for (let i = 0; i <= steps; i++) {
+		const th = (i / steps) * Math.PI * 2;
+		const c = Math.cos(th);
+		const sn = Math.sin(th);
+		const wob = 1 + (0.012 * Math.sin(5 * th + seed) + 0.008 * Math.sin(11 * th + seed * 2)) + scallop * Math.cos(12 * th);
+		const x = a * Math.sign(c) * Math.pow(Math.abs(c), 2 / n) * wob;
+		const y = b * Math.sign(sn) * Math.pow(Math.abs(sn), 2 / n) * wob;
+		pts.push(`${(cx + x).toFixed(2)},${(cy + y).toFixed(2)}`);
+	}
+	return `M${pts.join("L")}Z`;
 }
 
 /** Shrinks long words so they stay inside the stamp. */
@@ -84,95 +94,95 @@ function fit(text: string, base: number, room: number) {
 	return text.length > room ? Math.max(base * 0.62, (base * room) / text.length) : base;
 }
 
+function Sprig({ motif, x, y, k = 1 }: { motif: Motif; x: number; y: number; k?: number }) {
+	return (
+		<g transform={`translate(${x},${y}) scale(${k})`}>
+			{sprigLayers(motif).map((l, i) => (
+				<path key={i} d={l.d} fill={l.c === "paper" ? "var(--papier, #fffdf7)" : "currentColor"} />
+			))}
+		</g>
+	);
+}
+
 export function Stamp({ spec, delay = 0, className = "" }: { spec: StampSpec; delay?: number; className?: string }) {
 	const id = `ring${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 	const ink = spec.ink ?? "blue";
-	const S = { fill: "none", stroke: "currentColor" } as const;
-	const main = up(spec.main);
+	const S = { fill: "none", stroke: "currentColor", strokeLinejoin: "round" } as const;
+	const seed = (spec.rotate ?? 0) + spec.main.length;
+	const main = spec.main;
 	let body;
 
 	if (spec.shape === "round") {
 		body = (
 			<svg viewBox="0 0 120 120" aria-hidden="true">
 				<defs>
-					<path id={id} d="M60 60m-40 0a40 40 0 1 1 80 0a40 40 0 1 1-80 0" />
+					<path id={id} d="M60 60m-41 0a41 41 0 1 1 82 0a41 41 0 1 1-82 0" />
 				</defs>
-				<circle cx="60" cy="60" r="56" {...S} strokeWidth="3.4" />
-				<circle cx="60" cy="60" r="51" {...S} strokeWidth="1.2" />
-				<circle cx="60" cy="60" r="31" {...S} strokeWidth="1.2" />
-				<text fill="currentColor" style={face(70, 800, 9.6, 1.2)}>
-					<textPath href={`#${id}`} textLength="246" lengthAdjust="spacing">
-						{up(spec.ring)}
+				<path d={pressed(60, 60, 56, 56, 2, seed)} {...S} strokeWidth="3.2" />
+				<path d={pressed(60, 60, 31, 31, 2, seed + 3)} {...S} strokeWidth="1.1" />
+				<text fill="currentColor" style={text(8.6)}>
+					<textPath href={`#${id}`} textLength="250" lengthAdjust="spacing">
+						{spec.ring}
 					</textPath>
 				</text>
 				{spec.big ? (
-					<text x="60" y="67" textAnchor="middle" fill="currentColor" style={face(125, 900, 23, -0.5)}>
+					<text x="60" y="69" textAnchor="middle" fill="currentColor" style={{ ...display(25), fontStyle: "italic" }}>
 						{main}
 					</text>
 				) : (
-					<text x="60" y="58" textAnchor="middle" fill="currentColor" style={face(66, 800, fit(main, 10, 9), 0.6)}>
-						{main}
-					</text>
+					<>
+						{spec.sprig && <Sprig motif={spec.sprig} x={60} y={44} k={0.78} />}
+						<text x="60" y="66" textAnchor="middle" fill="currentColor" style={display(fit(main, 12, 8))}>
+							{main}
+						</text>
+					</>
 				)}
-				<text x="60" y={spec.big ? 80 : 72} textAnchor="middle" fill="currentColor" style={mono(7)}>
-					{up(spec.date)}
+				<text x="60" y={spec.big ? 82 : 77} textAnchor="middle" fill="currentColor" style={text(7.4, 500)}>
+					{spec.date}
 				</text>
 			</svg>
 		);
-	} else if (spec.shape === "rect" || spec.shape === "ticket") {
+	} else if (spec.shape === "oct") {
 		body = (
-			<svg viewBox="0 0 160 72" aria-hidden="true">
-				{spec.shape === "rect" ? (
-					<>
-						<rect x="3" y="3" width="154" height="66" rx="12" {...S} strokeWidth="3.2" />
-						<rect x="8.5" y="8.5" width="143" height="55" rx="8" {...S} strokeWidth="1.1" />
-					</>
-				) : (
-					<>
-						<path d="M13 3H147a10 10 0 0 1 10 10V27a9 9 0 0 0 0 18V59a10 10 0 0 1-10 10H13a10 10 0 0 1-10-10V45a9 9 0 0 0 0-18V13a10 10 0 0 1 10-10Z" {...S} strokeWidth="3.2" strokeLinejoin="round" />
-						<path d="M16 9.5H144M16 62.5H144" {...S} strokeWidth="1.1" />
-					</>
-				)}
-				<text x="80" y="24" textAnchor="middle" fill="currentColor" style={face(75, 700, fit(up(spec.top), 8.5, 24), 1.5)}>
-					{up(spec.top)}
+			<svg viewBox="0 0 120 120" aria-hidden="true">
+				<path d={pressed(60, 60, 54, 54, 2, seed, 0.028)} {...S} strokeWidth="3.2" />
+				<path d={pressed(60, 60, 46, 46, 2, seed + 2)} {...S} strokeWidth="1" strokeDasharray="0.1 3.2" strokeLinecap="round" />
+				{spec.sprig && <Sprig motif={spec.sprig} x={60} y={35} k={0.8} />}
+				<text x="60" y="61" textAnchor="middle" fill="currentColor" style={text(fit(spec.top ?? "", 8.6, 14))}>
+					{spec.top}
 				</text>
-				<text x="80" y="46" textAnchor="middle" fill="currentColor" style={face(62, 900, fit(main, 19, 11), 1.3)}>
+				<text x="60" y="78" textAnchor="middle" fill="currentColor" style={display(fit(main, 15.5, 9))}>
 					{main}
 				</text>
-				<text x="80" y="58.5" textAnchor="middle" fill="currentColor" style={mono(7.2)}>
-					{up(spec.date)}
-				</text>
-			</svg>
-		);
-	} else if (spec.shape === "oval") {
-		body = (
-			<svg viewBox="0 0 150 84" aria-hidden="true">
-				<ellipse cx="75" cy="42" rx="71" ry="38" {...S} strokeWidth="3.2" />
-				<ellipse cx="75" cy="42" rx="65" ry="32" {...S} strokeWidth="1.1" />
-				<text x="75" y="30" textAnchor="middle" fill="currentColor" style={face(75, 700, fit(up(spec.top), 8.5, 20), 1.5)}>
-					{up(spec.top)}
-				</text>
-				<text x="75" y="50" textAnchor="middle" fill="currentColor" style={face(62, 900, fit(main, 17, 10), 1.2)}>
-					{main}
-				</text>
-				<text x="75" y="62" textAnchor="middle" fill="currentColor" style={mono(7)}>
-					{up(spec.date)}
+				<text x="60" y="90" textAnchor="middle" fill="currentColor" style={text(7.4, 500)}>
+					{spec.date}
 				</text>
 			</svg>
 		);
 	} else {
+		const oval = spec.shape === "oval";
+		const W = oval ? 150 : 160;
+		const H = oval ? 84 : 72;
+		const tx = spec.sprig ? W / 2 + 14 : W / 2;
 		body = (
-			<svg viewBox="0 0 120 120" aria-hidden="true">
-				<polygon points={octagon(56)} {...S} strokeWidth="3.6" strokeLinejoin="round" />
-				<polygon points={octagon(50)} {...S} strokeWidth="1.1" />
-				<text x="60" y="45" textAnchor="middle" fill="currentColor" style={face(75, 700, fit(up(spec.top), 8.5, 14), 1.4)}>
-					{up(spec.top)}
+			<svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+				<path d={oval ? pressed(75, 42, 71, 38, 2, seed) : pressed(80, 36, 76, 32.5, spec.shape === "rect" ? 5 : 3.4, seed)} {...S} strokeWidth="3" />
+				<path
+					d={oval ? pressed(75, 42, 64.5, 31.5, 2, seed + 4) : pressed(80, 36, 70, 26.5, spec.shape === "rect" ? 5 : 3.4, seed + 4)}
+					{...S}
+					strokeWidth="1"
+					strokeDasharray={spec.shape === "ticket" ? "0.1 3.2" : undefined}
+					strokeLinecap="round"
+				/>
+				{spec.sprig && <Sprig motif={spec.sprig} x={oval ? 33 : 29} y={H / 2} k={1.15} />}
+				<text x={tx} y={H / 2 - 9} textAnchor="middle" fill="currentColor" style={text(fit(spec.top ?? "", 8.6, 20))}>
+					{spec.top}
 				</text>
-				<text x="60" y="66" textAnchor="middle" fill="currentColor" style={face(62, 900, fit(main, 17, 9), 1)}>
+				<text x={tx} y={H / 2 + 7.5} textAnchor="middle" fill="currentColor" style={display(fit(main, 18, 10))}>
 					{main}
 				</text>
-				<text x="60" y="80" textAnchor="middle" fill="currentColor" style={mono(7)}>
-					{up(spec.date)}
+				<text x={tx} y={H / 2 + 19.5} textAnchor="middle" fill="currentColor" style={text(7.4, 500)}>
+					{spec.date}
 				</text>
 			</svg>
 		);

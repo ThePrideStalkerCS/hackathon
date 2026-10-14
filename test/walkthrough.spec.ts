@@ -166,7 +166,7 @@ describe("guided walkthrough", () => {
 		const address = w.fields.find((f) => f.id === "new_address")!;
 		expect(address).toMatchObject({ value: "Florianigasse 18/5, 1080 Wien", source: "confirmed", confirmedBy: { name: "Karl Steiner", role: "Landlord" } });
 		expect(w.steps.find((s) => s.fieldId === "new_address")?.narration).toBe(
-			"Your landlord Karl Steiner has already confirmed your new address: Florianigasse 18/5, 1080 Wien. I'm entering it.",
+			"Your landlord Karl Steiner has already confirmed your new address: Florianigasse 18/5, 1080 Wien. So it is already on your slip.",
 		);
 		expect(w.fields.find((f) => f.id === "previous_address")?.source).toBe("profile");
 

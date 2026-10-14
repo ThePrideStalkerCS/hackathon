@@ -168,7 +168,7 @@ function OpenSlip({ s, t, lang, showSeal, onStart }: { s: Suggestion; t: UIText;
 				{p && (
 					<p className="lz-promise">
 						{tpl(t.lzCardOffices, { done: p.byOffices, total: p.rows })} {you}
-						{showSeal && minutes ? <span className="lz-promise-time"> {tpl(t.lzKeepEst, { time: formatMinutes(minutes, lang) })}.</span> : null}
+						{showSeal && minutes ? <span className="lz-promise-time"> {tpl(t.lzCardKeep, { time: formatMinutes(minutes, lang) })}</span> : null}
 					</p>
 				)}
 				<button type="button" className="lz-btn is-primary lz-open-go" onClick={() => onStart(s.serviceId)}>
@@ -187,6 +187,7 @@ function toSpec(s: RecordStamp, t: UIText, i: number) {
 		main: s.lines[0],
 		date: s.date || t.lzOnFileShort,
 		rotate: ((i * 41) % 11) - 5,
+		sprig: s.serviceId ? motifFor(s.serviceId) : undefined,
 	};
 }
 

@@ -59,14 +59,14 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Meldezettel – Wohnsitz an- oder ummelden", "Registration form (Meldezettel) – register your residence"),
 		portalUrl: "portal.amt.example/meldewesen/meldezettel",
 		intro: L(
-			"Wenn Sie umziehen, müssen Sie Ihre neue Adresse beim Amt melden. Das Formular dafür heißt Meldezettel. Ich fülle es jetzt mit Ihnen aus. Was ich schon weiß, trage ich selbst ein. {questions}",
-			"When you move, you have to register your new address with the authorities. The form is called Meldezettel. I'll fill it in with you now. Whatever I already know, I enter myself. {questions}",
+			"Wenn Sie umziehen, müssen Sie Ihre neue Adresse beim Amt melden. Das Formular dafür heißt Meldezettel. Ich gehe es jetzt mit Ihnen durch. Was die Ämter schon wissen, kommt direkt aus ihren Registern. {questions}",
+			"When you move, you have to register your new address with the authorities. The form is called Meldezettel. I'll go through it with you now. Whatever the offices already know comes straight from their registers. {questions}",
 		),
 		fields: {
 			new_address: {
 				confirmed: L(
-					"{yourRole} {name} hat Ihre neue Adresse schon bestätigt: {value}. Die trage ich ein.",
-					"{yourRole} {name} has already confirmed your new address: {value}. I'm entering it.",
+					"{yourRole} {name} hat Ihre neue Adresse schon bestätigt: {value}. Damit steht sie auf Ihrem Laufzettel.",
+					"{yourRole} {name} has already confirmed your new address: {value}. So it is already on your slip.",
 				),
 				question: L("Wie lautet Ihre neue Adresse?", "What is your new address?"),
 				officialTerm: L("Unterkunft (neue Adresse)", "Accommodation (new address)"),
@@ -98,8 +98,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			previous_address: {
 				autofill: L(
-					"Ihre bisherige Adresse kenne ich aus dem Melderegister: {value}. Die trage ich ein.",
-					"I know your previous address from the population register: {value}. I'm entering it.",
+					"Ihre bisherige Adresse kommt aus dem Melderegister: {value}.",
+					"Your previous address comes from the population register: {value}.",
 				),
 				question: L(
 					"Wo haben Sie bisher gewohnt? Wenn Sie aus dem Ausland kommen, können Sie das überspringen.",
@@ -138,8 +138,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			id_document: {
 				autofill: L(
-					"Als Ausweis nehme ich Ihren {value}. Der ist noch gültig.",
-					"As ID I'm using your {value}. It is still valid.",
+					"Im Register ist Ihr {value}. Der ist noch gültig und gilt als Ausweis.",
+					"The register has your {value}. It is still valid, so it counts as your ID.",
 				),
 				question: L(
 					"Ich habe keinen gültigen Ausweis mit Foto von Ihnen gefunden. Haben Sie einen anderen? Bitte nennen Sie die Art und die Nummer.",
@@ -166,8 +166,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			reason: {
 				question: L("Was ist mit Ihrem bisherigen Pass?", "What is the situation with your current passport?"),
 				autofill: L(
-					"Ihr Pass ist abgelaufen oder läuft bald ab. Deshalb trage ich als Grund „{value}“ ein.",
-					"Your passport has expired or expires soon, so I'm entering „{value}“ as the reason.",
+					"Ihr Pass ist abgelaufen oder läuft bald ab. Als Grund ist deshalb „{value}“ vorbefüllt. Sie können das ändern.",
+					"Your passport has expired or expires soon, so “{value}” is prefilled as the reason. You can change it.",
 				),
 				officialTerm: L("Antragsgrund", "Reason for application"),
 				explain: L("Wählen Sie, was auf Sie zutrifft.", "Choose what applies to you."),
@@ -187,8 +187,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			delivery_address: {
 				autofill: L(
-					"Der neue Pass kommt per Post. Ich nehme Ihre Meldeadresse: {value}.",
-					"The new passport is sent by post. I'm using your registered address: {value}.",
+					"Der neue Pass kommt per Post, an Ihre Adresse im Melderegister: {value}.",
+					"The new passport is sent by post to your address in the population register: {value}.",
 				),
 				question: L("An welche Adresse sollen wir den neuen Pass schicken?", "Where should we send the new passport?"),
 				officialTerm: L("Zustelladresse", "Delivery address"),
@@ -223,12 +223,12 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		),
 		fields: {
 			child_name: {
-				autofill: L("Ihr Kind {value} ist bei Ihnen gemeldet. Den Namen trage ich ein.", "Your child {value} is registered with you. I'm entering the name."),
+				autofill: L("Ihr Kind {value} ist bei Ihnen gemeldet. Der Name kommt aus dem Melderegister.", "Your child {value} is registered with you. The name comes from the population register."),
 				question: L("Wie heißt Ihr Kind?", "What is your child's name?"),
 				officialTerm: L("Name des Kindes", "Child's name"),
 			},
 			child_birth_date: {
-				autofill: L("Das Geburtsdatum kenne ich auch: {value}.", "I also know the date of birth: {value}."),
+				autofill: L("Auch das Geburtsdatum steht im Register: {value}.", "The register has the date of birth too: {value}."),
 				question: L("Wann wurde Ihr Kind geboren?", "When was your child born?"),
 				officialTerm: L("Geburtsdatum des Kindes", "Child's date of birth"),
 			},
@@ -287,10 +287,10 @@ export function fill(text: string, vars: Record<string, string | number>): strin
 export const PHRASES = {
 	checkTitle: L("Voraussetzungen prüfen", "Checking the requirements"),
 	checkIntro: L("Ich habe geprüft, ob Sie das beantragen können.", "I checked whether you can apply for this."),
-	checkAllGood: L("Es passt alles. Als Nächstes trage ich ein, was die Ämter schon wissen.", "Everything is in order. Next, I fill in what the offices already know."),
+	checkAllGood: L("Es passt alles. Als Nächstes kommt, was die Ämter schon wissen.", "Everything is in order. Next comes what the offices already know."),
 	checkWithNotes: L(
-		"Bitte beachten Sie die Hinweise. Als Nächstes trage ich ein, was die Ämter schon wissen.",
-		"Please note the remarks. Next, I fill in what the offices already know.",
+		"Bitte beachten Sie die Hinweise. Als Nächstes kommt, was die Ämter schon wissen.",
+		"Please note the remarks. Next comes what the offices already know.",
 	),
 	blockedTitle: L("Das geht leider so nicht", "This isn't possible like this"),
 	blockedIntro: L("Diesen Antrag können Sie leider nicht stellen.", "Unfortunately you can't submit this application."),
@@ -298,7 +298,7 @@ export const PHRASES = {
 		"Ein Mensch vom Amt kann Ihnen weiterhelfen. Drücken Sie dafür auf „Mit einem Menschen sprechen“.",
 		"A member of staff can help you. Press “Talk to a person” for that.",
 	),
-	autofillGeneric: L("Das trage ich aus Ihren Daten ein: {value}.", "I'm entering this from your data: {value}."),
+	autofillGeneric: L("Das kommt aus Ihren Daten beim Amt: {value}.", "This comes from your records: {value}."),
 	confirmedGeneric: L("Das hat {name} schon bestätigt: {value}.", "{name} has already confirmed this: {value}."),
 	askGeneric: L("Bitte geben Sie an: {label}.", "Please enter: {label}."),
 	appointmentTitle: L("Termin aussuchen", "Choose an appointment"),

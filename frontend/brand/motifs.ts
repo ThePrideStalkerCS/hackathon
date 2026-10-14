@@ -397,6 +397,62 @@ function edelweiss(): { full: Layer[]; silhouette: Layer[] } {
 	return { full: pl.layers, silhouette: sil.layers };
 }
 
+export function motifFor(serviceId: string): Motif {
+	if (serviceId === "passport-renewal") return "peaks";
+	if (serviceId === "childcare-subsidy") return "edelweiss";
+	return "pine";
+}
+
+/** A small sprig of the motif for office stamps (about 24 units, centred on 0,0). */
+function sprig(motif: Motif): Layer[] {
+	const pl = new Plate();
+	if (motif === "pine") {
+		const twig = curve([-10, 11], [-3, 2], [9, -10], 20);
+		pl.ink(swell(twig, (t) => 1.7 * (1 - t * 0.55)));
+		const needles: string[] = [];
+		for (const [k, spread] of [[0.35, 1.1], [0.62, 1], [0.86, 0.9], [1, 0.75]] as const) {
+			const [x, y] = twig[Math.round(k * (twig.length - 1))];
+			for (let i = 0; i < 7; i++) {
+				const a = -Math.PI / 2 + 0.25 + (i - 3) * 0.36 * spread;
+				const len = 7.4 - Math.abs(i - 3) * 0.6;
+				needles.push(swell([[x, y], [x + Math.cos(a) * len * 0.5, y + Math.sin(a) * len * 0.5], [x + Math.cos(a) * len, y + Math.sin(a) * len]], (t) => 0.85 * (1 - t * 0.8)));
+			}
+		}
+		pl.ink(needles.join(""));
+		const cone = blob(-4.6, 9.6, 2.6, 3.4, [[0.05, 5, 0]], 24);
+		pl.ink(pathOf(cone));
+		pl.paper(swell(curve([-6.4, 8], [-4.6, 9.4], [-2.8, 8]), () => 0.5) + swell(curve([-6.6, 10.8], [-4.6, 12.2], [-2.6, 10.8]), () => 0.5));
+	} else if (motif === "peaks") {
+		const hill: Pt[] = [[-12, 9], [-5.5, -2], [-2.6, 1.4], [3.6, -9], [12, 9]];
+		pl.ink(hatchShape(hill, { spacing: 1.25, wMin: 0.3, wMax: 0.75, angle: 60, light: "left", seed: 4 }));
+		pl.ink(swell(hill, () => 1.1));
+		pl.paper(pathOf([[3.6, -9], [6.2, -4.4], [4.6, -5], [3.4, -3.6], [2, -5.2], [1.4, -4.6]]));
+		const sun = blob(-7.4, -7.4, 2.6, 2.6, [], 20);
+		pl.ink(swell([...sun, sun[0]], () => 0.8));
+	} else {
+		const centre: Pt = [0, -1.5];
+		for (let i = 0; i < 7; i++) {
+			const a = -90 + i * (360 / 7) + (i % 2 ? 6 : -6);
+			pl.ink(pathOf(lance(centre, a, i % 2 ? 8.6 : 10, 4.2, i % 2 ? 8 : -8, 14).poly));
+		}
+		pl.paper(pathOf(blob(0, -1.5, 3.4, 3.4, [[0.1, 5, 0]], 24)));
+		pl.ink(pathOf(blob(0, -1.5, 1.1, 1.1, [], 10)) + pathOf(blob(-1.9, -0.2, 0.7, 0.7, [], 8)) + pathOf(blob(1.8, -0.4, 0.7, 0.7, [], 8)));
+		pl.ink(swell(curve([0.4, 6], [1.6, 9.6], [0.4, 12.6]), () => 1));
+	}
+	return pl.layers;
+}
+
+const sprigs = new Map<Motif, Layer[]>();
+
+export function sprigLayers(motif: Motif): Layer[] {
+	let s = sprigs.get(motif);
+	if (!s) {
+		s = sprig(motif);
+		sprigs.set(motif, s);
+	}
+	return s;
+}
+
 const DRAW = { pine, peaks, edelweiss };
 const cache = new Map<Motif, { full: Layer[]; silhouette: Layer[] }>();
 

@@ -8,6 +8,7 @@
  */
 import type { PortalField, Walkthrough, WalkthroughStep } from "../../src/shared/walkthrough";
 import type { StampSpec } from "../brand/Brand";
+import { motifFor } from "../brand/motifs";
 import type { UIText } from "../i18n";
 
 export type StationState = "done" | "active" | "pending";
@@ -66,6 +67,7 @@ export function initials(name?: string): string {
 
 export function buildStations(w: Walkthrough, t: UIText, citizenName?: string): Station[] {
 	const date = stampDate(w.language);
+	const sprig = motifFor(w.serviceId);
 	const stations: Station[] = [];
 
 	w.steps.forEach((step, index) => {
@@ -79,7 +81,7 @@ export function buildStations(w: Walkthrough, t: UIText, citizenName?: string): 
 
 		switch (step.kind) {
 			case "check":
-				stations.push({ ...base, label: t.lzRequirements, sub: office(w.authority), stamp: { shape: "oct", top: t.stampCheckTop, main: t.stampChecked, date, rotate } });
+				stations.push({ ...base, label: t.lzRequirements, sub: office(w.authority), stamp: { shape: "oct", top: t.stampCheckTop, main: t.stampChecked, date, rotate, sprig } });
 				break;
 			case "blocked":
 				stations.push({ ...base, label: t.lzStopped, sub: office(w.authority) });
@@ -100,10 +102,10 @@ export function buildStations(w: Walkthrough, t: UIText, citizenName?: string): 
 									? t.lzFromDraft
 									: t.lzSuggested,
 					stamp: by
-						? { shape: "ticket", top: `${by.role} · ${shortName(by.name)}`, main: t.stampConfirmed, date, rotate }
+						? { shape: "ticket", top: `${by.role} · ${shortName(by.name)}`, main: t.stampConfirmed, date, rotate, sprig }
 						: fromRegister
-							? { shape: "round", ring: t.stampRegisterRing, main: t.stampFilled, date, rotate }
-							: { shape: "ticket", top: office(w.authority), main: t.stampPrefilled, date, rotate },
+							? { shape: "round", ring: t.stampRegisterRing, main: t.stampFilled, date, rotate, sprig }
+							: { shape: "ticket", top: office(w.authority), main: t.stampPrefilled, date, rotate, sprig },
 				});
 				break;
 			}
@@ -112,7 +114,7 @@ export function buildStations(w: Walkthrough, t: UIText, citizenName?: string): 
 					...base,
 					label: field?.label ?? step.title,
 					sub: done ? t.lzFromYou : t.lzYourTurn,
-					stamp: { shape: "rect", top: office(w.authority), main: t.stampReceived, date, rotate },
+					stamp: { shape: "rect", top: office(w.authority), main: t.stampReceived, date, rotate, sprig },
 				});
 				break;
 			case "appointment":
@@ -120,7 +122,7 @@ export function buildStations(w: Walkthrough, t: UIText, citizenName?: string): 
 					...base,
 					label: t.lzAppointment,
 					sub: w.selectedSlot?.office ?? office(w.authority),
-					stamp: { shape: "oval", top: office(w.selectedSlot?.office ?? w.authority), main: t.stampReserved, date, rotate },
+					stamp: { shape: "oval", top: office(w.selectedSlot?.office ?? w.authority), main: t.stampReserved, date, rotate, sprig },
 				});
 				break;
 			case "review":
