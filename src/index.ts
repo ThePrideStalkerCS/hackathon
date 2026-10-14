@@ -3,6 +3,7 @@
  *
  *   /api/gov/*            Mock e-government REST API (src/gov/routes.ts)
  *   /api/voice/*          Text-to-speech / speech-to-text via ElevenLabs (src/voice/elevenlabs.ts)
+ *   /api/address/*        Address suggestions + check via Google Maps (src/address/google.ts)
  *   /api/evals/chat       Non-streaming assistant endpoint for automated tests (evals/run.ts)
  *   /agents/*             WebSocket + HTTP endpoint of the chat agent (Agents SDK)
  *   everything else       React frontend (static assets, built by Vite)
@@ -16,6 +17,7 @@ import { runAssistant } from "./agent/run-assistant";
 import { GovError } from "./gov/errors";
 import { govRoutes } from "./gov/routes";
 import { voiceRoutes } from "./voice/elevenlabs";
+import { addressRoutes } from "./address/google";
 
 // The Durable Object class must be exported from the entry point.
 export { CitizenAssistant } from "./agent/citizen-assistant";
@@ -30,6 +32,8 @@ app.get("/api/health", (c) => c.json({ status: "ok", model: MODEL_ID }));
 app.route("/api/gov", govRoutes);
 
 app.route("/api/voice", voiceRoutes);
+
+app.route("/api/address", addressRoutes);
 
 // Used by `pnpm evals`. Write tools (EVAL_STUBBED_TOOLS in src/agent/tools.ts) never execute here.
 app.post("/api/evals/chat", async (c) => {

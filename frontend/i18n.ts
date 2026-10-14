@@ -97,6 +97,17 @@ export const TEXT = {
 		toolWorking: "Ich schaue nach …",
 		error: "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
 
+		// Address suggestions (walkthrough/AddressInput.tsx)
+		addressSearching: "Suche Adressen …",
+		addressFound: "✓ Adresse auf Google Maps gefunden.",
+		addressPartial: "Adresse gefunden, aber ohne Hausnummer. Bitte ergänzen oder eine genauere Adresse wählen.",
+		addressNotFound: "Diese Adresse habe ich nicht gefunden.",
+		addressCustom: "Eigene Adresse verwenden: „{text}“",
+		addressCustomNote: "Eigene Adresse, nicht auf Google Maps geprüft. Bitte genau kontrollieren.",
+		addressDoor: "Stiege / Tür (falls vorhanden)",
+		addressDoorHint: "z. B. 3 oder 2/8",
+		addressPoweredBy: "Adressvorschläge von Google",
+
 		// Goals pages (frontend/goals/)
 		backToStart: "Zur Startseite",
 		goalsButton: "Meine Behördenwege",
@@ -209,6 +220,17 @@ export const TEXT = {
 
 		toolWorking: "Checking …",
 		error: "Something went wrong. Please try again.",
+
+		// Address suggestions (walkthrough/AddressInput.tsx)
+		addressSearching: "Looking for addresses …",
+		addressFound: "✓ Address found on Google Maps.",
+		addressPartial: "Address found, but without a house number. Please add it or pick a more precise address.",
+		addressNotFound: "I couldn't find this address.",
+		addressCustom: "Use my own address: “{text}”",
+		addressCustomNote: "Your own address, not checked on Google Maps. Please check it carefully.",
+		addressDoor: "Staircase / door (if any)",
+		addressDoorHint: "e.g. 3 or 2/8",
+		addressPoweredBy: "Address suggestions by Google",
 
 		// Goals pages (frontend/goals/)
 		backToStart: "Back to start",

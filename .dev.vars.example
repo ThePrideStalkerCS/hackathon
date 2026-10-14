@@ -4,3 +4,6 @@
 ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
 # Optional: a voice id from your ElevenLabs voice library
 ELEVENLABS_VOICE_ID=your_voice_id_here
+# Optional: Google Maps key with "Places API (New)" enabled (address suggestions + check).
+# Without a key, address fields are plain text fields. Deployed: npx wrangler secret put GOOGLE_MAPS_API_KEY
+GOOGLE_MAPS_API_KEY=

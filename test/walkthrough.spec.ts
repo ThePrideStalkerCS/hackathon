@@ -9,6 +9,7 @@ import { createWalkthrough, submitWalkthrough } from "../src/walkthrough/control
 import * as engine from "../src/walkthrough/engine";
 import { getSuggestions } from "../src/walkthrough/proactive";
 import { detectLanguage, routeIntent } from "../src/agent/router";
+import { extractDoor, toVerifiedAddress, withDoor } from "../src/shared/address";
 import type { Walkthrough } from "../src/shared/walkthrough";
 
 const residence = getServiceDefinition("change-of-residence")!;
@@ -193,5 +194,32 @@ describe("router", () => {
 		expect(routeIntent("Ist mein Reisepass noch gültig?", false, "de").forceTool).toBe("get_my_profile");
 		expect(routeIntent("Ich möchte einen Hund anmelden.", false, "de").forceTool).toBeNull();
 		expect(routeIntent("Mein Reisepass is abgloffen.", true, "de").forceTool).toBeNull(); // walkthrough already open
+	});
+});
+
+describe("address check helpers (Google Maps)", () => {
+	const graz = toVerifiedAddress(
+		[
+			{ longText: "Annenstraße", types: ["route"] },
+			{ longText: "24", types: ["street_number"] },
+			{ longText: "8020", types: ["postal_code"] },
+			{ longText: "Graz", types: ["locality", "political"] },
+			{ longText: "Österreich", shortText: "AT", types: ["country"] },
+		],
+		"Annenstraße 24, 8020 Graz, Österreich",
+	);
+
+	it("builds the Austrian address format", () => {
+		expect(graz.formatted).toBe("Annenstraße 24, 8020 Graz");
+		expect(graz.precise).toBe(true);
+		expect(toVerifiedAddress([{ longText: "Annenstraße", types: ["route"] }], "x").precise).toBe(false);
+	});
+
+	it("keeps the door number the citizen typed", () => {
+		expect(extractDoor("Annenstraße 24/3", "24")).toBe("3");
+		expect(extractDoor("Kaiserstr. 40/2/8, 1070 Wien", "40")).toBe("2/8");
+		expect(extractDoor("Hauptplatz 7", "7")).toBeNull();
+		expect(withDoor(graz, "3")).toBe("Annenstraße 24/3, 8020 Graz");
+		expect(withDoor(graz, "")).toBe("Annenstraße 24, 8020 Graz");
 	});
 });

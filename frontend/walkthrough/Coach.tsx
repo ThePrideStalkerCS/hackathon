@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { PortalField, Walkthrough, WalkthroughStep } from "../../src/shared/walkthrough";
 import { VoiceMark } from "../components";
+import { ADDRESS_FIELDS, AddressInput } from "./AddressInput";
 import { Icon } from "../icons";
 import { tpl, type UIText } from "../i18n";
 
@@ -69,7 +70,7 @@ export function Coach({ w, t, actions, queueNext }: Props) {
 				</p>
 			)}
 
-			{step.kind === "ask" && field && <AskInput key={step.id} field={field} step={step} t={t} actions={actions} />}
+			{step.kind === "ask" && field && <AskInput key={step.id} field={field} step={step} t={t} actions={actions} language={w.language} />}
 
 			{step.kind === "appointment" && <SlotPicker w={w} step={step} t={t} actions={actions} />}
 
@@ -110,7 +111,10 @@ export function Coach({ w, t, actions, queueNext }: Props) {
 	);
 }
 
-function AskInput({ field, step, t, actions }: { field: PortalField; step: WalkthroughStep; t: UIText; actions: WalkthroughActions }) {
+function AskInput(props: { field: PortalField; step: WalkthroughStep; t: UIText; actions: WalkthroughActions; language: "de" | "en" }) {
+	const { field, step, t, actions } = props;
+	// Address fields: suggestions + check via Google Maps, with a "custom address" fallback.
+	const isAddress = field.type === "text" && ADDRESS_FIELDS.has(field.id);
 	const [text, setText] = useState(field.value ?? "");
 	useEffect(() => setText(field.value ?? ""), [field.value]);
 	const submitText = () => text.trim() && actions.answer(field.id, text.trim());
@@ -141,7 +145,9 @@ function AskInput({ field, step, t, actions }: { field: PortalField; step: Walkt
 				</div>
 			)}
 
-			{(field.type === "text" || field.type === "date") && (
+			{isAddress && <AddressInput field={field} t={t} language={props.language} onAnswer={(value) => actions.answer(field.id, value)} />}
+
+			{!isAddress && (field.type === "text" || field.type === "date") && (
 				<form
 					className="coach-input"
 					onSubmit={(e) => {
