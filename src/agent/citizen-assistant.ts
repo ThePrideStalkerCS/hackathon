@@ -21,7 +21,8 @@ import { getServiceDefinition } from "../gov/data/services";
 import { dbListApplications } from "../gov/db";
 import * as gov from "../gov/service";
 import * as engine from "../walkthrough/engine";
-import { answerAndSave, createWalkthrough, handoffSummary, submitWalkthrough, type WalkthroughHost } from "../walkthrough/controller";
+import { answerAndSave, createWalkthrough, handoffSummary, relocalize, submitWalkthrough, type WalkthroughHost } from "../walkthrough/controller";
+import { buildOverview } from "../walkthrough/overview";
 import { getSuggestions as proactiveSuggestions } from "../walkthrough/proactive";
 import { routeIntent } from "./router";
 import { buildSystemPrompt } from "./system-prompt";
@@ -135,11 +136,17 @@ export class CitizenAssistant extends AIChatAgent<Env, AssistantState> implement
 	// -------------------------------------------------------------------------------------------
 
 	@callable({ description: "Change persona or language. Switching persona closes the walkthrough." })
-	updateSettings(patch: Partial<AssistantSettings>) {
+	async updateSettings(patch: Partial<AssistantSettings>) {
 		const current = this.st;
 		const next = { ...current, ...patch };
-		const personaChanged = next.personaId !== current.personaId;
-		this.setState({ ...next, ...(personaChanged ? { walkthrough: null, queue: [] } : {}) });
+		if (next.personaId !== current.personaId) {
+			this.setState({ ...next, walkthrough: null, queue: [] });
+		} else if (next.language !== current.language && current.walkthrough) {
+			// Switching language mid-walkthrough: same step, same answers, new language.
+			this.setState({ ...next, walkthrough: await relocalize(this.env, next.personaId, current.walkthrough, next.language) });
+		} else {
+			this.setState(next);
+		}
 		return this.st;
 	}
 
@@ -149,6 +156,16 @@ export class CitizenAssistant extends AIChatAgent<Env, AssistantState> implement
 		const citizen = await gov.getCitizenProfile(this.env, personaId);
 		const submitted = (await dbListApplications(this.env.GOV_DB, personaId)).filter((a) => a.status === "submitted").map((a) => a.serviceId);
 		return proactiveSuggestions(citizen, gov.today(), language, submitted);
+	}
+
+	@callable({ description: "Start page: life-areas ring, time saved, Stempelpass and suggestions" })
+	async getOverview() {
+		const { personaId, language } = this.st;
+		const citizen = await gov.getCitizenProfile(this.env, personaId);
+		const applications = await dbListApplications(this.env.GOV_DB, personaId);
+		const submitted = applications.filter((a) => a.status === "submitted").map((a) => a.serviceId);
+		const suggestions = proactiveSuggestions(citizen, gov.today(), language, submitted);
+		return { ...buildOverview(citizen, suggestions, applications, gov.today(), language), suggestions };
 	}
 
 	@callable({ description: "Start a walkthrough directly (e.g. from a suggestion card), without the AI" })

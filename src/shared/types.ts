@@ -16,7 +16,8 @@ export type AssistantSettings = {
 
 export const DEFAULT_SETTINGS: AssistantSettings = {
 	personaId: "lena-huber",
-	language: "de",
+	// The showcase runs in English; citizens switch to German (or back) in the top bar.
+	language: "en",
 };
 
 /**

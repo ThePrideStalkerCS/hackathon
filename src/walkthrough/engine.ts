@@ -407,6 +407,25 @@ export function markSubmitted(w: Walkthrough, result: SubmissionSummary): Walkth
 	return finalize(next);
 }
 
+/**
+ * Language switch mid-walkthrough: `fresh` is the same walkthrough rebuilt in the new language.
+ * Carry over where the citizen is and what they already answered.
+ */
+export function carryProgress(fresh: Walkthrough, old: Walkthrough): Walkthrough {
+	const next = clone(fresh);
+	const done = new Set(old.steps.filter((s) => s.done).map((s) => s.id));
+	for (const s of next.steps) if (done.has(s.id)) s.done = true;
+	for (const f of next.fields) {
+		const before = old.fields.find((o) => o.id === f.id);
+		if (before?.value && !f.value) Object.assign(f, { value: before.value, displayValue: displayValue(f, before.value, next.language), source: before.source });
+	}
+	const currentId = old.steps[old.current]?.id;
+	const index = next.steps.findIndex((s) => s.id === currentId);
+	next.current = index >= 0 ? index : 0;
+	if (old.selectedSlot) next.selectedSlot = old.selectedSlot;
+	return finalize(next);
+}
+
 /** The form data as the backend expects it. */
 export function formData(w: Walkthrough): Record<string, string> {
 	return Object.fromEntries(w.fields.filter((f) => f.value).map((f) => [f.id, f.value!]));

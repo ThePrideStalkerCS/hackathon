@@ -63,7 +63,8 @@ const SCHEMA = [
 
 const TABLES = ["citizens", "documents", "applications", "appointments", "handoffs"];
 
-const OFFICES = ["Passbehörde Wien – Bezirksamt Mitte (Mock)", "Bezirkshauptmannschaft Linz-Land (Mock)"];
+// Fictional offices (all data in this project is synthetic).
+const OFFICES = ["Passbehörde Wien – Bezirksamt Mitte", "Bezirkshauptmannschaft Linz-Land"];
 
 // ---------------------------------------------------------------------------------------------
 // Seeding

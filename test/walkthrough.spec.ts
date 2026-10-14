@@ -9,6 +9,8 @@ import { createWalkthrough, submitWalkthrough } from "../src/walkthrough/control
 import * as engine from "../src/walkthrough/engine";
 import { getSuggestions } from "../src/walkthrough/proactive";
 import { detectLanguage, routeIntent } from "../src/agent/router";
+import { buildOverview } from "../src/walkthrough/overview";
+import { cityOf, formatMinutes, stampForApplication } from "../src/shared/stamps";
 import { extractDoor, toVerifiedAddress, withDoor } from "../src/shared/address";
 import type { Walkthrough } from "../src/shared/walkthrough";
 
@@ -221,5 +223,52 @@ describe("address check helpers (Google Maps)", () => {
 		expect(extractDoor("Hauptplatz 7", "7")).toBeNull();
 		expect(withDoor(graz, "3")).toBe("Annenstraße 24/3, 8020 Graz");
 		expect(withDoor(graz, "")).toBe("Annenstraße 24, 8020 Graz");
+	});
+});
+
+describe("Stempelpass and time saved", () => {
+	it("reads the town from an Austrian address", () => {
+		expect(cityOf("Neubaugasse 12/4, 1070 Wien")).toBe("Wien");
+		expect(cityOf("Annenstraße 24/3, 8020 Graz")).toBe("Graz");
+		expect(cityOf("somewhere")).toBeNull();
+	});
+
+	it("gives a submitted errand its stamp", () => {
+		const stamp = stampForApplication({ id: "a1", serviceId: "change-of-residence", data: { new_address: "Neubaugasse 12/4, 1070 Wien" }, submittedAt: "2026-10-15T10:00:00Z" }, "de");
+		expect(stamp).toMatchObject({ lines: ["Gemeldet", "Wien"], date: "15.10.2026", source: "submitted" });
+		expect(formatMinutes(135, "de")).toBe("2 Std. 15 Min.");
+		expect(formatMinutes(45, "en")).toBe("45 min");
+	});
+
+	it("builds the overview: open areas, time saved, stamps from records", async () => {
+		const today = gov.today();
+		const josef = await gov.getCitizenProfile(env, "josef-gruber");
+		const open = buildOverview(josef, getSuggestions(josef, today, "de"), [], today, "de");
+		expect(open.areas.find((a) => a.id === "travel")?.status).toBe("open");
+		expect(open.timeSavedMin).toBe(0);
+		expect(open.stamps.some((s) => s.lines[1] === "Linz")).toBe(true); // registered residence, from the records
+
+		const done = buildOverview(
+			josef,
+			[],
+			[{ id: "a1", citizenId: "josef-gruber", serviceId: "passport-renewal", status: "submitted", data: {}, referenceNumber: "PASS-1", createdAt: "", submittedAt: `${today}T09:00:00Z` }],
+			today,
+			"de",
+		);
+		expect(done.areas.find((a) => a.id === "travel")?.status).toBe("done");
+		expect(done.timeSavedMin).toBe(30);
+		expect(done.stamps[0]).toMatchObject({ lines: ["Reisepass", "beantragt"], source: "submitted" });
+	});
+});
+
+describe("language switch", () => {
+	it("keeps step and answers when the walkthrough is rebuilt in another language", async () => {
+		let de = playUntilWaiting(await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false));
+		de = playUntilWaiting(answer(de, "new_address", "Neubaugasse 12/4, 1070 Wien").walkthrough);
+		const en = engine.carryProgress(await createWalkthrough(env, "lena-huber", "change-of-residence", "en", false), de);
+		expect(en.language).toBe("en");
+		expect(en.steps[en.current].id).toBe(de.steps[de.current].id);
+		expect(en.fields.find((f) => f.id === "new_address")?.value).toBe("Neubaugasse 12/4, 1070 Wien");
+		expect(en.steps[en.current].title).toBe("When did you move in?");
 	});
 });

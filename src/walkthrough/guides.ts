@@ -293,8 +293,8 @@ export const PHRASES = {
 	),
 	reviewTitle: L("Alles prüfen und bestätigen", "Check everything and confirm"),
 	review: L(
-		"Jetzt ist alles eingetragen. Bitte prüfen Sie es. Erst wenn Sie unten auf „Antrag absenden“ drücken, wird der Antrag abgeschickt.",
-		"Everything is filled in now. Please check it. The application is only sent when you press „Submit application“ below.",
+		"Jetzt ist alles eingetragen. Bitte prüfen Sie es. Erst wenn Sie unten den Fingerabdruck gedrückt halten, wird der Antrag abgeschickt.",
+		"Everything is filled in now. Please check it. The application is only sent when you press and hold the fingerprint below.",
 	),
 	reviewProblems: L(
 		"Es fehlt noch etwas. Drücken Sie bei dem rot markierten Feld auf „Ändern“.",

@@ -77,6 +77,13 @@ export async function createWalkthrough(env: Env, citizenId: string, serviceId: 
 	});
 }
 
+/** Rebuilds the walkthrough in another language and keeps the citizen's progress (not after submitting). */
+export async function relocalize(env: Env, citizenId: string, w: Walkthrough, lang: Language): Promise<Walkthrough> {
+	if (w.language === lang || w.result) return w;
+	const fresh = await createWalkthrough(env, citizenId, w.serviceId, lang, Boolean(w.applicationId));
+	return engine.carryProgress(fresh, w);
+}
+
 /** Sets a field locally, then saves it to the draft. A failed save is not fatal: submit saves everything again. */
 export async function answerAndSave(env: Env, w: Walkthrough, fieldId: string, value: string | boolean, source: "citizen" | "assistant"): Promise<engine.AnswerResult> {
 	const def = requireDefinition(w.serviceId);
