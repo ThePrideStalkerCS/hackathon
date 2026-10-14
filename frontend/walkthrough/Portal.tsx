@@ -12,8 +12,11 @@
  */
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import type { PortalField, Walkthrough } from "../../src/shared/walkthrough";
+import { TIME_SAVED_MINUTES, formatMinutes, stampForApplication } from "../../src/shared/stamps";
 import { Icon } from "../icons";
-import { formatSlot, type UIText } from "../i18n";
+import { formatSlot, tpl, type UIText } from "../i18n";
+import { StampView } from "../reward";
+import { HoldToConfirm } from "./HoldToConfirm";
 
 type Props = {
 	w: Walkthrough;
@@ -79,6 +82,22 @@ export function Portal({ w, t, coach, onEditField, onSubmit }: Props) {
 					<span>{t.referenceNumber}</span>
 					<strong>{w.result.referenceNumber}</strong>
 				</div>
+				<div className="earned">
+					<div className="paper earned-paper">
+						<StampView
+							slam
+							t={t}
+							stamp={stampForApplication(
+								{ id: w.id, serviceId: w.serviceId, data: Object.fromEntries(w.fields.filter((f) => f.value).map((f) => [f.id, f.value!])), submittedAt: w.result.submittedAt },
+								w.language,
+							)}
+						/>
+					</div>
+					<div className="earned-text">
+						<span className="earned-kicker">{t.stampEarned}</span>
+						{TIME_SAVED_MINUTES[w.serviceId] && <b>{tpl(t.savedThis, { time: formatMinutes(TIME_SAVED_MINUTES[w.serviceId], w.language) })}</b>}
+					</div>
+				</div>
 				{w.result.appointment && (
 					<div className="appointment-ticket">
 						<Icon name="calendar" />
@@ -100,12 +119,12 @@ export function Portal({ w, t, coach, onEditField, onSubmit }: Props) {
 	}
 
 	return (
-		<article className="page" ref={pageRef} aria-label={`${t.simulation}: ${w.portalTitle}`}>
+		<article className="page" ref={pageRef} aria-label={w.portalTitle}>
 			{cursor && (
 				<div className="ghost-cursor" aria-hidden="true" style={{ transform: `translate(${cursor.x}px, ${cursor.y}px)` }}>
 					{/* An ordinary mouse pointer: it should feel like a screen recording, not like magic. */}
 					<svg width="24" height="30" viewBox="0 0 22 28">
-						<path d="M1 1 L1 22 L7 17 L11 26 L15 24 L11 15 L19 15 Z" fill="#111" stroke="#fff" strokeWidth="1.6" strokeLinejoin="round" />
+						<path d="M1 1 L1 22 L7 17 L11 26 L15 24 L11 15 L19 15 Z" style={{ fill: "var(--cursor-fill)", stroke: "var(--cursor-stroke)" }} strokeWidth="1.6" strokeLinejoin="round" />
 					</svg>
 				</div>
 			)}
@@ -115,7 +134,6 @@ export function Portal({ w, t, coach, onEditField, onSubmit }: Props) {
 				<h1 data-anchor="title" className={anchor === "title" ? "is-active" : ""}>
 					{w.portalTitle}
 				</h1>
-				{w.implementation === "mock" && <span className="tag">{t.mockService}</span>}
 			</header>
 			{anchor === "title" && coach}
 
@@ -185,29 +203,24 @@ export function Portal({ w, t, coach, onEditField, onSubmit }: Props) {
 			{w.status !== "blocked" && (
 				<footer className="page-submit" data-anchor="submit">
 					{anchor === "submit" && coach}
-					<button
-						type="button"
-						className={`gov-button ${isReview && !submitBlocked ? "is-ready" : ""}`}
-						disabled={!isReview || submitBlocked || w.status === "submitting"}
-						onClick={onSubmit}
-					>
-						{w.status === "submitting" ? t.submitting : t.portalSubmit}
-						<Icon name="arrowRight" size={20} />
-					</button>
+					<HoldToConfirm
+						label={t.holdToSubmit}
+						hint={t.holdHint}
+						disabled={!isReview || submitBlocked}
+						busy={w.status === "submitting"}
+						busyLabel={t.submitting}
+						onConfirm={onSubmit}
+					/>
 				</footer>
 			)}
 
-			<p className="page-fine">
-				{t.factsUnverified}
-				{w.sourceUrl && (
-					<>
-						{" "}
-						<a href={w.sourceUrl} target="_blank" rel="noreferrer">
-							{t.source}: oesterreich.gv.at
-						</a>
-					</>
-				)}
-			</p>
+			{w.sourceUrl && (
+				<p className="page-fine">
+					<a href={w.sourceUrl} target="_blank" rel="noreferrer">
+						{t.source}: oesterreich.gv.at
+					</a>
+				</p>
+			)}
 		</article>
 	);
 }
