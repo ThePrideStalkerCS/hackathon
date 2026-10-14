@@ -14,21 +14,31 @@
 import { useEffect, useRef } from "react";
 import type { Walkthrough } from "../../src/shared/walkthrough";
 import { TIME_SAVED_MINUTES, formatMinutes } from "../../src/shared/stamps";
-import { Band, Lockup, Seal, Stamp } from "../brand/Brand";
+import { Band, Lockup, Stamp } from "../brand/Brand";
+import { Emblem, motifFor } from "../brand/Emblem";
 import { formatSlot, tpl, type UIText } from "../i18n";
 import { Icon } from "../icons";
 import { AskInput, SlotPicker, type WalkthroughActions } from "../walkthrough/Coach";
 import { HoldSeal } from "./HoldSeal";
 import { buildStations, initials, slipNumber, type Station } from "./stations";
 
-type Props = { w: Walkthrough; t: UIText; actions: WalkthroughActions; citizenName?: string; queueNext?: string };
+type Props = { w: Walkthrough; t: UIText; actions: WalkthroughActions; citizenName?: string; queueNext?: string; showSeal?: boolean };
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function Slip({ w, t, actions, citizenName, queueNext }: Props) {
+export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }: Props) {
 	const stations = buildStations(w, t, citizenName);
 	const total = stations.length;
 	const done = stations.filter((s) => s.state === "done").length;
+	const answersLeft = stations.filter((s) => (s.step.kind === "ask" || s.step.kind === "appointment") && s.state !== "done").length;
+	const minutes = TIME_SAVED_MINUTES[w.serviceId];
+	const motif = motifFor(w.serviceId);
+	const micro = `${slipNumber(w)} · ${w.serviceName}`;
+	const progress = [
+		tpl(t.lzStamped, { done, total }),
+		w.status === "blocked" ? null : answersLeft > 1 ? tpl(t.lzLeftMany, { n: answersLeft }) : answersLeft === 1 ? t.lzLeftOne : t.lzLeftSign,
+		showSeal && minutes && w.status !== "blocked" ? tpl(t.lzKeepEst, { time: formatMinutes(minutes, w.language) }) : null,
+	].filter(Boolean);
 	const listRef = useRef<HTMLOListElement>(null);
 
 	// Bring the current row into view, and put keyboard focus on a question that waits for the citizen.
@@ -42,7 +52,7 @@ export function Slip({ w, t, actions, citizenName, queueNext }: Props) {
 		return () => clearTimeout(timer);
 	}, [w.current, w.id]);
 
-	if (w.result) return <Confirmation w={w} t={t} actions={actions} citizenName={citizenName} queueNext={queueNext} total={total} />;
+	if (w.result) return <Confirmation w={w} t={t} actions={actions} citizenName={citizenName} queueNext={queueNext} total={total} showSeal={showSeal} />;
 
 	return (
 		<article className="lz-view" aria-label={w.portalTitle}>
@@ -55,22 +65,34 @@ export function Slip({ w, t, actions, citizenName, queueNext }: Props) {
 					<h1 className="lz-title">{w.serviceName}</h1>
 					<p className="lz-hero-sub">{w.portalTitle}</p>
 				</div>
-				<figure className="lz-hero-seal">
-					<Seal done={done} total={total} caption={tpl(t.lzOf, { total })} label={tpl(t.lzSealLabel, { done, total })} />
-					<figcaption>{t.lzSealCaption}</figcaption>
-				</figure>
+				{showSeal && (
+					<figure className="lz-hero-seal">
+						<Emblem motif={motif} done={done} total={total} micro={micro} label={tpl(t.lzSealLabel, { done, total })} />
+						<figcaption>
+							<b>{tpl(t.lzStamped, { done, total })}</b>
+							<span>{t.lzSealWhy}</span>
+						</figcaption>
+					</figure>
+				)}
 			</header>
 
 			<div className="lz-slip-wrap">
 				<div className="lz-slip">
 					<Band />
 					<div className="lz-slip-head">
-						<span className="lz-slip-name">Laufzettel</span>
-						<span className="lz-mono">No. {slipNumber(w)}</span>
-						<span className="lz-mono lz-grow">{w.portalTitle}</span>
-						<span className="lz-mono lz-strong" aria-live="polite">
-							{tpl(t.lzStamped, { done, total })}
-						</span>
+						{showSeal && <Emblem motif={motif} done={done} total={total} size="xs" label={tpl(t.lzSealLabel, { done, total })} />}
+						<div className="lz-head-text">
+							<p className="lz-head-name">
+								<span className="lz-slip-name">Laufzettel</span>
+								<span className="lz-head-no">{slipNumber(w)}</span>
+								<span className="lz-head-form">{w.portalTitle}</span>
+							</p>
+							<p className="lz-head-progress" aria-live="polite">
+								{progress.map((p, i) => (
+									<span key={i}>{i === 0 ? <b>{p}</b> : p}</span>
+								))}
+							</p>
+						</div>
 					</div>
 					<ol className="lz-rows" ref={listRef}>
 						{stations.map((s) => (
@@ -198,7 +220,7 @@ function Row({ s, w, t, actions, citizenName }: { s: Station; w: Walkthrough; t:
 		);
 
 	return (
-		<li className={`lz-row is-${s.state} kind-${step.kind} ${s.current ? "is-current" : ""}`} aria-current={s.current ? "step" : undefined}>
+		<li className={`lz-row is-${s.state} kind-${step.kind} ${s.current ? "is-current" : ""} ${asking ? "is-asking" : ""}`} aria-current={s.current ? "step" : undefined}>
 			<span className="lz-route" aria-hidden="true">
 				<i className="lz-dot" />
 			</span>
@@ -212,7 +234,7 @@ function Row({ s, w, t, actions, citizenName }: { s: Station; w: Walkthrough; t:
 	);
 }
 
-function Confirmation({ w, t, actions, citizenName, queueNext, total }: Props & { total: number }) {
+function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal = true }: Props & { total: number }) {
 	const result = w.result!;
 	const minutes = TIME_SAVED_MINUTES[w.serviceId];
 	const locale = w.language === "de" ? "de-AT" : "en-GB";
@@ -269,10 +291,10 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total }: Props & 
 							</div>
 						</dl>
 						<div className="lz-doc-seal">
-							<Seal done={total} total={total} caption={tpl(t.lzOf, { total })} label={tpl(t.lzSealLabel, { done: total, total })} size="md" />
+							{showSeal && <Emblem motif={motifFor(w.serviceId)} done={total} total={total} micro={`${slipNumber(w)} · ${w.serviceName}`} size="md" label={tpl(t.lzSealLabel, { done: total, total })} />}
 							{seal && <Stamp spec={seal} delay={0.35} />}
 						</div>
-						{minutes && (
+						{showSeal && minutes && (
 							<p className="lz-doc-kept">
 								<b>{tpl(t.lzKept, { time: formatMinutes(minutes, w.language) })}</b> {t.lzKeptHow}
 							</p>

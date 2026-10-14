@@ -32,7 +32,7 @@ describe("guided walkthrough", () => {
 	});
 
 	it("builds the change-of-residence tutorial: profile data is filled, the rest is asked", async () => {
-		const w = await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false);
+		const w = await createWalkthrough(env, "sofia-rossi", "change-of-residence", "de", false);
 		const kinds = w.steps.map((s) => `${s.kind}${s.fieldId ? `:${s.fieldId}` : ""}`);
 		expect(kinds).toEqual([
 			"intro",
@@ -47,12 +47,12 @@ describe("guided walkthrough", () => {
 			"review",
 		]);
 		expect(w.steps[0].narration).toContain("5 Fragen");
-		expect(w.fields.find((f) => f.id === "id_document")?.displayValue).toBe("Personalausweis ID1234567");
+		expect(w.fields.find((f) => f.id === "id_document")?.displayValue).toBe("Personalausweis IT-CA1234567");
 		expect(w.status).toBe("playing");
 	});
 
 	it("never plays past a question, and advance is idempotent", async () => {
-		let w = await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false);
+		let w = await createWalkthrough(env, "sofia-rossi", "change-of-residence", "de", false);
 		w = engine.advance(w, 0);
 		expect(engine.advance(w, 0)).toBe(w); // double call (e.g. two tabs) does nothing
 		w = playUntilWaiting(w);
@@ -62,7 +62,7 @@ describe("guided walkthrough", () => {
 	});
 
 	it("normalizes answers and keeps the step open on problems", async () => {
-		let w = playUntilWaiting(await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false));
+		let w = playUntilWaiting(await createWalkthrough(env, "sofia-rossi", "change-of-residence", "de", false));
 		w = answer(w, "new_address", "Kaiserstraße 1/5, 1070 Wien").walkthrough;
 		const date = answer(w, "move_in_date", "1.11.2026");
 		expect(date.ok).toBe(true);
@@ -78,7 +78,7 @@ describe("guided walkthrough", () => {
 	});
 
 	it("goes back to the review after changing a field from the review", async () => {
-		let w = playUntilWaiting(await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false));
+		let w = playUntilWaiting(await createWalkthrough(env, "sofia-rossi", "change-of-residence", "de", false));
 		for (const [id, v] of [
 			["new_address", "Kaiserstraße 1/5, 1070 Wien"],
 			["move_in_date", "2026-10-01"],
@@ -140,6 +140,43 @@ describe("guided walkthrough", () => {
 		expect(getSuggestions(david, today, "de").map((s) => s.serviceId)).toContain("change-of-residence");
 		// Already applied: don't suggest it again.
 		expect(getSuggestions(josef, today, "de", ["passport-renewal"])).toEqual([]);
+	});
+
+	it("landlord confirmed the move: open slip on the desk, rows filled with the landlord as source", async () => {
+		const lena = await gov.getCitizenProfile(env, "lena-huber");
+		const [move] = getSuggestions(lena, gov.today(), "en");
+		expect(move).toMatchObject({ serviceId: "change-of-residence", title: "Register your new address" });
+		expect(move.reason).toContain("Karl Steiner");
+		expect(move.reason).toContain("Florianigasse 18/5, 1080 Wien");
+
+		const w = await createWalkthrough(env, "lena-huber", "change-of-residence", "en", false);
+		expect(w.steps.map((s) => `${s.kind}${s.fieldId ? `:${s.fieldId}` : ""}`)).toEqual([
+			"intro",
+			"check",
+			"autofill:new_address",
+			"autofill:move_in_date",
+			"ask:residence_type",
+			"autofill:previous_address",
+			"ask:deregister_previous",
+			"autofill:landlord_signature",
+			"autofill:id_document",
+			"review",
+		]);
+		expect(w.steps[0].narration).toContain("You only answer 2 questions.");
+		const address = w.fields.find((f) => f.id === "new_address")!;
+		expect(address).toMatchObject({ value: "Florianigasse 18/5, 1080 Wien", source: "confirmed", confirmedBy: { name: "Karl Steiner", role: "Landlord" } });
+		expect(w.steps.find((s) => s.fieldId === "new_address")?.narration).toBe(
+			"Your landlord Karl Steiner has already confirmed your new address: Florianigasse 18/5, 1080 Wien. I'm entering it.",
+		);
+		expect(w.fields.find((f) => f.id === "previous_address")?.source).toBe("profile");
+
+		// Changing a confirmed value makes it the citizen's own answer.
+		const changed = answer(engine.editField(playUntilWaiting(w), "new_address"), "new_address", "Lange Gasse 3/1, 1080 Wien").walkthrough;
+		expect(changed.fields.find((f) => f.id === "new_address")).toMatchObject({ source: "citizen" });
+		expect(changed.fields.find((f) => f.id === "new_address")?.confirmedBy).toBeUndefined();
+
+		// Settled once she is registered there: no slip on the desk any more.
+		expect(getSuggestions({ ...lena, primaryAddress: "Florianigasse 18/5, 1080 Wien" }, gov.today(), "en")).toEqual([]);
 	});
 });
 
@@ -285,12 +322,21 @@ describe("voice of the texts (docs/redesign/LAUFZETTEL.md)", () => {
 
 describe("language switch", () => {
 	it("keeps step and answers when the walkthrough is rebuilt in another language", async () => {
-		let de = playUntilWaiting(await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false));
+		let de = playUntilWaiting(await createWalkthrough(env, "sofia-rossi", "change-of-residence", "de", false));
 		de = playUntilWaiting(answer(de, "new_address", "Neubaugasse 12/4, 1070 Wien").walkthrough);
-		const en = engine.carryProgress(await createWalkthrough(env, "lena-huber", "change-of-residence", "en", false), de);
+		const en = engine.carryProgress(await createWalkthrough(env, "sofia-rossi", "change-of-residence", "en", false), de);
 		expect(en.language).toBe("en");
 		expect(en.steps[en.current].id).toBe(de.steps[de.current].id);
 		expect(en.fields.find((f) => f.id === "new_address")?.value).toBe("Neubaugasse 12/4, 1070 Wien");
 		expect(en.steps[en.current].title).toBe("When did you move in?");
+	});
+
+	it("keeps the citizen's own answer over a value the rebuild fills in again", async () => {
+		let de = await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false);
+		de = answer(engine.editField(playUntilWaiting(de), "new_address"), "new_address", "Lange Gasse 3/1, 1080 Wien").walkthrough;
+		const en = engine.carryProgress(await createWalkthrough(env, "lena-huber", "change-of-residence", "en", false), de);
+		expect(en.fields.find((f) => f.id === "new_address")).toMatchObject({ value: "Lange Gasse 3/1, 1080 Wien", source: "citizen" });
+		expect(en.fields.find((f) => f.id === "new_address")?.confirmedBy).toBeUndefined();
+		expect(en.fields.find((f) => f.id === "move_in_date")?.confirmedBy?.role).toBe("Landlord");
 	});
 });

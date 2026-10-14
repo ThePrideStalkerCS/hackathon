@@ -124,12 +124,12 @@ export function Stamp({ spec, delay = 0, className = "" }: { spec: StampSpec; de
 			<svg viewBox="0 0 160 72" aria-hidden="true">
 				{spec.shape === "rect" ? (
 					<>
-						<rect x="3" y="3" width="154" height="66" {...S} strokeWidth="3.2" />
-						<rect x="8.5" y="8.5" width="143" height="55" {...S} strokeWidth="1.1" />
+						<rect x="3" y="3" width="154" height="66" rx="12" {...S} strokeWidth="3.2" />
+						<rect x="8.5" y="8.5" width="143" height="55" rx="8" {...S} strokeWidth="1.1" />
 					</>
 				) : (
 					<>
-						<path d="M3 3H157V27a9 9 0 0 0 0 18V69H3V45a9 9 0 0 0 0-18Z" {...S} strokeWidth="3.2" />
+						<path d="M13 3H147a10 10 0 0 1 10 10V27a9 9 0 0 0 0 18V59a10 10 0 0 1-10 10H13a10 10 0 0 1-10-10V45a9 9 0 0 0 0-18V13a10 10 0 0 1 10-10Z" {...S} strokeWidth="3.2" strokeLinejoin="round" />
 						<path d="M16 9.5H144M16 62.5H144" {...S} strokeWidth="1.1" />
 					</>
 				)}
@@ -163,7 +163,7 @@ export function Stamp({ spec, delay = 0, className = "" }: { spec: StampSpec; de
 	} else {
 		body = (
 			<svg viewBox="0 0 120 120" aria-hidden="true">
-				<polygon points={octagon(56)} {...S} strokeWidth="3.2" strokeLinejoin="round" />
+				<polygon points={octagon(56)} {...S} strokeWidth="3.6" strokeLinejoin="round" />
 				<polygon points={octagon(50)} {...S} strokeWidth="1.1" />
 				<text x="60" y="45" textAnchor="middle" fill="currentColor" style={face(75, 700, fit(up(spec.top), 8.5, 14), 1.4)}>
 					{up(spec.top)}

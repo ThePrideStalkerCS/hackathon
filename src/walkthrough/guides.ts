@@ -6,7 +6,8 @@
  * must not change between runs. The LLM is only used for follow-up questions ("What does that
  * mean?") and for understanding free-text / voice answers.
  *
- * Placeholders: {value} (field value), {questions} ("You only answer two questions."), {name} (first name).
+ * Placeholders: {value} (field value), {questions} ("You only answer two questions."), {name} (first name,
+ * or in `confirmed` texts the person who confirmed), {yourRole} ("Your landlord").
  *
  * ⚠️ Facts in these texts (deadlines, requirements) must match src/knowledge/ and be verified on
  *    oesterreich.gv.at before the demo. Explanations of terms are fine as they are.
@@ -22,6 +23,8 @@ export type FieldGuide = {
 	question?: Localized;
 	/** Narration when the assistant fills the field itself (autofill step). */
 	autofill?: Localized;
+	/** Narration when a third party already confirmed the value (src/gov/data/confirmations.ts). */
+	confirmed?: Localized;
 	/** Official term as it appears on forms (shown as "Amtsdeutsch"). Defaults to the field label. */
 	officialTerm?: Localized;
 	/** What the official term means, in plain language. */
@@ -61,6 +64,10 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		),
 		fields: {
 			new_address: {
+				confirmed: L(
+					"{yourRole} {name} hat Ihre neue Adresse schon bestätigt: {value}. Die trage ich ein.",
+					"{yourRole} {name} has already confirmed your new address: {value}. I'm entering it.",
+				),
 				question: L("Wie lautet Ihre neue Adresse?", "What is your new address?"),
 				officialTerm: L("Unterkunft (neue Adresse)", "Accommodation (new address)"),
 				explain: L(
@@ -69,6 +76,7 @@ export const GUIDES: Record<string, ServiceGuide> = {
 				),
 			},
 			move_in_date: {
+				confirmed: L("Auch das Einzugsdatum steht in der Bestätigung: {value}.", "The move-in date is in the confirmation too: {value}."),
 				question: L("Wann sind Sie eingezogen?", "When did you move in?"),
 				officialTerm: L("Einzugsdatum", "Move-in date"),
 				explain: L(
@@ -110,6 +118,10 @@ export const GUIDES: Record<string, ServiceGuide> = {
 				),
 			},
 			landlord_signature: {
+				confirmed: L(
+					"{name} hat digital bestätigt, dass Sie dort wohnen. Die Unterschrift des Unterkunftgebers ist damit schon da.",
+					"{name} has confirmed digitally that you live there. So the accommodation provider's signature is already in place.",
+				),
 				question: L(
 					"Hat Ihre Vermieterin oder Ihr Vermieter den Meldezettel unterschrieben?",
 					"Has your landlord signed the registration form?",
@@ -287,6 +299,7 @@ export const PHRASES = {
 		"A member of staff can help you. Press “Talk to a person” for that.",
 	),
 	autofillGeneric: L("Das trage ich aus Ihren Daten ein: {value}.", "I'm entering this from your data: {value}."),
+	confirmedGeneric: L("Das hat {name} schon bestätigt: {value}.", "{name} has already confirmed this: {value}."),
 	askGeneric: L("Bitte geben Sie an: {label}.", "Please enter: {label}."),
 	appointmentTitle: L("Termin aussuchen", "Choose an appointment"),
 	appointmentGeneric: L("Wählen Sie bitte einen Termin aus.", "Please choose an appointment."),

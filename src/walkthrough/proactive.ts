@@ -3,12 +3,13 @@
  * that are probably due ("Your passport expired", "You had a baby"). Deterministic rules, no AI,
  * so a suggestion never shows up by accident.
  *
- * 👉 EXTEND HERE: more life events (residence permit expiring, child turns 6 → school, moving
- *    detected from a forwarding order, …). Keep each rule explainable in one sentence.
+ * 👉 EXTEND HERE: more life events (residence permit expiring, child turns 6 → school, …).
+ *    Keep each rule explainable in one sentence.
  */
 import type { Language } from "../shared/types";
 import type { Suggestion } from "../shared/walkthrough";
 import type { Citizen } from "../gov/types";
+import { openConfirmation } from "../gov/data/confirmations";
 import { formatDate } from "./guides";
 
 function addMonths(isoDate: string, months: number): string {
@@ -57,8 +58,22 @@ function collect(citizen: Citizen, today: string, lang: Language): Suggestion[] 
 		});
 	}
 
-	// 3. No registered address.
-	if (!citizen.primaryAddress) {
+	// 3. A landlord confirmed a move the citizen has not registered yet (src/gov/data/confirmations.ts).
+	const move = openConfirmation(citizen, "change-of-residence");
+	if (move) {
+		const { new_address: address, move_in_date: movedIn } = move.data(today);
+		out.push({
+			serviceId: "change-of-residence",
+			urgency: "normal",
+			title: de ? "Neue Adresse anmelden" : "Register your new address",
+			reason: de
+				? `${move.by.yourRole.de} ${move.by.name} hat bestätigt, dass Sie am ${formatDate(movedIn, "de")} in die ${address} eingezogen sind. Anmelden müssen Sie sich innerhalb von drei Tagen nach dem Einzug.`
+				: `${move.by.yourRole.en} ${move.by.name} confirmed that you moved into ${address} on ${formatDate(movedIn, "en")}. You have to register within three days of moving in.`,
+		});
+	}
+
+	// 4. No registered address.
+	if (!citizen.primaryAddress && !move) {
 		out.push({
 			serviceId: "change-of-residence",
 			urgency: "high",

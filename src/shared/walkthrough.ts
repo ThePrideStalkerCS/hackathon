@@ -40,8 +40,10 @@ export type PortalField = {
 	value?: string;
 	/** Human-readable value (option label, "Ja"/"Nein", formatted date). */
 	displayValue?: string;
-	/** Where the value came from. */
-	source?: "profile" | "draft" | "citizen" | "assistant";
+	/** Where the value came from. "confirmed" = a third party confirmed it to the state (see confirmedBy). */
+	source?: "profile" | "draft" | "citizen" | "assistant" | "confirmed";
+	/** Who confirmed the value, e.g. { name: "Karl Steiner", role: "Landlord" }. */
+	confirmedBy?: { name: string; role: string };
 	/** Validation problem reported by the backend for this field. */
 	problem?: string;
 };
@@ -119,6 +121,8 @@ export type Suggestion = {
 	title: string;
 	reason: string;
 	urgency: "high" | "normal";
+	/** What the slip will look like, for the desk card: rows in total, rows the offices fill, questions left for the citizen. */
+	preview?: { rows: number; byOffices: number; questions: number };
 };
 
 /** Services waiting in line after the current walkthrough (combined requests). */

@@ -209,6 +209,9 @@ export function ProfileMenu(props: {
 	onVoice: (on: boolean) => void;
 	onRate: (rate: number) => void;
 	onRestart: () => void;
+	/** Fair nudging switch: show the seal and the time kept (stored on this device only). */
+	sealOn?: boolean;
+	onSeal?: (on: boolean) => void;
 	/** Optional: the Laufzettel identity has one light look, so the app no longer passes these. */
 	theme?: "dark" | "light";
 	onTheme?: (theme: "dark" | "light") => void;
@@ -294,6 +297,18 @@ export function ProfileMenu(props: {
 							<span />
 						</button>
 					</div>
+
+					{props.onSeal && (
+						<div className="menu-row menu-row-note">
+							<span>
+								{t.lzSealSetting}
+								<small>{t.lzSealSettingHint}</small>
+							</span>
+							<button type="button" role="switch" aria-checked={props.sealOn} aria-label={t.lzSealSetting} className="switch" onClick={() => props.onSeal?.(!props.sealOn)}>
+								<span />
+							</button>
+						</div>
+					)}
 
 					<div className="menu-row">
 						<span>{t.speed}</span>

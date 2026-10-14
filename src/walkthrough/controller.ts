@@ -12,6 +12,7 @@
  */
 import type { Language } from "../shared/types";
 import type { QueuedService, SubmissionSummary, Walkthrough } from "../shared/walkthrough";
+import { openConfirmation } from "../gov/data/confirmations";
 import { getServiceDefinition } from "../gov/data/services";
 import { GovError } from "../gov/errors";
 import * as gov from "../gov/service";
@@ -47,16 +48,18 @@ export async function createWalkthrough(env: Env, citizenId: string, serviceId: 
 	const slots = def.requiresAppointment ? (await gov.getAppointmentSlots(env, serviceId, 6)).slots : [];
 
 	const profileData = def.prefill(citizen, today);
+	const confirmation = openConfirmation(citizen, serviceId);
+	const confirmedData = Object.fromEntries(Object.entries(confirmation?.data(today) ?? {}).filter(([id]) => !profileData[id]));
 	const suggested: Record<string, string> = {};
 	for (const [fieldId, fg] of Object.entries(getGuide(serviceId)?.fields ?? {})) {
 		const value = fg.suggest?.(citizen, today);
-		if (value && !profileData[fieldId]) suggested[fieldId] = value;
+		if (value && !profileData[fieldId] && !confirmedData[fieldId]) suggested[fieldId] = value;
 	}
 
-	let data: Record<string, string> = { ...profileData, ...suggested };
+	let data: Record<string, string> = { ...profileData, ...confirmedData, ...suggested };
 	let applicationId: string | null = null;
 	if (persist && eligibility.eligible) {
-		const draft = await gov.startApplication(env, citizenId, serviceId, suggested, lang);
+		const draft = await gov.startApplication(env, citizenId, serviceId, { ...confirmedData, ...suggested }, lang);
 		applicationId = draft.applicationId;
 		data = draft.data;
 	}
@@ -69,12 +72,30 @@ export async function createWalkthrough(env: Env, citizenId: string, serviceId: 
 		data,
 		profileKeys: Object.keys(profileData),
 		assistantKeys: Object.keys(suggested),
+		confirmed: confirmation && {
+			keys: Object.keys(confirmedData),
+			name: confirmation.by.name,
+			role: confirmation.by.role[lang],
+			yourRole: confirmation.by.yourRole[lang],
+		},
 		slots,
 		applicationId,
 		lang,
 		sourceUrl: knowledge?.sourceUrl ?? null,
 		factsVerified: knowledge?.verified ?? false,
 	});
+}
+
+/**
+ * What a slip will look like before it is opened (desk card): rows in total, rows the offices fill
+ * (check + autofill), questions for the citizen (ask + appointment). Null if the citizen cannot apply.
+ * Counts the same step kinds as the slip rows in frontend/laufzettel/stations.ts.
+ */
+export async function previewSlip(env: Env, citizenId: string, serviceId: string, lang: Language): Promise<{ rows: number; byOffices: number; questions: number } | null> {
+	const w = await createWalkthrough(env, citizenId, serviceId, lang, false);
+	if (w.status === "blocked" || w.steps.some((s) => s.kind === "blocked")) return null;
+	const count = (...kinds: string[]) => w.steps.filter((s) => kinds.includes(s.kind)).length;
+	return { rows: count("check", "autofill", "ask", "appointment", "review"), byOffices: count("check", "autofill"), questions: count("ask", "appointment") };
 }
 
 /** Rebuilds the walkthrough in another language and keeps the citizen's progress (not after submitting). */

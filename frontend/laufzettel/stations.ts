@@ -48,6 +48,12 @@ function office(authority: string): string {
 	return authority.replace(/\s*\(.*?\)\s*/g, " ").split(/[,–-]/)[0].trim();
 }
 
+/** "Karl Steiner" → "K. Steiner" */
+function shortName(name: string): string {
+	const parts = name.split(" ").filter(Boolean);
+	return parts.length > 1 ? `${parts[0][0]}. ${parts.slice(1).join(" ")}` : name;
+}
+
 export function initials(name?: string): string {
 	return (name ?? "")
 		.split(" ")
@@ -80,13 +86,24 @@ export function buildStations(w: Walkthrough, t: UIText, citizenName?: string): 
 				break;
 			case "autofill": {
 				const fromRegister = field?.source === "profile";
+				const by = field?.source === "confirmed" ? field.confirmedBy : undefined;
 				stations.push({
 					...base,
 					label: field?.label ?? step.title,
-					sub: fromRegister ? t.lzFromRegister : field?.source === "citizen" ? t.lzFromYou : field?.source === "draft" ? t.lzFromDraft : t.lzSuggested,
-					stamp: fromRegister
-						? { shape: "round", ring: t.stampRegisterRing, main: t.stampFilled, date, rotate }
-						: { shape: "ticket", top: office(w.authority), main: t.stampPrefilled, date, rotate },
+					sub: by
+						? t.lzFromConfirmed.replace("{name}", by.name)
+						: fromRegister
+							? t.lzFromRegister
+							: field?.source === "citizen"
+								? t.lzFromYou
+								: field?.source === "draft"
+									? t.lzFromDraft
+									: t.lzSuggested,
+					stamp: by
+						? { shape: "ticket", top: `${by.role} · ${shortName(by.name)}`, main: t.stampConfirmed, date, rotate }
+						: fromRegister
+							? { shape: "round", ring: t.stampRegisterRing, main: t.stampFilled, date, rotate }
+							: { shape: "ticket", top: office(w.authority), main: t.stampPrefilled, date, rotate },
 				});
 				break;
 			}

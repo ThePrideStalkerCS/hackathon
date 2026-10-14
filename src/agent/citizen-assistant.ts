@@ -21,7 +21,7 @@ import { getServiceDefinition } from "../gov/data/services";
 import { dbListApplications } from "../gov/db";
 import * as gov from "../gov/service";
 import * as engine from "../walkthrough/engine";
-import { answerAndSave, createWalkthrough, handoffSummary, relocalize, submitWalkthrough, type WalkthroughHost } from "../walkthrough/controller";
+import { answerAndSave, createWalkthrough, handoffSummary, previewSlip, relocalize, submitWalkthrough, type WalkthroughHost } from "../walkthrough/controller";
 import { buildOverview } from "../walkthrough/overview";
 import { getSuggestions as proactiveSuggestions } from "../walkthrough/proactive";
 import { routeIntent } from "./router";
@@ -164,7 +164,12 @@ export class CitizenAssistant extends AIChatAgent<Env, AssistantState> implement
 		const citizen = await gov.getCitizenProfile(this.env, personaId);
 		const applications = await dbListApplications(this.env.GOV_DB, personaId);
 		const submitted = applications.filter((a) => a.status === "submitted").map((a) => a.serviceId);
-		const suggestions = proactiveSuggestions(citizen, gov.today(), language, submitted);
+		const suggestions = await Promise.all(
+			proactiveSuggestions(citizen, gov.today(), language, submitted).map(async (s) => {
+				const preview = await previewSlip(this.env, personaId, s.serviceId, language).catch(() => null);
+				return preview ? { ...s, preview } : s;
+			}),
+		);
 		return { ...buildOverview(citizen, suggestions, applications, gov.today(), language), suggestions };
 	}
 

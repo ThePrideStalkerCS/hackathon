@@ -54,6 +54,8 @@ export function App() {
 	const [playing, setPlaying] = useState(true);
 	const [voiceOn, setVoiceOn] = useState(true);
 	const [rate, setRate] = useState(1);
+	// Fair nudging is voluntary: the seal and the time kept can be switched off. Stored only on this device.
+	const [showSeal, setShowSeal] = useState(() => localStorage.getItem("lz-seal") !== "off");
 	const [replayCount, setReplayCount] = useState(0);
 	const [caption, setCaption] = useState("");
 	const t = TEXT[state.language];
@@ -128,6 +130,16 @@ export function App() {
 		if (walkthroughOpen) return;
 		call<Overview & { suggestions: Suggestion[] }>("getOverview").then(setOverview).catch(() => setOverview(null));
 	}, [call, state.personaId, state.language, sessionId, walkthroughOpen]);
+
+	// The slip head sticks right under the top bar, whose height changes with wrapping and text size.
+	const topRef = useRef<HTMLElement>(null);
+	useEffect(() => {
+		const el = topRef.current;
+		if (!el) return;
+		const ro = new ResizeObserver(() => document.documentElement.style.setProperty("--lz-top-h", `${el.offsetHeight}px`));
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
 
 	// Accessibility: keep <html lang> and font size in sync with the settings.
 	useEffect(() => {
@@ -250,7 +262,7 @@ export function App() {
 				{t.skip}
 			</a>
 
-			<header className="lz-top">
+			<header className="lz-top" ref={topRef}>
 				<div className="lz-top-in">
 					<button type="button" className="lz-home" onClick={w ? actions.close : () => go("")} aria-label={t.toStart} title={t.toStart}>
 						<Lockup />
@@ -296,6 +308,11 @@ export function App() {
 								setReplayCount((c) => c + 1);
 							}}
 							onRate={setRate}
+							sealOn={showSeal}
+							onSeal={(on) => {
+								localStorage.setItem("lz-seal", on ? "on" : "off");
+								setShowSeal(on);
+							}}
 							onRestart={restart}
 						/>
 					</div>
@@ -306,7 +323,7 @@ export function App() {
 				{goalsPage ? (
 					goalsPage
 				) : w ? (
-					<Slip w={w} t={t} actions={actions} citizenName={persona?.name} queueNext={state.queue[0]?.name} />
+					<Slip w={w} t={t} actions={actions} citizenName={persona?.name} queueNext={state.queue[0]?.name} showSeal={showSeal} />
 				) : (
 					<Desk
 						t={t}
@@ -318,6 +335,7 @@ export function App() {
 						recorder={recorder}
 						onSend={send}
 						onStart={(serviceId) => void call("startWalkthrough", [serviceId])}
+						showSeal={showSeal}
 					/>
 				)}
 			</main>

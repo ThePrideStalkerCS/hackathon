@@ -31,6 +31,8 @@ export type Stamp = {
 	ink: Ink;
 	/** "submitted": an errand finished in this app. "record": derived from the citizen's data. */
 	source: "submitted" | "record";
+	/** Submitted errands: which service (picks the emblem motif in the collection). */
+	serviceId?: string;
 };
 
 /** Life areas shown in the ring on the start page. */
@@ -69,13 +71,13 @@ export function stampForApplication(app: { id: string; serviceId: string; data: 
 	const date = dateOf(app.submittedAt);
 	switch (app.serviceId) {
 		case "change-of-residence":
-			return { id: app.id, lines: [de ? "Gemeldet" : "Registered", cityOf(app.data.new_address) ?? (de ? "Wohnsitz" : "Residence")], date, ink: "red", source: "submitted" };
+			return { id: app.id, lines: [de ? "Gemeldet" : "Registered", cityOf(app.data.new_address) ?? (de ? "Wohnsitz" : "Residence")], date, ink: "red", source: "submitted", serviceId: app.serviceId };
 		case "passport-renewal":
-			return { id: app.id, lines: [de ? "Reisepass" : "Passport", de ? "beantragt" : "applied"], date, ink: "violet", source: "submitted" };
+			return { id: app.id, lines: [de ? "Reisepass" : "Passport", de ? "beantragt" : "applied"], date, ink: "violet", source: "submitted", serviceId: app.serviceId };
 		case "childcare-subsidy":
-			return { id: app.id, lines: [de ? "Kinderbetreuung" : "Childcare", de ? "beantragt" : "applied"], date, ink: "green", source: "submitted" };
+			return { id: app.id, lines: [de ? "Kinderbetreuung" : "Childcare", de ? "beantragt" : "applied"], date, ink: "green", source: "submitted", serviceId: app.serviceId };
 		default:
-			return { id: app.id, lines: [de ? "Erledigt" : "Done", app.serviceId], date, ink: "blue", source: "submitted" };
+			return { id: app.id, lines: [de ? "Erledigt" : "Done", app.serviceId], date, ink: "blue", source: "submitted", serviceId: app.serviceId };
 	}
 }
 

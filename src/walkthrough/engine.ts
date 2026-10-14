@@ -34,6 +34,8 @@ export type BuildInput = {
 	profileKeys: string[];
 	/** Field ids the assistant derived itself (guide.suggest). */
 	assistantKeys: string[];
+	/** Field ids a third party already confirmed (e.g. the landlord), and who that was. */
+	confirmed?: { keys: string[]; name: string; role: string; yourRole: string };
 	slots: SlotOption[];
 	applicationId: string | null;
 	lang: Language;
@@ -97,7 +99,7 @@ export function buildWalkthrough(input: BuildInput): Walkthrough {
 	for (const field of fields) {
 		const fg = guide?.fields[field.id];
 		if (fg?.onlyIfFilled && !input.data[fg.onlyIfFilled]) continue;
-		steps.push(field.value ? autofillStep(field, fg, lang) : askStep(field, fg, lang));
+		steps.push(field.value ? autofillStep(field, fg, lang, input.confirmed) : askStep(field, fg, lang));
 	}
 
 	if (def.requiresAppointment) {
@@ -172,20 +174,23 @@ function toPortalField(f: FormField, input: BuildInput, fg: FieldGuide | undefin
 	};
 	const value = input.data[f.id];
 	if (value) {
-		const source = input.profileKeys.includes(f.id) ? "profile" : input.assistantKeys.includes(f.id) ? "assistant" : "draft";
+		const confirmed = input.confirmed?.keys.includes(f.id) ? input.confirmed : undefined;
+		const source = input.profileKeys.includes(f.id) ? "profile" : confirmed ? "confirmed" : input.assistantKeys.includes(f.id) ? "assistant" : "draft";
 		Object.assign(field, { value, displayValue: displayValue(field, value, lang), source });
+		if (source === "confirmed" && confirmed) field.confirmedBy = { name: confirmed.name, role: confirmed.role };
 	}
 	return field;
 }
 
-function autofillStep(field: PortalField, fg: FieldGuide | undefined, lang: Language): WalkthroughStep {
-	const template = fg?.autofill?.[lang] ?? phrase("autofillGeneric", lang);
+function autofillStep(field: PortalField, fg: FieldGuide | undefined, lang: Language, confirmed?: BuildInput["confirmed"]): WalkthroughStep {
+	const byThirdParty = field.source === "confirmed" && confirmed;
+	const template = byThirdParty ? (fg?.confirmed?.[lang] ?? phrase("confirmedGeneric", lang)) : (fg?.autofill?.[lang] ?? phrase("autofillGeneric", lang));
 	return {
 		id: `field:${field.id}`,
 		kind: "autofill",
 		chapter: "fill",
 		title: field.label,
-		narration: fill(template, { value: field.displayValue ?? field.value ?? "" }),
+		narration: fill(template, { value: field.displayValue ?? field.value ?? "", name: confirmed?.name ?? "", yourRole: confirmed?.yourRole ?? "" }),
 		fieldId: field.id,
 		officialTerm: fg?.officialTerm?.[lang] ?? field.label,
 		plainExplanation: fg?.explain?.[lang] ?? field.hint,
@@ -331,6 +336,7 @@ export function answerField(
 	field.value = value;
 	field.displayValue = displayValue(field, value, lang);
 	field.source = source;
+	delete field.confirmedBy;
 
 	if (problems.length || mustBeYesButNo) {
 		field.problem = mustBeYesButNo ? (fg?.ifNo?.[lang] ?? problems[0]) : problems[0];
@@ -422,7 +428,12 @@ export function carryProgress(fresh: Walkthrough, old: Walkthrough): Walkthrough
 	for (const s of next.steps) if (done.has(s.id)) s.done = true;
 	for (const f of next.fields) {
 		const before = old.fields.find((o) => o.id === f.id);
-		if (before?.value && !f.value) Object.assign(f, { value: before.value, displayValue: displayValue(f, before.value, next.language), source: before.source });
+		// The citizen's own answer wins over a value the rebuild filled in again (register, landlord, suggestion).
+		if (before?.value && (!f.value || before.source === "citizen")) {
+			delete f.confirmedBy;
+			Object.assign(f, { value: before.value, displayValue: displayValue(f, before.value, next.language), source: before.source });
+			if (before.confirmedBy) f.confirmedBy = before.confirmedBy;
+		}
 	}
 	const currentId = old.steps[old.current]?.id;
 	const index = next.steps.findIndex((s) => s.id === currentId);
