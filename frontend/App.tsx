@@ -12,12 +12,16 @@
  */
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { useAgent } from "agents/react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { DEFAULT_STATE, type AssistantSettings, type AssistantState, type Language } from "../src/shared/types";
 import type { Suggestion } from "../src/shared/walkthrough";
 import { api, type HandoffResult, type Persona } from "./api";
 import { AskBox, HandoffCard, MessageView, messageText, runningToolLabel } from "./components";
 import { TEXT, tpl } from "./i18n";
+import { GOALS, loadProgress, percent, saveProgress, type Goal, type Progress } from "./goals/data";
+import { GoalCelebration } from "./goals/GoalCelebration";
+import { GoalDetail } from "./goals/GoalDetail";
+import { GoalsOverview } from "./goals/GoalsOverview";
 import { useNarrator } from "./voice";
 import { Explainer, type WalkthroughActions } from "./walkthrough/Explainer";
 import { Portal } from "./walkthrough/Portal";
@@ -45,6 +49,38 @@ export function App() {
 	const [replayCount, setReplayCount] = useState(0);
 	const t = TEXT[state.language];
 	const narrator = useNarrator();
+
+	// Gamified goals pages (goals/). A tiny hash router: #/goals, #/goals/<id>, #/goals/<id>/done.
+	const [hash, setHash] = useState(() => window.location.hash);
+	const [progress, setProgress] = useState<Progress>(loadProgress);
+	useEffect(() => {
+		const onHash = () => setHash(window.location.hash);
+		window.addEventListener("hashchange", onHash);
+		return () => window.removeEventListener("hashchange", onHash);
+	}, []);
+	const go = (h: string) => {
+		if (h) window.location.hash = h;
+		else history.replaceState(null, "", window.location.pathname);
+		setHash(h);
+		window.scrollTo(0, 0);
+	};
+	const [, route, goalId, goalDone] = hash.split("/");
+	const goal = GOALS.find((g) => g.id === goalId);
+	function toggleStep(g: Goal, stepId: string) {
+		const done = progress[g.id] ?? [];
+		const next = { ...progress, [g.id]: done.includes(stepId) ? done.filter((id) => id !== stepId) : [...done, stepId] };
+		setProgress(saveProgress(next));
+		// The bar is full: celebrate!
+		if (percent(g, next[g.id]) === 100) go(`#/goals/${g.id}/done`);
+	}
+	const goalProps = { t, lang: state.language, progress, go };
+	let goalsPage: ReactNode = null;
+	if (route === "goals") {
+		// The completion page only shows once the bar is really full.
+		if (goal && goalDone === "done" && percent(goal, progress[goal.id] ?? []) === 100) goalsPage = <GoalCelebration goal={goal} {...goalProps} />;
+		else if (goal) goalsPage = <GoalDetail goal={goal} {...goalProps} onToggle={(id) => toggleStep(goal, id)} />;
+		else goalsPage = <GoalsOverview {...goalProps} onReset={() => setProgress(saveProgress(null))} />;
+	}
 
 	// One agent instance per session. The server owns the state; we only receive it.
 	const agent = useAgent<AssistantState>({
@@ -215,6 +251,9 @@ export function App() {
 						))}
 					</fieldset>
 
+					<button type="button" aria-pressed={route === "goals"} onClick={() => go("#/goals")}>
+						{t.goalsButton}
+					</button>
 					<button type="button" onClick={newConversation}>
 						{t.newChat}
 					</button>
@@ -226,8 +265,10 @@ export function App() {
 
 			<p className="notice">{t.mockNotice}</p>
 
-			<main id="main" className={w ? "stage walkthrough" : "stage home"}>
-				{w ? (
+			<main id="main" className={w && !goalsPage ? "stage walkthrough" : "stage home"}>
+				{goalsPage ? (
+					goalsPage
+				) : w ? (
 					<>
 						<div className="stage-left">
 							<Portal w={w} t={t} onEditField={actions.editField} />
