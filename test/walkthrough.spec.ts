@@ -3,6 +3,7 @@
  */
 import { env, SELF } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
+import { nearbyFirst } from "../src/gov/data/offices";
 import { getServiceDefinition } from "../src/gov/data/services";
 import * as gov from "../src/gov/service";
 import { createWalkthrough, submitWalkthrough } from "../src/walkthrough/controller";
@@ -338,5 +339,24 @@ describe("language switch", () => {
 		expect(en.fields.find((f) => f.id === "new_address")).toMatchObject({ value: "Lange Gasse 3/1, 1080 Wien", source: "citizen" });
 		expect(en.fields.find((f) => f.id === "new_address")?.confirmedBy).toBeUndefined();
 		expect(en.fields.find((f) => f.id === "move_in_date")?.confirmedBy?.role).toBe("Landlord");
+	});
+});
+
+describe("appointment offices", () => {
+	it("offers the office in the citizen's region first", async () => {
+		const josef = await createWalkthrough(env, "josef-gruber", "passport-renewal", "en", false);
+		const slots = josef.steps.find((s) => s.kind === "appointment")?.slots ?? [];
+		expect(slots.length).toBeGreaterThanOrEqual(3);
+		expect(slots.slice(0, 3).map((s) => s.office)).toEqual(Array(3).fill("Bezirkshauptmannschaft Linz-Land"));
+	});
+
+	it("keeps time order inside each group and falls back to all offices", () => {
+		const slots = [
+			{ office: "Passbehörde Wien – Bezirksamt Mitte", slotTime: "2026-10-16T08:00" },
+			{ office: "Bezirkshauptmannschaft Linz-Land", slotTime: "2026-10-16T11:00" },
+			{ office: "Bezirkshauptmannschaft Linz-Land", slotTime: "2026-10-16T09:30" },
+		];
+		expect(nearbyFirst(slots, "Hauptplatz 7, 4020 Linz", 3).map((s) => s.slotTime)).toEqual(["2026-10-16T09:30", "2026-10-16T11:00", "2026-10-16T08:00"]);
+		expect(nearbyFirst(slots, null, 2).map((s) => s.slotTime)).toEqual(["2026-10-16T08:00", "2026-10-16T09:30"]);
 	});
 });

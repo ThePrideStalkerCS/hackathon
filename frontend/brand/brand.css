@@ -2115,7 +2115,11 @@ h3 {
 		gap: 12px;
 	}
 	.lz-head-progress {
+		flex-direction: column;
 		font-size: 0.88rem;
+	}
+	.lz-head-progress span + span::before {
+		content: none;
 	}
 	.lz-rows {
 		padding: 6px 6px 10px;

@@ -13,6 +13,7 @@
 import type { Language } from "../shared/types";
 import type { QueuedService, SubmissionSummary, Walkthrough } from "../shared/walkthrough";
 import { openConfirmation } from "../gov/data/confirmations";
+import { nearbyFirst } from "../gov/data/offices";
 import { getServiceDefinition } from "../gov/data/services";
 import { GovError } from "../gov/errors";
 import * as gov from "../gov/service";
@@ -45,7 +46,7 @@ export async function createWalkthrough(env: Env, citizenId: string, serviceId: 
 	const citizen = await gov.getCitizenProfile(env, citizenId);
 	const eligibility = await gov.checkEligibility(env, citizenId, serviceId);
 	const today = gov.today();
-	const slots = def.requiresAppointment ? (await gov.getAppointmentSlots(env, serviceId, 6)).slots : [];
+	const slots = def.requiresAppointment ? nearbyFirst((await gov.getAppointmentSlots(env, serviceId, 40)).slots, citizen.primaryAddress, 6) : [];
 
 	const profileData = def.prefill(citizen, today);
 	const confirmation = openConfirmation(citizen, serviceId);
@@ -141,10 +142,11 @@ export async function submitWalkthrough(env: Env, citizenId: string, w: Walkthro
 			} catch (err) {
 				if (err instanceof GovError && err.status === 409) {
 					// Slot gone: send the citizen back to the appointment step with fresh slots.
-					const fresh = await gov.getAppointmentSlots(env, w.serviceId, 6);
+					const citizen = await gov.getCitizenProfile(env, citizenId);
+					const fresh = nearbyFirst((await gov.getAppointmentSlots(env, w.serviceId, 40)).slots, citizen.primaryAddress, 6);
 					const next = structuredClone(w);
 					const i = next.steps.findIndex((s) => s.kind === "appointment");
-					next.steps[i] = { ...next.steps[i], slots: fresh.slots, done: false };
+					next.steps[i] = { ...next.steps[i], slots: fresh, done: false };
 					delete next.selectedSlot;
 					next.current = i;
 					return engine.withError(next, phrase("slotTaken", lang));

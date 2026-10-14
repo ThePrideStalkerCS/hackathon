@@ -5,6 +5,7 @@
  * (lazy seeding), so a fresh deploy works without running migrations.
  * Reset anytime with: POST /api/gov/admin/reset
  */
+import { OFFICES } from "./data/offices";
 import { PERSONAS } from "./data/personas";
 import type { Application, AppointmentSlot, Citizen, CitizenDocument, Handoff } from "./types";
 
@@ -63,8 +64,6 @@ const SCHEMA = [
 
 const TABLES = ["citizens", "documents", "applications", "appointments", "handoffs"];
 
-// Fictional offices (all data in this project is synthetic).
-const OFFICES = ["Passbehörde Wien – Bezirksamt Mitte", "Bezirkshauptmannschaft Linz-Land"];
 
 // ---------------------------------------------------------------------------------------------
 // Seeding
@@ -145,7 +144,7 @@ function generateSlots(): Omit<AppointmentSlot, "citizenId">[] {
 			n++;
 			slots.push({
 				id: `apt-passport-${String(n).padStart(3, "0")}`,
-				office: OFFICES[i % OFFICES.length],
+				office: OFFICES[i % OFFICES.length].name,
 				serviceId: "passport-renewal",
 				slotTime: `${date}T${time}`,
 			});
