@@ -1,27 +1,30 @@
 /**
- * The citizen-facing app: a guided walkthrough instead of a chat (see docs/CORE.md).
+ * The citizen-facing app. The authority's web page is the main window; the assistant is a layer
+ * on top of it (see docs/CORE.md):
  *
- *   Start screen   greeting, proactive suggestions from the citizen's data, "say what you need"
- *   Walkthrough    portal (left) + explanation window (right) + video-style timeline (bottom)
+ *   Start page     portal home: greeting, one big "what do you need?" bar (voice or text), "For you" cards
+ *   Walkthrough    the form page (Portal) with the assistant's card attached to the active field,
+ *                  a video-style progress bar on top and the voice dock (captions + mic) at the bottom
  *
  * State lives in the agent (Durable Object) and is synced here via useAgent. This component never
  * changes the walkthrough itself: it calls the agent's @callable methods (agent.call("answer", …)).
  *
- * The playback loop: when the current step changes, the narration is spoken; when it is finished
- * and the step doesn't need the citizen, we call `advance`. Paused = nothing advances.
+ * Playback loop: when the current step changes, its narration is spoken (and shown as captions);
+ * when it's finished and the step doesn't need the citizen, we call `advance`. Paused = nothing advances.
  */
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { useAgent } from "agents/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { DEFAULT_STATE, type AssistantSettings, type AssistantState, type Language } from "../src/shared/types";
+import { DEFAULT_STATE, type AssistantSettings, type AssistantState } from "../src/shared/types";
 import type { Suggestion } from "../src/shared/walkthrough";
 import { api, type HandoffResult, type Persona } from "./api";
-import { AskBox, HandoffCard, MessageView, messageText, runningToolLabel } from "./components";
+import { CommandBar, Dock, HandoffSheet, messageText, ProfileMenu, runningToolLabel, VoiceMark, type VoiceState } from "./components";
+import { Icon, SERVICE_ICON } from "./icons";
 import { TEXT, tpl } from "./i18n";
-import { useNarrator } from "./voice";
-import { Explainer, type WalkthroughActions } from "./walkthrough/Explainer";
+import { useNarrator, useRecorder } from "./voice";
+import { Coach, needsCoach, type WalkthroughActions } from "./walkthrough/Coach";
 import { Portal } from "./walkthrough/Portal";
-import { Timeline } from "./walkthrough/Timeline";
+import { Progress } from "./walkthrough/Progress";
 
 function getSessionId(reset = false): string {
 	let id = localStorage.getItem("sessionId");
@@ -43,6 +46,7 @@ export function App() {
 	const [voiceOn, setVoiceOn] = useState(true);
 	const [rate, setRate] = useState(1);
 	const [replayCount, setReplayCount] = useState(0);
+	const [caption, setCaption] = useState("");
 	const t = TEXT[state.language];
 	const narrator = useNarrator();
 
@@ -56,6 +60,16 @@ export function App() {
 	const busy = status === "submitted" || status === "streaming";
 	const call = useCallback(<T,>(method: string, args: unknown[] = []) => agent.call<T>(method, args), [agent]);
 
+	const send = useCallback(
+		(text: string) => {
+			narrator.stop();
+			setCaption(text);
+			sendMessage({ text });
+		},
+		[narrator, sendMessage],
+	);
+	const recorder = useRecorder(state.language, send);
+
 	const w = state.walkthrough;
 	const step = w?.steps[w.current];
 	const stepKey = w && step ? `${w.id}:${w.current}:${step.id}:${step.kind}:${step.done}` : null;
@@ -67,10 +81,12 @@ export function App() {
 		api.personas().then(setPersonas).catch(console.error);
 	}, []);
 
-	// Proactive suggestions whenever the logged-in citizen changes.
+	// Proactive suggestions whenever the logged-in citizen changes or a walkthrough ends.
+	const walkthroughOpen = Boolean(state.walkthrough);
 	useEffect(() => {
+		if (walkthroughOpen) return;
 		call<Suggestion[]>("getSuggestions").then(setSuggestions).catch(() => setSuggestions([]));
-	}, [call, state.personaId, state.language, sessionId]);
+	}, [call, state.personaId, state.language, sessionId, walkthroughOpen]);
 
 	// Accessibility: keep <html lang> and font size in sync with the settings.
 	useEffect(() => {
@@ -86,11 +102,12 @@ export function App() {
 	const spokenKeyRef = useRef(spokenKey);
 	spokenKeyRef.current = spokenKey;
 
-	// 1. Speak the narration of each new step.
+	// 1. Speak (and caption) the narration of each new step.
 	useEffect(() => {
 		if (!stepKey || !step) return;
 		let cancelled = false;
 		setSpokenKey(null);
+		setCaption(step.narration);
 		narrator.speak(step.narration, { lang: state.language, rate, muted: !voiceOn }).then((finished) => {
 			if (finished && !cancelled) setSpokenKey(stepKey);
 		});
@@ -114,13 +131,34 @@ export function App() {
 		prevStatus.current = status;
 		if (!(was === "streaming" || was === "submitted") || status !== "ready" || !lastAssistant) return;
 		const text = messageText(lastAssistant);
-		if (!text || !voiceOn) return;
+		if (!text) return;
+		setCaption(text);
+		if (!voiceOn) return;
 		const keyBefore = stepKeyRef.current;
 		narrator.speak(text, { lang: state.language, rate, muted: false }).then(() => {
 			if (stepKeyRef.current && spokenKeyRef.current !== stepKeyRef.current && stepKeyRef.current === keyBefore) setReplayCount((c) => c + 1);
 		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [status]);
+
+	function togglePause() {
+		if (playing) narrator.stop();
+		else setReplayCount((c) => c + 1);
+		setPlaying(!playing);
+	}
+
+	// Invisible shortcuts for keyboard users: Space = pause/continue, ← = previous step.
+	useEffect(() => {
+		const onKey = (e: KeyboardEvent) => {
+			if (!w || (e.target as HTMLElement).closest("input, textarea, select, button, [contenteditable]")) return;
+			if (e.key === " ") {
+				e.preventDefault();
+				togglePause();
+			} else if (e.key === "ArrowLeft") void call("back");
+		};
+		window.addEventListener("keydown", onKey);
+		return () => window.removeEventListener("keydown", onKey);
+	});
 
 	// --- Actions -----------------------------------------------------------------------------------
 	const actions: WalkthroughActions = useMemo(
@@ -130,7 +168,6 @@ export function App() {
 			chooseSlot: (slotId) => void call("chooseSlot", [slotId]),
 			advance: () => w && void call("advance", [w.current]),
 			submit: () => void call("submit"),
-			replay: () => setReplayCount((c) => c + 1),
 			close: () => {
 				narrator.stop();
 				void call("closeWalkthrough");
@@ -147,26 +184,26 @@ export function App() {
 		setHandoff(result);
 	}
 
-	function send(text: string) {
-		narrator.stop();
-		sendMessage({ text });
-	}
-
 	function updateSettings(patch: Partial<AssistantSettings>) {
 		if (patch.personaId && patch.personaId !== state.personaId) {
 			clearHistory();
 			setHandoff(null);
+			setCaption("");
 			narrator.stop();
 		}
 		void call("updateSettings", [patch]);
 	}
 
-	function newConversation() {
+	function restart() {
 		narrator.stop();
 		clearHistory();
 		setHandoff(null);
+		setCaption("");
 		setSessionId(getSessionId(true));
 	}
+
+	const voice: VoiceState =
+		recorder.state === "listening" ? "listening" : busy || recorder.state === "transcribing" ? "thinking" : !playing ? "paused" : narrator.speaking ? "speaking" : "idle";
 
 	return (
 		<>
@@ -175,159 +212,141 @@ export function App() {
 			</a>
 
 			<header className="topbar">
-				<div className="brand">
-					<span className="logo" aria-hidden="true">
-						◆
-					</span>
-					<div>
-						<h1>{t.title}</h1>
-						<p className="subtitle">{t.subtitle}</p>
+				<div className="topbar-row">
+					<button type="button" className="brand" onClick={w ? actions.close : undefined} aria-label={t.toStart} title={t.toStart}>
+						<span className="brand-mark" aria-hidden="true" />
+						<span className="brand-name">{t.brand}</span>
+					</button>
+
+					{w ? (
+						<div className="address" aria-hidden="true">
+							<Icon name="lock" size={15} />
+							<span className="address-url">{w.portalUrl}</span>
+							<span className="address-sim">{t.simulation}</span>
+						</div>
+					) : (
+						<span className="address-sim standalone">{t.simulation}</span>
+					)}
+
+					<div className="topbar-actions">
+						<button type="button" className="human-button" onClick={askHuman} title={t.humanLong} aria-label={t.humanLong}>
+							<Icon name="headset" size={20} />
+							<span>{t.human}</span>
+						</button>
+						<ProfileMenu
+							t={t}
+							persona={persona}
+							personas={personas}
+							language={state.language}
+							fontScale={fontScale}
+							voiceOn={voiceOn}
+							rate={rate}
+							onPersona={(id) => updateSettings({ personaId: id })}
+							onLanguage={(language) => updateSettings({ language })}
+							onFontScale={setFontScale}
+							onVoice={(on) => {
+								narrator.stop();
+								setVoiceOn(on);
+								setReplayCount((c) => c + 1);
+							}}
+							onRate={setRate}
+							onRestart={restart}
+						/>
 					</div>
 				</div>
-
-				<div className="controls" role="group" aria-label="Settings">
-					<label>
-						{t.loginLabel}
-						<select value={state.personaId} onChange={(e) => updateSettings({ personaId: e.target.value })}>
-							{personas.map((p) => (
-								<option key={p.id} value={p.id}>
-									{p.name} – {p.scenarioHint}
-								</option>
-							))}
-						</select>
-					</label>
-
-					<fieldset className="segmented">
-						<legend>{t.language}</legend>
-						{(["de", "en"] as Language[]).map((lang) => (
-							<button key={lang} type="button" aria-pressed={state.language === lang} onClick={() => updateSettings({ language: lang })}>
-								{lang === "de" ? "Deutsch" : "English"}
-							</button>
-						))}
-					</fieldset>
-
-					<fieldset className="segmented">
-						<legend>{t.textSize}</legend>
-						{[1, 1.25, 1.5].map((scale) => (
-							<button key={scale} type="button" aria-pressed={fontScale === scale} onClick={() => setFontScale(scale)} aria-label={`${t.textSize} ${scale * 100}%`}>
-								<span style={{ fontSize: `${scale}em` }}>A</span>
-							</button>
-						))}
-					</fieldset>
-
-					<button type="button" onClick={newConversation}>
-						{t.newChat}
-					</button>
-					<button type="button" className="human-button" onClick={askHuman}>
-						☎ {t.human}
-					</button>
-				</div>
+				{w && <Progress w={w} t={t} onGoTo={(i) => void call("goTo", [i])} />}
 			</header>
 
-			<p className="notice">{t.mockNotice}</p>
-
-			<main id="main" className={w ? "stage walkthrough" : "stage home"}>
+			<main id="main" className={w ? "main walkthrough" : "main home"}>
 				{w ? (
-					<>
-						<div className="stage-left">
-							<Portal w={w} t={t} onEditField={actions.editField} />
-							<Timeline
-								w={w}
-								t={t}
-								playing={playing}
-								rate={rate}
-								voiceOn={voiceOn}
-								onTogglePlay={() => {
-									if (playing) narrator.stop();
-									else setReplayCount((c) => c + 1);
-									setPlaying(!playing);
-								}}
-								onBack={() => void call("back")}
-								onNext={actions.advance}
-								onGoTo={(i) => void call("goTo", [i])}
-								onRate={setRate}
-								onToggleVoice={() => {
-									narrator.stop();
-									setVoiceOn(!voiceOn);
-									setReplayCount((c) => c + 1);
-								}}
-							/>
-						</div>
-
-						<aside className="explainer" aria-label={t.assistant}>
-							{handoff && <HandoffCard result={handoff} t={t} onClose={() => setHandoff(null)} />}
-							<Explainer w={w} t={t} actions={actions} queueNext={state.queue[0]?.name} />
-							<Reply text={lastAssistant ? messageText(lastAssistant) : ""} busy={busy} toolLabel={toolLabel} t={t} />
-							<AskBox t={t} language={state.language} placeholder={t.askPlaceholder} disabled={busy} onSend={send} />
-							<History messages={messages} language={state.language} t={t} />
-						</aside>
-					</>
+					<Portal
+						w={w}
+						t={t}
+						coach={needsCoach(step) ? <Coach w={w} t={t} actions={actions} queueNext={state.queue[0]?.name} /> : null}
+						onEditField={actions.editField}
+						onSubmit={actions.submit}
+					/>
 				) : (
-					<section className="home-panel">
-						{handoff && <HandoffCard result={handoff} t={t} onClose={() => setHandoff(null)} />}
-						<h2>{tpl(t.greeting, { name: persona?.name.split(" ")[0] ?? "" })}</h2>
-						<p className="lead">{t.homeQuestion}</p>
-						<AskBox t={t} language={state.language} placeholder={t.placeholder} disabled={busy} onSend={send} big />
-						<Reply text={lastAssistant ? messageText(lastAssistant) : ""} busy={busy} toolLabel={toolLabel} t={t} />
+					<section className="home">
+						<p className="eyebrow">
+							<VoiceMark state={voice} size="sm" /> {t.eyebrow}
+						</p>
+						<h1>{tpl(t.greeting, { name: persona?.name.split(" ")[0] ?? "" })}</h1>
+						<p className="home-question">{t.homeQuestion}</p>
+
+						<CommandBar t={t} recorder={recorder} busy={busy} onSend={send} />
+						<p className="home-hint">{t.homeHint}</p>
+
+						{(busy || messageText(lastAssistant)) && (
+							<div className="answer" aria-live="polite">
+								<VoiceMark state={busy ? "thinking" : "idle"} size="sm" />
+								<p>{busy ? (toolLabel ?? t.thinking) : messageText(lastAssistant)}</p>
+							</div>
+						)}
 
 						{suggestions.length > 0 && (
-							<section className="suggestions" aria-labelledby="sugg-title">
-								<h3 id="sugg-title">{t.suggestionsTitle}</h3>
-								<div className="suggestion-grid">
+							<section className="for-you" aria-labelledby="for-you-title">
+								<h2 id="for-you-title" className="section-title">
+									{t.forYou}
+								</h2>
+								<div className="tasks">
 									{suggestions.map((s) => (
-										<article key={s.serviceId} className={`suggestion ${s.urgency}`}>
-											<h4>{s.title}</h4>
-											<p>{s.reason}</p>
-											<button type="button" className="primary" onClick={() => void call("startWalkthrough", [s.serviceId])}>
-												▶ {t.showMeHow}
-											</button>
-										</article>
+										<button key={s.serviceId} type="button" className={`task ${s.urgency}`} onClick={() => void call("startWalkthrough", [s.serviceId])}>
+											<span className="task-icon">
+												<Icon name={SERVICE_ICON[s.serviceId] ?? "home"} />
+											</span>
+											<span className="task-text">
+												<strong>
+													{s.title}
+													{s.urgency === "high" && <span className="badge">{t.urgent}</span>}
+												</strong>
+												<span>{s.reason}</span>
+											</span>
+											<span className="task-go">
+												{t.startTask} <Icon name="arrowRight" size={18} />
+											</span>
+										</button>
 									))}
 								</div>
 							</section>
 						)}
 
-						<div className="examples">
-							<h3>{t.examplesTitle}</h3>
-							{t.examples.map((ex) => (
-								<button key={ex} type="button" className="chip" onClick={() => send(ex)} disabled={busy}>
-									„{ex}“
-								</button>
-							))}
-						</div>
-						<History messages={messages} language={state.language} t={t} />
+						<section className="examples" aria-labelledby="examples-title">
+							<h2 id="examples-title" className="section-title">
+								{t.examplesTitle}
+							</h2>
+							<div className="example-list">
+								{t.examples.map((ex) => (
+									<button key={ex} type="button" className="example" onClick={() => send(ex)} disabled={busy}>
+										„{ex}“
+									</button>
+								))}
+							</div>
+						</section>
+
+						<p className="home-footer">{t.footer}</p>
 					</section>
 				)}
 			</main>
+
+			{w && (
+				<Dock
+					t={t}
+					caption={busy ? (toolLabel ?? t.thinking) : caption}
+					voice={voice}
+					paused={!playing}
+					busy={busy}
+					recorder={recorder}
+					onTogglePause={togglePause}
+					onReplay={() => {
+						if (!playing) setPlaying(true);
+						setReplayCount((c) => c + 1);
+					}}
+					onSend={send}
+				/>
+			)}
+
+			{handoff && <HandoffSheet result={handoff} t={t} onClose={() => setHandoff(null)} />}
 		</>
-	);
-}
-
-/** The assistant's latest answer, shown as a speech bubble (it is also spoken). */
-function Reply({ text, busy, toolLabel, t }: { text: string; busy: boolean; toolLabel: string | null; t: (typeof TEXT)["de"] }) {
-	if (!text && !busy) return null;
-	return (
-		<div className="reply" aria-live="polite" aria-busy={busy}>
-			<span className="reply-avatar" aria-hidden="true">
-				◆
-			</span>
-			<p>{busy ? `⏳ ${toolLabel ?? t.thinking}` : text}</p>
-		</div>
-	);
-}
-
-function History({ messages, language, t }: { messages: Parameters<typeof MessageView>[0]["message"][]; language: Language; t: (typeof TEXT)["de"] }) {
-	if (!messages.length) return null;
-	return (
-		<details className="history">
-			<summary>
-				{t.history} ({messages.length})
-			</summary>
-			<div className="messages">
-				{messages.map((m) => (
-					<MessageView key={m.id} message={m} language={language} />
-				))}
-			</div>
-		</details>
 	);
 }

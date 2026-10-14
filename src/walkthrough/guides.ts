@@ -152,13 +152,19 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		),
 		fields: {
 			reason: {
-				question: L("Warum brauchen Sie einen neuen Pass?", "Why do you need a new passport?"),
+				question: L("Was ist mit Ihrem bisherigen Pass?", "What is the situation with your current passport?"),
 				autofill: L(
-					"Ihr Pass ist abgelaufen oder läuft bald ab. Deshalb wähle ich als Grund: {value}.",
-					"Your passport has expired or expires soon. So I'm choosing this reason: {value}.",
+					"Ihr Pass ist abgelaufen oder läuft bald ab. Deshalb trage ich als Grund „{value}“ ein.",
+					"Your passport has expired or expires soon, so I'm entering „{value}“ as the reason.",
 				),
 				officialTerm: L("Antragsgrund", "Reason for application"),
-				explain: L("Der Grund, warum Sie einen neuen Pass brauchen.", "The reason why you need a new passport."),
+				explain: L("Wählen Sie, was auf Sie zutrifft.", "Choose what applies to you."),
+				optionExplain: {
+					expired: L("Der Pass gilt nicht mehr oder läuft in den nächsten Monaten ab.", "The passport is no longer valid or runs out in the next few months."),
+					lost_or_stolen: L("Sie haben den Pass nicht mehr.", "You no longer have the passport."),
+					damaged: L("Der Pass ist kaputt, zum Beispiel nass geworden oder eingerissen.", "The passport is broken, for example wet or torn."),
+					name_change: L("Sie heißen jetzt anders, zum Beispiel nach einer Heirat.", "Your name has changed, for example after a marriage."),
+				},
 				suggest: (c, today) => {
 					const passport = c.documents.find((d) => d.type === "passport");
 					if (!passport?.validUntil) return undefined;
@@ -287,8 +293,8 @@ export const PHRASES = {
 	),
 	reviewTitle: L("Alles prüfen und bestätigen", "Check everything and confirm"),
 	review: L(
-		"Hier sehen Sie alles, was eingetragen ist. Bitte prüfen Sie es. Erst wenn Sie auf „Ja, so einreichen“ drücken, schicke ich den Antrag ab.",
-		"Here is everything that has been entered. Please check it. I only send the application when you press „Yes, submit like this“.",
+		"Jetzt ist alles eingetragen. Bitte prüfen Sie es. Erst wenn Sie unten auf „Antrag absenden“ drücken, wird der Antrag abgeschickt.",
+		"Everything is filled in now. Please check it. The application is only sent when you press „Submit application“ below.",
 	),
 	reviewProblems: L(
 		"Es fehlt noch etwas. Drücken Sie bei dem rot markierten Feld auf „Ändern“.",

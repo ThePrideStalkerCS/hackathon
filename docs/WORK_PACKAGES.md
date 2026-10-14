@@ -28,9 +28,9 @@ Put your name next to a package when you take it. **Before starting, read [CORE.
 
 **Goal:** the walkthrough feels like a calm, trustworthy video tutorial on every screen.
 
-- Restyle via the tokens in `frontend/styles.css` (`:root`). Portal, explanation window, timeline.
-- Mobile: the header is too tall. Collapse settings (persona, language, text size) into a menu, keep "Talk to a person" visible.
-- **Adaptive layout without guessing by age:** ask once at the start ("How would you like to use this? Big text / Read aloud / Simple view"), default from `digitalLiteracy` in the profile, always changeable. A "simple view" could hide the portal and show only the explanation window. (Inferring the layout from age alone is a stereotype the jury may call out.)
+- **Done:** official 2030 redesign (page as main window, hint card at the active field, voice dock with the red-white-red voice mark, red video-style progress bar, all settings in one profile menu, mobile layout). Principles in CORE.md "Design principles".
+- Next: polish with the tokens in `frontend/styles.css` (`:root`), a real name, the voice mark reacting to the actual audio level, and a review of every question in `src/walkthrough/guides.ts` with real users (is it clear without the explanation?).
+- **Adaptive layout without guessing by age:** ask once at the start ("How would you like to use this? Big text / Read aloud / Simple view"), default from `digitalLiteracy` in the profile, always changeable. A "simple view" could show only the coach card and the dock, bigger. (Inferring the layout from age alone is a stereotype the jury may call out.)
 - Pictograms per step, clearer ghost cursor, step transition animation (respect `prefers-reduced-motion`).
 - Accessibility check: keyboard only, screen reader (VoiceOver), contrast, 200 % zoom. Document results in `docs/TECHNICAL.md` §6.
 
@@ -67,7 +67,7 @@ Files: `src/agent/system-prompt.ts`, `src/agent/router.ts`, `src/agent/tools.ts`
 
 - For each service, open the official page on oesterreich.gv.at, correct `src/knowledge/index.ts`, set the exact `sourceUrl` and `verified: true`.
 - Check the facts inside `src/walkthrough/guides.ts` (e.g. "within 3 days", KBG models) against the same pages.
-- Optional RAG: Cloudflare AI Search over the official pages for free follow-up questions, returning a citation. Show the source as a chip in the explanation window.
+- Optional RAG: Cloudflare AI Search over the official pages for free follow-up questions, returning a citation. Show the source as a chip in the coach card.
 - Show a confidence hint when the answer is not from a verified source.
 
 ## WP-5 More services + fallback for unknown requests
@@ -93,7 +93,7 @@ Depends on: WP-4 for the facts.
 
 - New page (e.g. `/caseworker`) listing `GET /api/gov/handoffs` with the summary.
 - **Co-browsing:** the ticket contains the `sessionId`. A case worker can connect to the same agent (`useAgent({ name: sessionId })`) and sees the same portal live. Add a read-only flag / role so they can't submit for the citizen without consent.
-- Bonus: the case worker can send a message that appears in the citizen's explanation window.
+- Bonus: the case worker can send a message that appears in the citizen's dock.
 
 ## WP-8 Trusted helper
 

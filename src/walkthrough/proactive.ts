@@ -17,7 +17,12 @@ function addMonths(isoDate: string, months: number): string {
 	return d.toISOString().slice(0, 10);
 }
 
-export function getSuggestions(citizen: Citizen, today: string, lang: Language): Suggestion[] {
+/** `alreadySubmitted`: services the citizen has already applied for (no need to suggest them again). */
+export function getSuggestions(citizen: Citizen, today: string, lang: Language, alreadySubmitted: string[] = []): Suggestion[] {
+	return collect(citizen, today, lang).filter((s) => !alreadySubmitted.includes(s.serviceId));
+}
+
+function collect(citizen: Citizen, today: string, lang: Language): Suggestion[] {
 	const out: Suggestion[] = [];
 	const de = lang === "de";
 

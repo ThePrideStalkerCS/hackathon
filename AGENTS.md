@@ -34,7 +34,7 @@ Open tasks are in [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md). Ask the team a
 - `src/gov/db.ts`: D1 schema + lazy seeding. After changing the schema or personas, call `POST /api/gov/admin/reset`.
 - `src/gov/data/`: personas, services (forms, eligibility rules), human contact.
 - `src/knowledge/index.ts`: service facts with source URLs.
-- `frontend/`: React (Vite). `App.tsx` (layout + playback loop), `walkthrough/` (Portal, Explainer, Timeline), `voice.ts` (TTS/STT with browser fallback), `components.tsx`. Texts are in `frontend/i18n.ts` (German + English, keep both in sync).
+- `frontend/`: React (Vite). `App.tsx` (layout + playback loop), `walkthrough/` (`Portal` = the page as main window, `Coach` = card at the active field, `Progress` = chapter bar), `components.tsx` (Orb, Dock, CommandBar, ProfileMenu, HandoffSheet), `icons.tsx`, `voice.ts` (TTS/STT with browser fallback). Texts are in `frontend/i18n.ts` (German + English, keep both in sync). Design principles: docs/CORE.md.
 - `evals/`: scenarios (`scenarios.json`) + runner (`run.ts`).
 
 ## Rules for new code

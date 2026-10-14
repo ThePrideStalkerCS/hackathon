@@ -8,23 +8,34 @@
 Not a chatbot. The citizen says (or types) what they need, in their own words, dialect included.
 The assistant opens the **official form in a simulated portal** and fills it in **while the citizen
 watches**, like a YouTube tutorial. A ghost cursor moves to each field, values from the citizen's
-data are typed in, and a voice explains what is happening. An **explanation window** shows the
-subtitles, the official term ("Amtsdeutsch") next to its plain-language meaning, and the *one* thing
-the citizen has to do in this step (big buttons). A **timeline** with chapters lets them pause, go
-back or slow down. Only the citizen can submit, with a button at the end. A person can take over at any time
-and sees exactly where the citizen stopped.
+data are typed in, and a voice explains what is happening (with subtitles in the **voice dock**).
+When the citizen has to answer something, a **coach card** appears right below that field: one
+question, the official term ("Amtsdeutsch") explained in plain words, big answer buttons. A
+**progress bar** with chapters shows where they are. Only the citizen can submit, with the page's own
+"Submit application" button. A person can take over at any time and sees exactly where the citizen stopped.
+
+## Design principles (frontend)
+
+1. **The web page is the main window.** The authority's page fills the screen; the assistant is a layer on top of it, not a side panel.
+2. **Official, not "AI".** Ink on white, the red-white-red mark, the red progress bar. No gradients, glass, glowing orbs or sparkles. Modern comes from typography, space and motion.
+3. **Two visual layers.** Authority = ink, white, red identity. Assistant = one sober blue for highlights and hint cards, plus the voice mark (the red-white-red stripes moving like a level meter while it speaks). The citizen always sees what is the official form and what is help.
+4. **A card only when the citizen must act** (ask, appointment, review, done, blocked). Everything else plays by itself and is narrated in the dock.
+5. **Few controls.** Visible at all times: "Beratung" (human help), the profile menu (test person, language, text size, voice, speed), the dock (voice mark = pause, captions, keyboard, mic). Nothing else.
+6. **One question, plain words.** The card asks the question the way a person would ("Was ist mit Ihrem bisherigen Pass?"), explains each option, and only then names the official term ("Im Formular heißt das: Antragsgrund"). Never explain a term with itself.
+7. **Voice first, never voice only.** Everything spoken is in the captions; everything answerable by voice is also clickable.
+8. **Learning effect.** The page looks like a real portal and is filled in the order a person would do it, so next time the citizen recognises it.
 
 ## Architecture
 
 ```
 Browser (React)                                     Worker (Cloudflare)
 ┌──────────────────────────────────────┐            ┌─────────────────────────────────────────────┐
-│ App.tsx  playback loop               │  WebSocket │ CitizenAssistant (Durable Object, 1/session)│
-│  ├ Portal.tsx      simulated form    │◄──state────│  state = { personaId, language,             │
-│  ├ Explainer.tsx   context window    │            │            walkthrough, queue }             │
-│  ├ Timeline.tsx    chapters/controls │──callable─►│  @callable advance/answer/submit/…          │
-│  ├ AskBox          text + mic        │──chat─────►│  onChatMessage:                             │
-│  └ voice.ts        TTS / STT         │            │    1. extractAnswer (deterministic)         │
+│ App.tsx  layout + playback loop      │  WebSocket │ CitizenAssistant (Durable Object, 1/session)│
+│  ├ Portal.tsx    the page (main win.)│◄──state────│  state = { personaId, language,             │
+│  ├ Coach.tsx     card at active field│            │            walkthrough, queue }             │
+│  ├ Progress.tsx  chapters bar        │──callable─►│  @callable advance/answer/submit/…          │
+│  ├ Dock / CommandBar  captions + mic │──chat─────►│  onChatMessage:                             │
+│  └ voice.ts      TTS / STT           │            │    1. extractAnswer (deterministic)         │
 └──────────┬───────────────────────────┘            │    2. routeIntent  (keywords → force tool)  │
            │ /api/voice/tts|stt                      │    3. LLM (Workers AI) + tools              │
            ▼                                         └───────┬─────────────────────────┬───────────┘

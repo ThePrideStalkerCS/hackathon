@@ -8,6 +8,7 @@ import * as gov from "../src/gov/service";
 import { createWalkthrough, submitWalkthrough } from "../src/walkthrough/controller";
 import * as engine from "../src/walkthrough/engine";
 import { getSuggestions } from "../src/walkthrough/proactive";
+import { detectLanguage, routeIntent } from "../src/agent/router";
 import type { Walkthrough } from "../src/shared/walkthrough";
 
 const residence = getServiceDefinition("change-of-residence")!;
@@ -134,6 +135,8 @@ describe("guided walkthrough", () => {
 		expect(getSuggestions(thomas, today, "de").map((s) => s.serviceId)).toContain("childcare-subsidy");
 		const david = await gov.getCitizenProfile(env, "david-novak");
 		expect(getSuggestions(david, today, "de").map((s) => s.serviceId)).toContain("change-of-residence");
+		// Already applied: don't suggest it again.
+		expect(getSuggestions(josef, today, "de", ["passport-renewal"])).toEqual([]);
 	});
 });
 
@@ -173,5 +176,22 @@ describe("answer extraction (before the LLM)", () => {
 		expect(engine.extractAnswer(residence, "des is mei Hauptwohnsitz")).toBe("main");
 		expect(engine.extractAnswer(residence, "nur Nebenwohnsitz, i studier do")).toBe("secondary");
 		expect(engine.extractAnswer(residence, "keine Ahnung")).toBeNull();
+	});
+});
+
+describe("router", () => {
+	it("detects the language, including Austrian dialect", () => {
+		expect(detectLanguage("mia ham a baby kriagt, kriag i do a göd?", "en")).toBe("de");
+		expect(detectLanguage("Servus, i bin grad nach Wien zogn, was muss i tun?", "en")).toBe("de");
+		expect(detectLanguage("My passport expired.", "de")).toBe("en");
+		expect(detectLanguage("We just had a baby, is there any support?", "de")).toBe("en");
+		expect(detectLanguage("ok", "de")).toBe("de");
+	});
+
+	it("forces the walkthrough only for clear requests", () => {
+		expect(routeIntent("mia ham a baby kriagt, kriag i do a göd?", false, "de")).toMatchObject({ forceTool: "start_guided_walkthrough", candidates: ["childcare-subsidy"] });
+		expect(routeIntent("Ist mein Reisepass noch gültig?", false, "de").forceTool).toBe("get_my_profile");
+		expect(routeIntent("Ich möchte einen Hund anmelden.", false, "de").forceTool).toBeNull();
+		expect(routeIntent("Mein Reisepass is abgloffen.", true, "de").forceTool).toBeNull(); // walkthrough already open
 	});
 });

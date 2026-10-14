@@ -5,7 +5,7 @@
  *   1. Chat (onChatMessage): understands what the citizen says or types, starts walkthroughs,
  *      fills fields from spoken answers, explains. Streams to the browser.
  *   2. Walkthrough host: keeps the guided walkthrough in its state. The state is synced live to the
- *      browser, which renders the portal, the explanation window and the timeline from it.
+ *      browser, which renders the portal page, the coach card and the progress bar from it.
  *      The browser changes it ONLY through the @callable() methods below (agent.call("answer", …)).
  *
  * Docs: https://developers.cloudflare.com/agents/  (callable methods: node_modules/agents/docs/callable-methods.md)
@@ -18,6 +18,7 @@ import { DEFAULT_STATE, type AssistantSettings, type AssistantState, type Langua
 import type { Suggestion, Walkthrough } from "../shared/walkthrough";
 import { PERSONAS } from "../gov/data/personas";
 import { getServiceDefinition } from "../gov/data/services";
+import { dbListApplications } from "../gov/db";
 import * as gov from "../gov/service";
 import * as engine from "../walkthrough/engine";
 import { answerAndSave, createWalkthrough, handoffSummary, submitWalkthrough, type WalkthroughHost } from "../walkthrough/controller";
@@ -146,7 +147,8 @@ export class CitizenAssistant extends AIChatAgent<Env, AssistantState> implement
 	async getSuggestions(): Promise<Suggestion[]> {
 		const { personaId, language } = this.st;
 		const citizen = await gov.getCitizenProfile(this.env, personaId);
-		return proactiveSuggestions(citizen, gov.today(), language);
+		const submitted = (await dbListApplications(this.env.GOV_DB, personaId)).filter((a) => a.status === "submitted").map((a) => a.serviceId);
+		return proactiveSuggestions(citizen, gov.today(), language, submitted);
 	}
 
 	@callable({ description: "Start a walkthrough directly (e.g. from a suggestion card), without the AI" })

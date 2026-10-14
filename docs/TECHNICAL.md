@@ -13,7 +13,7 @@
 ## 2. Architecture
 
 ```
-Browser (React, Vite)                       Portal view · explanation window · timeline · mic
+Browser (React, Vite)                       Portal page (main window) · coach card · progress bar · voice dock
    │  WebSocket (Agents SDK): state sync + @callable methods + chat stream
    ▼
 CitizenAssistant (Durable Object, one per session)

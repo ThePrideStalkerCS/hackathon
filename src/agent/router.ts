@@ -31,8 +31,9 @@ const ACTION_WORDS = [
 	"what do i", "what should i", "help", "had a baby", "support",
 ];
 
-const GERMAN_HINTS = /\b(und|der|die|das|ich|bin|ist|nicht|bitte|mein|mei|meine|wir|haben|muss|was|wos|wie|wo|grad|einen|eine|servus|ein|mit|für)\b/gi;
-const ENGLISH_HINTS = /\b(and|the|i|i'm|you|your|is|not|please|my|we|have|need|what|how|where|just|to|for|with)\b/gi;
+// Standard German + Austrian dialect markers. ("i" is NOT an English signal here: in dialect it means "ich".)
+const GERMAN_HINTS = /\b(und|der|die|das|ich|bin|ist|nicht|bitte|mein|mei|meine|wir|haben|muss|was|wie|wo|einen|eine|ein|mit|für|servus|grüß|mia|ham|hob|hab|kriag\w*|net|ned|des|scho|jo|wos|wia|göd|oba|nix|zogn|umzogn|abgloffen|muass|mochn|grad)\b/gi;
+const ENGLISH_HINTS = /\b(and|the|i'm|i've|you|your|is|not|please|my|we|have|need|what|how|where|just|to|for|with|moved|expired|baby's|our)\b/gi;
 
 /** Questions about the citizen's own data ("Is my passport still valid?", "Which address do you have?"). */
 const OWN_DATA_WORDS = ["gültig", "valid", "läuft ab", "lauft ab", "expire", "adresse", "address", "on file", "gespeichert", "meine daten", "my data", "gemeldet"];
@@ -48,11 +49,17 @@ export type Route = {
 	language: Language;
 };
 
+/**
+ * Language of a message. Only overrides the session language when the evidence is clear,
+ * because switching language by mistake is worse than not switching.
+ */
 export function detectLanguage(text: string, fallback: Language): Language {
-	const de = text.match(GERMAN_HINTS)?.length ?? 0;
+	const umlauts = /[äöüß]/i.test(text) ? 2 : 0;
+	const de = (text.match(GERMAN_HINTS)?.length ?? 0) + umlauts;
 	const en = text.match(ENGLISH_HINTS)?.length ?? 0;
-	if (de === en) return fallback;
-	return de > en ? "de" : "en";
+	if (de - en >= 2 || (de >= 1 && en === 0)) return "de";
+	if (en - de >= 2 || (en >= 1 && de === 0)) return "en";
+	return fallback;
 }
 
 export function routeIntent(text: string, walkthroughActive: boolean, fallbackLanguage: Language): Route {
