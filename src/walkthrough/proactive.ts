@@ -54,7 +54,9 @@ function collect(citizen: Citizen, today: string, lang: Language): Suggestion[] 
 			serviceId: "childcare-subsidy",
 			urgency: "normal",
 			title: de ? "Kinderbetreuungsgeld beantragen" : "Apply for childcare benefit",
-			reason: de ? `Herzlichen Glückwunsch zu ${baby.name}. Sie haben wahrscheinlich Anspruch auf Kinderbetreuungsgeld.` : `Congratulations on ${baby.name}. You are probably entitled to childcare benefit.`,
+			reason: de
+				? `Herzlichen Glückwunsch zur Geburt von ${baby.name.split(" ")[0]}. Sie haben wahrscheinlich Anspruch auf Kinderbetreuungsgeld.`
+				: `Congratulations on the birth of ${baby.name.split(" ")[0]}. You are probably entitled to childcare benefit.`,
 		});
 	}
 
