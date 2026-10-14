@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import type { PortalField, Walkthrough, WalkthroughStep } from "../../src/shared/walkthrough";
 import { tpl, type UIText } from "../i18n";
+import { ADDRESS_FIELDS, AddressInput } from "./AddressInput";
 
 export type WalkthroughActions = {
 	answer: (fieldId: string, value: string | boolean) => void;
@@ -89,7 +90,7 @@ export function Explainer({ w, t, actions, queueNext }: Props) {
 function StepAction({ w, step, field, t, actions, queueNext }: Props & { step: WalkthroughStep; field?: PortalField }) {
 	switch (step.kind) {
 		case "ask":
-			return field ? <AskWidget key={step.id} field={field} step={step} t={t} actions={actions} /> : null;
+			return field ? <AskWidget key={step.id} field={field} step={step} t={t} actions={actions} language={w.language} /> : null;
 
 		case "autofill":
 			return field ? (
@@ -195,7 +196,21 @@ function StepAction({ w, step, field, t, actions, queueNext }: Props & { step: W
 	}
 }
 
-function AskWidget({ field, step, t, actions }: { field: PortalField; step: WalkthroughStep; t: UIText; actions: WalkthroughActions }) {
+function AskWidget({
+	field,
+	step,
+	t,
+	actions,
+	language,
+}: {
+	field: PortalField;
+	step: WalkthroughStep;
+	t: UIText;
+	actions: WalkthroughActions;
+	language: "de" | "en";
+}) {
+	const isAddress = field.type === "text" && ADDRESS_FIELDS.has(field.id);
+
 	const [text, setText] = useState(field.value ?? "");
 	useEffect(() => setText(field.value ?? ""), [field.value]);
 
@@ -225,7 +240,10 @@ function AskWidget({ field, step, t, actions }: { field: PortalField; step: Walk
 				</div>
 			)}
 
-			{(field.type === "text" || field.type === "date") && (
+			{/* Address fields: suggestions + check via Google Maps, with a "custom address" fallback. */}
+			{isAddress && <AddressInput field={field} t={t} language={language} onAnswer={(value) => actions.answer(field.id, value)} />}
+
+			{!isAddress && (field.type === "text" || field.type === "date") && (
 				<form
 					className="field-form"
 					onSubmit={(e) => {

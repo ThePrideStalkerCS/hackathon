@@ -785,6 +785,90 @@ a {
 .field-form label {
 	font-weight: 600;
 }
+/* Address check (frontend/walkthrough/AddressInput.tsx) */
+.address-combo {
+	position: relative;
+}
+.address-combo input {
+	width: 100%;
+}
+.address-list {
+	position: absolute;
+	z-index: 20;
+	top: calc(100% + 4px);
+	left: 0;
+	right: 0;
+	margin: 0;
+	padding: 0.3rem;
+	list-style: none;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	box-shadow: var(--shadow);
+	max-height: 22rem;
+	overflow-y: auto;
+}
+.address-list li {
+	display: flex;
+	gap: 0.6rem;
+	align-items: flex-start;
+	padding: 0.6rem 0.7rem;
+	min-height: 48px;
+	border-radius: 8px;
+	cursor: pointer;
+}
+.address-list li > span:last-child {
+	display: flex;
+	flex-direction: column;
+}
+.address-list small {
+	color: var(--muted);
+	font-size: 0.9rem;
+}
+.address-list li.is-active,
+.address-list li[role="option"]:hover {
+	background: var(--surface-2);
+	outline: 2px solid var(--focus);
+	outline-offset: -2px;
+}
+.address-list .address-empty {
+	cursor: default;
+	color: var(--warn);
+	font-weight: 600;
+	min-height: 0;
+}
+.address-list .address-custom {
+	border-top: 1px solid var(--border);
+	margin-top: 0.2rem;
+}
+.address-list .address-custom.is-suggested {
+	background: var(--warn-bg);
+	border-top: 0;
+}
+.address-door {
+	display: flex;
+	flex-direction: column;
+	gap: 0.3rem;
+	max-width: 14rem;
+}
+.address-status {
+	margin: 0;
+	min-height: 1.5em;
+}
+.address-status .badge {
+	display: inline-block;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	font-weight: 600;
+}
+.address-status .badge.ok {
+	background: var(--ok-bg);
+	color: var(--ok);
+}
+.address-status .badge.warn {
+	background: var(--warn-bg);
+	color: var(--warn);
+}
 .answer-box .value {
 	font-size: 1.2rem;
 	font-weight: 700;

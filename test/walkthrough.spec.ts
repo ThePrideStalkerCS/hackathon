@@ -8,6 +8,7 @@ import * as gov from "../src/gov/service";
 import { createWalkthrough, submitWalkthrough } from "../src/walkthrough/controller";
 import * as engine from "../src/walkthrough/engine";
 import { getSuggestions } from "../src/walkthrough/proactive";
+import { extractDoor, toVerifiedAddress, withDoor } from "../src/shared/address";
 import type { Walkthrough } from "../src/shared/walkthrough";
 
 const residence = getServiceDefinition("change-of-residence")!;
@@ -173,5 +174,32 @@ describe("answer extraction (before the LLM)", () => {
 		expect(engine.extractAnswer(residence, "des is mei Hauptwohnsitz")).toBe("main");
 		expect(engine.extractAnswer(residence, "nur Nebenwohnsitz, i studier do")).toBe("secondary");
 		expect(engine.extractAnswer(residence, "keine Ahnung")).toBeNull();
+	});
+});
+
+describe("address check helpers (Google Maps)", () => {
+	const graz = toVerifiedAddress(
+		[
+			{ longText: "Annenstraße", types: ["route"] },
+			{ longText: "24", types: ["street_number"] },
+			{ longText: "8020", types: ["postal_code"] },
+			{ longText: "Graz", types: ["locality", "political"] },
+			{ longText: "Österreich", shortText: "AT", types: ["country"] },
+		],
+		"Annenstraße 24, 8020 Graz, Österreich",
+	);
+
+	it("builds the Austrian address format", () => {
+		expect(graz.formatted).toBe("Annenstraße 24, 8020 Graz");
+		expect(graz.precise).toBe(true);
+		expect(toVerifiedAddress([{ longText: "Annenstraße", types: ["route"] }], "x").precise).toBe(false);
+	});
+
+	it("keeps the door number the citizen typed", () => {
+		expect(extractDoor("Annenstraße 24/3", "24")).toBe("3");
+		expect(extractDoor("Kaiserstr. 40/2/8, 1070 Wien", "40")).toBe("2/8");
+		expect(extractDoor("Hauptplatz 7", "7")).toBeNull();
+		expect(withDoor(graz, "3")).toBe("Annenstraße 24/3, 8020 Graz");
+		expect(withDoor(graz, "")).toBe("Annenstraße 24, 8020 Graz");
 	});
 });
