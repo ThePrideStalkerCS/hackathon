@@ -1,18 +1,16 @@
 /**
- * UI building blocks: chat messages, tool status, handoff card.
+ * UI building blocks: chat messages (conversation history), assistant reply bubble, handoff card,
+ * ask box (text + microphone).
  */
 import type { UIMessage } from "ai";
+import { useState } from "react";
 import type { Language } from "../src/shared/types";
 import type { HandoffResult } from "./api";
-import { TEXT, TOOL_LABELS } from "./i18n";
+import { TEXT, TOOL_LABELS, type UIText } from "./i18n";
+import { useRecorder } from "./voice";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyPart = any;
-
-type MessageViewProps = {
-	message: UIMessage;
-	language: Language;
-};
 
 function toolNameOf(part: AnyPart): string | null {
 	if (part.type === "dynamic-tool") return part.toolName;
@@ -20,60 +18,47 @@ function toolNameOf(part: AnyPart): string | null {
 	return null;
 }
 
-export function MessageView({ message, language }: MessageViewProps) {
+/** Text of a message (reasoning and tool parts left out). */
+export function messageText(message: UIMessage): string {
+	return message.parts
+		.filter((p: AnyPart) => p.type === "text")
+		.map((p: AnyPart) => p.text)
+		.join("")
+		.trim();
+}
+
+/** Label of the tool the assistant is running right now, if any. */
+export function runningToolLabel(message: UIMessage | undefined, language: Language): string | null {
+	if (!message || message.role !== "assistant") return null;
+	const running = [...message.parts].reverse().find((p: AnyPart) => toolNameOf(p) && p.state !== "output-available" && p.state !== "output-error");
+	if (!running) return null;
+	const name = toolNameOf(running)!;
+	return TOOL_LABELS[name]?.[language] ?? TEXT[language].toolWorking;
+}
+
+export function MessageView({ message, language }: { message: UIMessage; language: Language }) {
 	const t = TEXT[language];
 	const isUser = message.role === "user";
-
+	const text = messageText(message);
+	const tools = message.parts.map(toolNameOf).filter(Boolean) as string[];
+	if (!text && !tools.length) return null;
 	return (
 		<article className={`message ${isUser ? "user" : "assistant"}`}>
 			<h3 className="visually-hidden">{isUser ? t.you : t.assistant}</h3>
-			{message.parts.map((part: AnyPart, i: number) => {
-				if (part.type === "text") {
-					return part.text.trim() ? (
-						<p key={i} className="text">
-							{part.text}
-						</p>
-					) : null;
-				}
-				const toolName = toolNameOf(part);
-				if (!toolName) return null;
-				return <ToolPart key={part.toolCallId ?? i} part={part} toolName={toolName} language={language} />;
-			})}
+			{text && <p className="text">{text}</p>}
+			{tools.length > 0 && (
+				<p className="tool-trace">
+					{tools.map((name) => TOOL_LABELS[name]?.[language] ?? name).join(" · ")}
+				</p>
+			)}
 		</article>
 	);
 }
 
-function ToolPart(props: { part: AnyPart; toolName: string; language: Language }) {
-	const { part, toolName, language } = props;
-	const t = TEXT[language];
-
-	// 👉 EXTEND HERE: render tool results as proper UI (e.g. a confirmation step before submitting,
-	//    a success card with the reference number) instead of the raw JSON log below.
-
-	// 1. Finished: show the result as a small expandable log
-	if (part.state === "output-available") {
-		const output = part.output ?? {};
-		// Not produced by any tool yet – ready for when you add a human handoff.
-		if (output.type === "handoff_result") return <HandoffCard result={output} language={language} />;
-		return (
-			<details className="tool-log">
-				<summary>✓ {TOOL_LABELS[toolName]?.[language] ?? toolName}</summary>
-				<pre>{JSON.stringify(output, null, 2)}</pre>
-			</details>
-		);
-	}
-
-	if (part.state === "output-error") return <p className="tool-status error">{t.error}</p>;
-
-	// 2. Still running
-	return <p className="tool-status">⏳ {TOOL_LABELS[toolName]?.[language] ?? t.toolWorking}</p>;
-}
-
-export function HandoffCard({ result, language }: { result: HandoffResult; language: Language }) {
-	const t = TEXT[language];
+export function HandoffCard({ result, t, onClose }: { result: HandoffResult; t: UIText; onClose: () => void }) {
 	return (
 		<div className="card handoff" role="status">
-			<h4>☎ {t.handoffTitle}</h4>
+			<h3>☎ {t.handoffTitle}</h3>
 			<p>{result.message}</p>
 			<p>
 				<strong>{result.phone}</strong> · {result.hours}
@@ -83,6 +68,61 @@ export function HandoffCard({ result, language }: { result: HandoffResult; langu
 			<p>
 				{t.ticket}: <strong>{result.ticketId}</strong>
 			</p>
+			<p className="fine-print">{t.handoffNote}</p>
+			<button type="button" onClick={onClose}>
+				{t.close}
+			</button>
+		</div>
+	);
+}
+
+/** Text field + microphone. Used on the start screen and as "Something unclear?" in the walkthrough. */
+export function AskBox(props: { t: UIText; language: Language; placeholder: string; disabled: boolean; big?: boolean; onSend: (text: string) => void }) {
+	const { t, language, onSend } = props;
+	const [text, setText] = useState("");
+	const recorder = useRecorder(language, onSend);
+
+	function submit() {
+		const value = text.trim();
+		if (!value || props.disabled) return;
+		onSend(value);
+		setText("");
+	}
+
+	return (
+		<div className={`ask-box ${props.big ? "big" : ""}`}>
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					submit();
+				}}
+			>
+				<button
+					type="button"
+					className={`mic ${recorder.state === "listening" ? "is-listening" : ""}`}
+					onClick={recorder.state === "listening" ? recorder.stop : recorder.start}
+					disabled={recorder.state === "transcribing" || recorder.state === "unavailable"}
+					aria-pressed={recorder.state === "listening"}
+				>
+					<span aria-hidden="true">🎤</span> {recorder.state === "listening" ? t.micStop : t.micStart}
+				</button>
+				<label htmlFor={props.big ? "ask-main" : "ask-side"} className="visually-hidden">
+					{props.placeholder}
+				</label>
+				<input
+					id={props.big ? "ask-main" : "ask-side"}
+					value={text}
+					placeholder={props.placeholder}
+					onChange={(e) => setText(e.target.value)}
+					autoComplete="off"
+				/>
+				<button type="submit" className="primary" disabled={props.disabled || !text.trim()}>
+					{t.send}
+				</button>
+			</form>
+			{recorder.state === "listening" && <p className="mic-status" role="status">{t.micListening}</p>}
+			{recorder.state === "transcribing" && <p className="mic-status" role="status">{t.micTranscribing}</p>}
+			{recorder.state === "unavailable" && <p className="mic-status">{t.micUnavailable}</p>}
 		</div>
 	);
 }

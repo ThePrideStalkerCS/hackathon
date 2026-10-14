@@ -7,6 +7,8 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "gov-assistant-2030",
+	// Team account (Martin's, has the Workers AI credits). Everyone's wrangler login must have access to it.
+	"account_id": "4467250ff4138321896264140dca6da8",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-10-06",
 	"compatibility_flags": ["nodejs_compat"],

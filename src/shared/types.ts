@@ -2,6 +2,7 @@
  * Types shared between the Worker (server) and the React frontend.
  * Keep this file free of runtime dependencies so both sides can import it.
  */
+import type { QueuedService, Walkthrough } from "./walkthrough";
 
 export type Language = "de" | "en";
 
@@ -16,4 +17,20 @@ export type AssistantSettings = {
 export const DEFAULT_SETTINGS: AssistantSettings = {
 	personaId: "lena-huber",
 	language: "de",
+};
+
+/**
+ * Full agent state, synced to the browser. Only the server changes it: the frontend changes
+ * settings through the `updateSettings` callable and drives the walkthrough through callables
+ * (see src/agent/citizen-assistant.ts), never with `setState`.
+ */
+export type AssistantState = AssistantSettings & {
+	walkthrough: Walkthrough | null;
+	queue: QueuedService[];
+};
+
+export const DEFAULT_STATE: AssistantState = {
+	...DEFAULT_SETTINGS,
+	walkthrough: null,
+	queue: [],
 };

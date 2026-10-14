@@ -1,4 +1,20 @@
-# Digital Public Service Assistant 2030 – Starter Template
+# Digital Public Service Assistant 2030
+
+> **Our approach: a guided tutorial instead of a chatbot.** The citizen says what they need (voice or
+> text, dialect welcome). The assistant opens the official form in a simulated portal and fills it in
+> while the citizen watches: a ghost cursor, a narrating voice, the official term next to a
+> plain-language explanation. The citizen only answers what the system can't know and submits with a
+> button. A person can take over at any time and sees where the citizen stopped.
+>
+> - How it works: [docs/CORE.md](docs/CORE.md)
+> - Who does what next: [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md)
+> - Voice: `cp .dev.vars.example .dev.vars` and add the ElevenLabs key (optional, falls back to browser speech)
+>
+> The rest of this README describes the original starter template.
+
+---
+
+# Starter Template
 
 **Austrian Startup Summit 2026 Hackathon · Challenge 3 (Federal Chancellery)**
 
