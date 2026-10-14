@@ -72,9 +72,16 @@ export function useNarrator() {
 			setSpeaking(true);
 			try {
 				if (await elevenLabsAvailable()) {
-					const url = await ttsUrl(text, opts.lang, cache.current);
-					if (!stillMine()) return false;
-					await playAudio(url, opts.rate);
+					try {
+						const url = await ttsUrl(text, opts.lang, cache.current);
+						if (!stillMine()) return false;
+						await playAudio(url, opts.rate);
+					} catch (err) {
+						// ElevenLabs configured but failing (wrong key, no credits, offline): use the browser voice.
+						console.warn("[narrator] ElevenLabs failed, using the browser voice", err);
+						if (!stillMine()) return false;
+						await speakWithBrowser(text, opts);
+					}
 				} else {
 					await speakWithBrowser(text, opts);
 				}

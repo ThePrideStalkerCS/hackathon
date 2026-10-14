@@ -16,6 +16,7 @@
  */
 import { Hono } from "hono";
 import { z } from "zod";
+import { realSecret } from "../config";
 
 /** Secrets/vars for voice. Optional so the app runs without them. */
 type VoiceEnv = { ELEVENLABS_API_KEY?: string; ELEVENLABS_VOICE_ID?: string };
@@ -32,20 +33,21 @@ export const voiceRoutes = new Hono<{ Bindings: Env }>();
 
 voiceRoutes.get("/status", (c) => {
 	const env = c.env as Env & VoiceEnv;
-	return c.json({ elevenlabs: Boolean(env.ELEVENLABS_API_KEY) });
+	return c.json({ elevenlabs: Boolean(realSecret(env.ELEVENLABS_API_KEY)) });
 });
 
 /** POST /api/voice/tts { text, language, speed? } -> audio/mpeg */
 voiceRoutes.post("/tts", async (c) => {
 	const env = c.env as Env & VoiceEnv;
-	if (!env.ELEVENLABS_API_KEY) return c.json({ error: "tts_not_configured" }, 501);
+	const apiKey = realSecret(env.ELEVENLABS_API_KEY);
+	if (!apiKey) return c.json({ error: "tts_not_configured" }, 501);
 
 	const input = z
 		.object({ text: z.string().min(1).max(MAX_TTS_CHARS), language: z.enum(["de", "en"]), speed: z.number().min(0.7).max(1.2).default(1) })
 		.safeParse(await c.req.json().catch(() => ({})));
 	if (!input.success) return c.json({ error: input.error.message }, 400);
 	const { text, language, speed } = input.data;
-	const voiceId = env.ELEVENLABS_VOICE_ID || DEFAULT_VOICE_ID;
+	const voiceId = realSecret(env.ELEVENLABS_VOICE_ID) ?? DEFAULT_VOICE_ID;
 
 	// Same narration = same audio: cache it (saves credits and makes replays instant).
 	const cacheKey = new Request(`https://tts-cache.internal/${voiceId}/${language}/${speed}/${await sha256(text)}`);
@@ -55,7 +57,7 @@ voiceRoutes.post("/tts", async (c) => {
 
 	const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_64`, {
 		method: "POST",
-		headers: { "xi-api-key": env.ELEVENLABS_API_KEY, "content-type": "application/json", accept: "audio/mpeg" },
+		headers: { "xi-api-key": apiKey, "content-type": "application/json", accept: "audio/mpeg" },
 		body: JSON.stringify({
 			text,
 			model_id: TTS_MODEL,
@@ -78,7 +80,8 @@ voiceRoutes.post("/tts", async (c) => {
 /** POST /api/voice/stt (multipart: file, language?) -> { text } */
 voiceRoutes.post("/stt", async (c) => {
 	const env = c.env as Env & VoiceEnv;
-	if (!env.ELEVENLABS_API_KEY) return c.json({ error: "stt_not_configured" }, 501);
+	const apiKey = realSecret(env.ELEVENLABS_API_KEY);
+	if (!apiKey) return c.json({ error: "stt_not_configured" }, 501);
 
 	const form = await c.req.formData().catch(() => null);
 	const file = form?.get("file");
@@ -93,7 +96,7 @@ voiceRoutes.post("/stt", async (c) => {
 
 	const res = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
 		method: "POST",
-		headers: { "xi-api-key": env.ELEVENLABS_API_KEY },
+		headers: { "xi-api-key": apiKey },
 		body: upstream,
 	});
 	if (!res.ok) {

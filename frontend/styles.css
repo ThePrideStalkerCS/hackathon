@@ -1715,6 +1715,13 @@ a {
  * Small screens
  * ------------------------------------------------------------------------------------------- */
 
+@media (max-width: 960px) {
+	/* not enough room for every label in the top bar: the goals button keeps its icon */
+	.nav-goals span {
+		display: none;
+	}
+}
+
 @media (max-width: 720px) {
 	.topbar-row {
 		gap: 0.5rem;

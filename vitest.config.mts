@@ -8,6 +8,8 @@ export default defineConfig({
 		agents(),
 		cloudflareTest({
 			wrangler: { configPath: "./wrangler.jsonc" },
+			// Unit tests never call Workers AI: no remote connection, so they run offline and without a Cloudflare login.
+			remoteBindings: false,
 		}),
 	],
 });

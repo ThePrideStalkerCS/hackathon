@@ -265,7 +265,14 @@ export function App() {
 					)}
 
 					<div className="topbar-actions">
-						<button type="button" className="human-button" aria-pressed={route === "goals"} onClick={() => go(route === "goals" ? "" : "#/goals")}>
+						<button
+							type="button"
+							className="human-button nav-goals"
+							aria-pressed={route === "goals"}
+							aria-label={t.goalsButton}
+							title={t.goalsButton}
+							onClick={() => go(route === "goals" ? "" : "#/goals")}
+						>
 							<Icon name="checkCircle" size={20} />
 							<span>{t.goalsButton}</span>
 						</button>

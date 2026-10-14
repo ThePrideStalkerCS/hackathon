@@ -38,3 +38,12 @@ export function getModel(env: Env, metadata: Record<string, string> = {}) {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	return workersai(MODEL_ID as any);
 }
+
+/**
+ * A secret that is empty or still the placeholder from .dev.vars.example ("your_…_here") counts as
+ * missing, so the app falls back (browser voice, plain address field) instead of failing silently.
+ */
+export function realSecret(value: string | undefined): string | undefined {
+	const v = value?.trim();
+	return v && !/^your_|_here$/i.test(v) ? v : undefined;
+}

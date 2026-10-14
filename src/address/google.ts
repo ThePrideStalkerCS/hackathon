@@ -25,6 +25,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { type AddressSuggestion, type GoogleAddressComponent, toVerifiedAddress } from "../shared/address";
+import { realSecret } from "../config";
 
 type AddressEnv = { GOOGLE_MAPS_API_KEY?: string };
 
@@ -36,7 +37,7 @@ const ADDRESS_TYPES = ["street_address", "premise", "subpremise", "route", "geoc
 
 export const addressRoutes = new Hono<{ Bindings: Env }>();
 
-const key = (env: Env) => (env as Env & AddressEnv).GOOGLE_MAPS_API_KEY;
+const key = (env: Env) => realSecret((env as Env & AddressEnv).GOOGLE_MAPS_API_KEY);
 
 addressRoutes.get("/status", (c) => c.json({ google: Boolean(key(c.env)) }));
 
