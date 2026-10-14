@@ -5,6 +5,7 @@
 import { generateText, stepCountIs, type ModelMessage } from "ai";
 import { getModel, MAX_STEPS } from "../config";
 import { DEFAULT_SETTINGS, type AssistantSettings } from "../shared/types";
+import { routeIntent } from "./router";
 import { buildSystemPrompt } from "./system-prompt";
 import { buildTools } from "./tools";
 
@@ -15,11 +16,16 @@ export async function runAssistant(env: Env, turns: EvalTurn[], partialSettings:
 	const sessionId = `eval-${crypto.randomUUID().slice(0, 8)}`;
 	const started = Date.now();
 
+	const lastUserText = [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
+	const route = routeIntent(lastUserText, false, settings.language);
+
 	const result = await generateText({
 		model: getModel(env, { app: "gov-assistant-evals", session: sessionId, persona: settings.personaId }),
-		system: buildSystemPrompt(settings),
+		system: buildSystemPrompt(settings, { route }),
+		prepareStep: ({ stepNumber }) =>
+			stepNumber === 0 && route.forceTool ? { toolChoice: { type: "tool", toolName: route.forceTool } } : undefined,
 		messages: turns as ModelMessage[],
-		tools: buildTools({ env, settings, sessionId, mode: "eval" }),
+		tools: buildTools({ env, settings, sessionId, mode: "eval", replyLanguage: route.language }),
 		stopWhen: stepCountIs(MAX_STEPS),
 	});
 

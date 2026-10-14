@@ -20,7 +20,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
 	personas: () => request<Persona[]>("/api/gov/citizens"),
-	/** Creates a human handoff ticket. Not used by the UI yet – 👉 EXTEND HERE: build a human fallback. */
+	/** Creates a human handoff ticket via REST (the UI uses the agent's requestHuman callable, which adds the walkthrough position). */
 	handoff: (input: { citizenId: string; sessionId: string; reason: string; summary: string }, language: Language) =>
 		request<HandoffResult>(`/api/gov/handoffs?lang=${language}`, { method: "POST", body: JSON.stringify(input) }),
 };

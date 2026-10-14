@@ -1,21 +1,27 @@
 /**
- * The citizen-facing app. Deliberately plain – the UX is yours to design (35% of the jury score!).
+ * The citizen-facing app: a guided walkthrough instead of a chat (see docs/CORE.md).
  *
- * 👉 EXTEND HERE – ideas:
- *   - Voice input/output (Web Speech API, or Workers AI speech-to-text / text-to-speech models)
- *   - A guided step-by-step view next to the chat (progress: understand → check → fill → confirm)
- *   - Render answers as Markdown (e.g. react-markdown)
- *   - Proactive hints ("Your passport expires in 2 months")
- *   - A confirmation step before anything is submitted or booked
- *   - A way to reach a human (backend: POST /api/gov/handoffs, see api.handoff and HandoffCard)
+ *   Start screen   greeting, proactive suggestions from the citizen's data, "say what you need"
+ *   Walkthrough    portal (left) + explanation window (right) + video-style timeline (bottom)
+ *
+ * State lives in the agent (Durable Object) and is synced here via useAgent. This component never
+ * changes the walkthrough itself: it calls the agent's @callable methods (agent.call("answer", …)).
+ *
+ * The playback loop: when the current step changes, the narration is spoken; when it is finished
+ * and the step doesn't need the citizen, we call `advance`. Paused = nothing advances.
  */
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { useAgent } from "agents/react";
-import { useEffect, useRef, useState } from "react";
-import { DEFAULT_SETTINGS, type AssistantSettings, type Language } from "../src/shared/types";
-import { api, type Persona } from "./api";
-import { MessageView } from "./components";
-import { TEXT } from "./i18n";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DEFAULT_STATE, type AssistantSettings, type AssistantState, type Language } from "../src/shared/types";
+import type { Suggestion } from "../src/shared/walkthrough";
+import { api, type HandoffResult, type Persona } from "./api";
+import { AskBox, HandoffCard, MessageView, messageText, runningToolLabel } from "./components";
+import { TEXT, tpl } from "./i18n";
+import { useNarrator } from "./voice";
+import { Explainer, type WalkthroughActions } from "./walkthrough/Explainer";
+import { Portal } from "./walkthrough/Portal";
+import { Timeline } from "./walkthrough/Timeline";
 
 function getSessionId(reset = false): string {
 	let id = localStorage.getItem("sessionId");
@@ -28,200 +34,300 @@ function getSessionId(reset = false): string {
 
 export function App() {
 	const [sessionId, setSessionId] = useState(() => getSessionId());
-	const [settings, setSettings] = useState<AssistantSettings>(DEFAULT_SETTINGS);
+	const [state, setState] = useState<AssistantState>(DEFAULT_STATE);
 	const [personas, setPersonas] = useState<Persona[]>([]);
+	const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+	const [handoff, setHandoff] = useState<HandoffResult | null>(null);
 	const [fontScale, setFontScale] = useState(1);
-	const t = TEXT[settings.language];
+	const [playing, setPlaying] = useState(true);
+	const [voiceOn, setVoiceOn] = useState(true);
+	const [rate, setRate] = useState(1);
+	const [replayCount, setReplayCount] = useState(0);
+	const t = TEXT[state.language];
+	const narrator = useNarrator();
 
-	// One agent instance per session. State (persona, language) syncs both ways.
-	const agent = useAgent<AssistantSettings>({
+	// One agent instance per session. The server owns the state; we only receive it.
+	const agent = useAgent<AssistantState>({
 		agent: "CitizenAssistant",
 		name: sessionId,
-		onStateUpdate: (state) => setSettings({ ...DEFAULT_SETTINGS, ...state }),
+		onStateUpdate: (s) => setState({ ...DEFAULT_STATE, ...s }),
 	});
-
 	const { messages, sendMessage, clearHistory, status } = useAgentChat({ agent });
 	const busy = status === "submitted" || status === "streaming";
+	const call = useCallback(<T,>(method: string, args: unknown[] = []) => agent.call<T>(method, args), [agent]);
+
+	const w = state.walkthrough;
+	const step = w?.steps[w.current];
+	const stepKey = w && step ? `${w.id}:${w.current}:${step.id}:${step.kind}:${step.done}` : null;
+	const persona = personas.find((p) => p.id === state.personaId);
+	const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
+	const toolLabel = busy ? runningToolLabel(messages.at(-1), state.language) : null;
 
 	useEffect(() => {
 		api.personas().then(setPersonas).catch(console.error);
 	}, []);
 
+	// Proactive suggestions whenever the logged-in citizen changes.
+	useEffect(() => {
+		call<Suggestion[]>("getSuggestions").then(setSuggestions).catch(() => setSuggestions([]));
+	}, [call, state.personaId, state.language, sessionId]);
+
 	// Accessibility: keep <html lang> and font size in sync with the settings.
 	useEffect(() => {
-		document.documentElement.lang = settings.language;
+		document.documentElement.lang = state.language;
 		document.documentElement.style.fontSize = `${fontScale * 100}%`;
 		document.title = t.title;
-	}, [settings.language, fontScale, t.title]);
+	}, [state.language, fontScale, t.title]);
+
+	// --- Playback loop ---------------------------------------------------------------------------
+	const [spokenKey, setSpokenKey] = useState<string | null>(null);
+	const stepKeyRef = useRef(stepKey);
+	stepKeyRef.current = stepKey;
+	const spokenKeyRef = useRef(spokenKey);
+	spokenKeyRef.current = spokenKey;
+
+	// 1. Speak the narration of each new step.
+	useEffect(() => {
+		if (!stepKey || !step) return;
+		let cancelled = false;
+		setSpokenKey(null);
+		narrator.speak(step.narration, { lang: state.language, rate, muted: !voiceOn }).then((finished) => {
+			if (finished && !cancelled) setSpokenKey(stepKey);
+		});
+		return () => {
+			cancelled = true;
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [stepKey, replayCount]);
+
+	// 2. When it's spoken and the step plays automatically, go on.
+	useEffect(() => {
+		if (!w || !step || !playing || spokenKey !== stepKey || step.waitsForCitizen) return;
+		const timer = setTimeout(() => call("advance", [w.current]), 600);
+		return () => clearTimeout(timer);
+	}, [spokenKey, stepKey, playing, w, step, call]);
+
+	// 3. Speak the assistant's answer when it has finished streaming, then resume the narration if it was cut off.
+	const prevStatus = useRef(status);
+	useEffect(() => {
+		const was = prevStatus.current;
+		prevStatus.current = status;
+		if (!(was === "streaming" || was === "submitted") || status !== "ready" || !lastAssistant) return;
+		const text = messageText(lastAssistant);
+		if (!text || !voiceOn) return;
+		const keyBefore = stepKeyRef.current;
+		narrator.speak(text, { lang: state.language, rate, muted: false }).then(() => {
+			if (stepKeyRef.current && spokenKeyRef.current !== stepKeyRef.current && stepKeyRef.current === keyBefore) setReplayCount((c) => c + 1);
+		});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [status]);
+
+	// --- Actions -----------------------------------------------------------------------------------
+	const actions: WalkthroughActions = useMemo(
+		() => ({
+			answer: (fieldId, value) => void call("answer", [fieldId, value]),
+			editField: (fieldId) => void call("editField", [fieldId]),
+			chooseSlot: (slotId) => void call("chooseSlot", [slotId]),
+			advance: () => w && void call("advance", [w.current]),
+			submit: () => void call("submit"),
+			replay: () => setReplayCount((c) => c + 1),
+			close: () => {
+				narrator.stop();
+				void call("closeWalkthrough");
+			},
+			startNext: () => void call("startNext"),
+			askHuman: () => void askHuman(),
+		}),
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[call, w?.current],
+	);
+
+	async function askHuman() {
+		const result = await call<HandoffResult>("requestHuman", ["Citizen pressed the 'talk to a person' button"]);
+		setHandoff(result);
+	}
+
+	function send(text: string) {
+		narrator.stop();
+		sendMessage({ text });
+	}
 
 	function updateSettings(patch: Partial<AssistantSettings>) {
-		const next = { ...settings, ...patch };
-		setSettings(next);
-		agent.setState(next);
+		if (patch.personaId && patch.personaId !== state.personaId) {
+			clearHistory();
+			setHandoff(null);
+			narrator.stop();
+		}
+		void call("updateSettings", [patch]);
 	}
 
 	function newConversation() {
+		narrator.stop();
 		clearHistory();
+		setHandoff(null);
 		setSessionId(getSessionId(true));
 	}
 
 	return (
 		<>
-			<a className="skip-link" href="#chat-input">
+			<a className="skip-link" href="#main">
 				{t.skip}
 			</a>
 
-			{/* 90s theme: the whole app is one "Windows 95" program window. Decoration is aria-hidden. */}
-			<div className="window">
-				<div className="title-bar" aria-hidden="true">
-					<span>🏛 {t.title}.exe</span>
-					<span className="title-bar-buttons">
-						<span>_</span>
-						<span>□</span>
-						<span>×</span>
+			<header className="topbar">
+				<div className="brand">
+					<span className="logo" aria-hidden="true">
+						◆
 					</span>
-				</div>
-				<div className="menu-bar" aria-hidden="true">
-					{t.menu.map((item) => (
-						<span key={item}>{item}</span>
-					))}
-				</div>
-
-				<header className="header">
 					<div>
 						<h1>{t.title}</h1>
 						<p className="subtitle">{t.subtitle}</p>
 					</div>
-
-					<div className="controls" role="group" aria-label="Settings">
-						<label>
-							{t.loginLabel}
-							<select value={settings.personaId} onChange={(e) => updateSettings({ personaId: e.target.value })}>
-								{personas.map((p) => (
-									<option key={p.id} value={p.id}>
-										{p.name} – {p.scenarioHint}
-									</option>
-								))}
-							</select>
-						</label>
-
-						<fieldset className="segmented">
-							<legend>{t.language}</legend>
-							{(["de", "en"] as Language[]).map((lang) => (
-								<button key={lang} type="button" aria-pressed={settings.language === lang} onClick={() => updateSettings({ language: lang })}>
-									{lang === "de" ? "Deutsch" : "English"}
-								</button>
-							))}
-						</fieldset>
-
-						<fieldset className="segmented">
-							<legend>{t.textSize}</legend>
-							{[1, 1.25, 1.5].map((scale) => (
-								<button key={scale} type="button" aria-pressed={fontScale === scale} onClick={() => setFontScale(scale)} aria-label={`${t.textSize} ${scale * 100}%`}>
-									<span style={{ fontSize: `${scale}em` }}>A</span>
-								</button>
-							))}
-						</fieldset>
-
-						<button type="button" onClick={newConversation}>
-							{t.newChat}
-						</button>
-					</div>
-				</header>
-
-				<div className="marquee" aria-hidden="true">
-					<span>{t.marquee}</span>
 				</div>
 
-				<main className="main">
-					<p className="notice">{t.mockNotice}</p>
+				<div className="controls" role="group" aria-label="Settings">
+					<label>
+						{t.loginLabel}
+						<select value={state.personaId} onChange={(e) => updateSettings({ personaId: e.target.value })}>
+							{personas.map((p) => (
+								<option key={p.id} value={p.id}>
+									{p.name} – {p.scenarioHint}
+								</option>
+							))}
+						</select>
+					</label>
 
-					{/* aria-live announces new messages to screen reader users */}
-					<section className="messages" aria-live="polite" aria-busy={busy} aria-label="Chat">
-						{messages.length === 0 && (
-							<div className="examples">
-								<h2>{t.examplesTitle}</h2>
-								{t.examples.map((ex) => (
-									<button key={ex} type="button" onClick={() => sendMessage({ text: ex })}>
-										{ex}
-									</button>
-								))}
-							</div>
+					<fieldset className="segmented">
+						<legend>{t.language}</legend>
+						{(["de", "en"] as Language[]).map((lang) => (
+							<button key={lang} type="button" aria-pressed={state.language === lang} onClick={() => updateSettings({ language: lang })}>
+								{lang === "de" ? "Deutsch" : "English"}
+							</button>
+						))}
+					</fieldset>
+
+					<fieldset className="segmented">
+						<legend>{t.textSize}</legend>
+						{[1, 1.25, 1.5].map((scale) => (
+							<button key={scale} type="button" aria-pressed={fontScale === scale} onClick={() => setFontScale(scale)} aria-label={`${t.textSize} ${scale * 100}%`}>
+								<span style={{ fontSize: `${scale}em` }}>A</span>
+							</button>
+						))}
+					</fieldset>
+
+					<button type="button" onClick={newConversation}>
+						{t.newChat}
+					</button>
+					<button type="button" className="human-button" onClick={askHuman}>
+						☎ {t.human}
+					</button>
+				</div>
+			</header>
+
+			<p className="notice">{t.mockNotice}</p>
+
+			<main id="main" className={w ? "stage walkthrough" : "stage home"}>
+				{w ? (
+					<>
+						<div className="stage-left">
+							<Portal w={w} t={t} onEditField={actions.editField} />
+							<Timeline
+								w={w}
+								t={t}
+								playing={playing}
+								rate={rate}
+								voiceOn={voiceOn}
+								onTogglePlay={() => {
+									if (playing) narrator.stop();
+									else setReplayCount((c) => c + 1);
+									setPlaying(!playing);
+								}}
+								onBack={() => void call("back")}
+								onNext={actions.advance}
+								onGoTo={(i) => void call("goTo", [i])}
+								onRate={setRate}
+								onToggleVoice={() => {
+									narrator.stop();
+									setVoiceOn(!voiceOn);
+									setReplayCount((c) => c + 1);
+								}}
+							/>
+						</div>
+
+						<aside className="explainer" aria-label={t.assistant}>
+							{handoff && <HandoffCard result={handoff} t={t} onClose={() => setHandoff(null)} />}
+							<Explainer w={w} t={t} actions={actions} queueNext={state.queue[0]?.name} />
+							<Reply text={lastAssistant ? messageText(lastAssistant) : ""} busy={busy} toolLabel={toolLabel} t={t} />
+							<AskBox t={t} language={state.language} placeholder={t.askPlaceholder} disabled={busy} onSend={send} />
+							<History messages={messages} language={state.language} t={t} />
+						</aside>
+					</>
+				) : (
+					<section className="home-panel">
+						{handoff && <HandoffCard result={handoff} t={t} onClose={() => setHandoff(null)} />}
+						<h2>{tpl(t.greeting, { name: persona?.name.split(" ")[0] ?? "" })}</h2>
+						<p className="lead">{t.homeQuestion}</p>
+						<AskBox t={t} language={state.language} placeholder={t.placeholder} disabled={busy} onSend={send} big />
+						<Reply text={lastAssistant ? messageText(lastAssistant) : ""} busy={busy} toolLabel={toolLabel} t={t} />
+
+						{suggestions.length > 0 && (
+							<section className="suggestions" aria-labelledby="sugg-title">
+								<h3 id="sugg-title">{t.suggestionsTitle}</h3>
+								<div className="suggestion-grid">
+									{suggestions.map((s) => (
+										<article key={s.serviceId} className={`suggestion ${s.urgency}`}>
+											<h4>{s.title}</h4>
+											<p>{s.reason}</p>
+											<button type="button" className="primary" onClick={() => void call("startWalkthrough", [s.serviceId])}>
+												▶ {t.showMeHow}
+											</button>
+										</article>
+									))}
+								</div>
+							</section>
 						)}
 
-						{messages.map((message) => (
-							<MessageView
-								key={message.id}
-								message={message}
-								language={settings.language}
-							/>
-						))}
-
-						{busy && <p className="status">{t.thinking}</p>}
+						<div className="examples">
+							<h3>{t.examplesTitle}</h3>
+							{t.examples.map((ex) => (
+								<button key={ex} type="button" className="chip" onClick={() => send(ex)} disabled={busy}>
+									„{ex}“
+								</button>
+							))}
+						</div>
+						<History messages={messages} language={state.language} t={t} />
 					</section>
-
-					<ChatInput disabled={busy} placeholder={t.placeholder} sendLabel={t.send} onSend={(text) => sendMessage({ text })} />
-				</main>
-
-				<div className="status-bar" aria-hidden="true">
-					<span>{busy ? t.statusBusy : t.statusReady}</span>
-					<span>{messages.length} 💬</span>
-				</div>
-			</div>
-
-			<footer className="footer" aria-hidden="true">
-				<hr />
-				<p>🚧 {t.bestViewed} 🚧</p>
-				<p>
-					{t.visitors} <span className="counter">{String(1337 + messages.length).padStart(6, "0")}</span>
-				</p>
-			</footer>
-
+				)}
+			</main>
 		</>
 	);
 }
 
-function ChatInput(props: { disabled: boolean; placeholder: string; sendLabel: string; onSend: (text: string) => void }) {
-	const [text, setText] = useState("");
-	const inputRef = useRef<HTMLTextAreaElement>(null);
-
-	function submit() {
-		const value = text.trim();
-		if (!value || props.disabled) return;
-		props.onSend(value);
-		setText("");
-		inputRef.current?.focus();
-	}
-
+/** The assistant's latest answer, shown as a speech bubble (it is also spoken). */
+function Reply({ text, busy, toolLabel, t }: { text: string; busy: boolean; toolLabel: string | null; t: (typeof TEXT)["de"] }) {
+	if (!text && !busy) return null;
 	return (
-		<form
-			className="chat-input"
-			onSubmit={(e) => {
-				e.preventDefault();
-				submit();
-			}}
-		>
-			<label htmlFor="chat-input" className="visually-hidden">
-				{props.placeholder}
-			</label>
-			<textarea
-				id="chat-input"
-				ref={inputRef}
-				rows={2}
-				value={text}
-				placeholder={props.placeholder}
-				onChange={(e) => setText(e.target.value)}
-				onKeyDown={(e) => {
-					// Enter sends, Shift+Enter adds a new line
-					if (e.key === "Enter" && !e.shiftKey) {
-						e.preventDefault();
-						submit();
-					}
-				}}
-			/>
-			<button type="submit" disabled={props.disabled || !text.trim()}>
-				{props.sendLabel}
-			</button>
-		</form>
+		<div className="reply" aria-live="polite" aria-busy={busy}>
+			<span className="reply-avatar" aria-hidden="true">
+				◆
+			</span>
+			<p>{busy ? `⏳ ${toolLabel ?? t.thinking}` : text}</p>
+		</div>
+	);
+}
+
+function History({ messages, language, t }: { messages: Parameters<typeof MessageView>[0]["message"][]; language: Language; t: (typeof TEXT)["de"] }) {
+	if (!messages.length) return null;
+	return (
+		<details className="history">
+			<summary>
+				{t.history} ({messages.length})
+			</summary>
+			<div className="messages">
+				{messages.map((m) => (
+					<MessageView key={m.id} message={m} language={language} />
+				))}
+			</div>
+		</details>
 	);
 }
