@@ -6,7 +6,7 @@
  * must not change between runs. The LLM is only used for follow-up questions ("What does that
  * mean?") and for understanding free-text / voice answers.
  *
- * Placeholders: {value} (field value), {count} (number of questions), {name} (first name).
+ * Placeholders: {value} (field value), {questions} ("You only answer two questions."), {name} (first name).
  *
  * ⚠️ Facts in these texts (deadlines, requirements) must match src/knowledge/ and be verified on
  *    oesterreich.gv.at before the demo. Explanations of terms are fine as they are.
@@ -56,8 +56,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Meldezettel – Wohnsitz an- oder ummelden", "Registration form (Meldezettel) – register your residence"),
 		portalUrl: "portal.amt.example/meldewesen/meldezettel",
 		intro: L(
-			"Wenn Sie umziehen, müssen Sie Ihre neue Adresse beim Amt melden. Das Formular dafür heißt Meldezettel. Ich fülle es jetzt mit Ihnen aus. Was ich schon weiß, trage ich selbst ein. Sie beantworten nur {count} Fragen.",
-			"When you move, you have to register your new address with the authorities. The form is called Meldezettel. I'll fill it in with you now. Whatever I already know, I enter myself. You only answer {count} questions.",
+			"Wenn Sie umziehen, müssen Sie Ihre neue Adresse beim Amt melden. Das Formular dafür heißt Meldezettel. Ich fülle es jetzt mit Ihnen aus. Was ich schon weiß, trage ich selbst ein. {questions}",
+			"When you move, you have to register your new address with the authorities. The form is called Meldezettel. I'll fill it in with you now. Whatever I already know, I enter myself. {questions}",
 		),
 		fields: {
 			new_address: {
@@ -147,8 +147,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Reisepass – Antrag vorbereiten und Termin buchen", "Passport – prepare the application and book an appointment"),
 		portalUrl: "portal.amt.example/reisedokumente/reisepass",
 		intro: L(
-			"Einen neuen Reisepass beantragt man persönlich bei der Passbehörde, weil dort Fingerabdrücke genommen werden. Ich bereite den Antrag mit Ihnen vor und suche einen Termin. Sie beantworten nur {count} Fragen.",
-			"You apply for a new passport in person at the passport office, because your fingerprints are taken there. I'll prepare the application with you and find an appointment. You only answer {count} questions.",
+			"Einen neuen Reisepass beantragt man persönlich bei der Passbehörde, weil dort Fingerabdrücke genommen werden. Ich bereite den Antrag mit Ihnen vor und suche einen Termin. {questions}",
+			"You apply for a new passport in person at the passport office, because your fingerprints are taken there. I'll prepare the application with you and find an appointment. {questions}",
 		),
 		fields: {
 			reason: {
@@ -206,8 +206,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Antrag auf Kinderbetreuungsgeld", "Application for childcare benefit (Kinderbetreuungsgeld)"),
 		portalUrl: "portal.amt.example/familie/kinderbetreuungsgeld",
 		intro: L(
-			"Kinderbetreuungsgeld ist Geld vom Staat für Eltern von kleinen Kindern. Zuständig ist Ihre Krankenkasse. Ich fülle den Antrag mit Ihnen aus. Sie beantworten nur {count} Fragen.",
-			"Childcare benefit is money from the state for parents of young children. Your health insurance handles it. I'll fill in the application with you. You only answer {count} questions.",
+			"Kinderbetreuungsgeld ist Geld vom Staat für Eltern von kleinen Kindern. Zuständig ist Ihre Krankenkasse. Ich fülle den Antrag mit Ihnen aus. {questions}",
+			"Childcare benefit is money from the state for parents of young children. Your health insurance handles it. I'll fill in the application with you. {questions}",
 		),
 		fields: {
 			child_name: {
@@ -275,13 +275,16 @@ export function fill(text: string, vars: Record<string, string | number>): strin
 export const PHRASES = {
 	checkTitle: L("Voraussetzungen prüfen", "Checking the requirements"),
 	checkIntro: L("Ich habe geprüft, ob Sie das beantragen können.", "I checked whether you can apply for this."),
-	checkAllGood: L("Es passt alles. Weiter geht's mit dem Formular.", "Everything looks fine. Let's move on to the form."),
-	checkWithNotes: L("Bitte beachten Sie die Hinweise. Weiter geht's mit dem Formular.", "Please note the remarks. Let's move on to the form."),
+	checkAllGood: L("Es passt alles. Als Nächstes trage ich ein, was die Ämter schon wissen.", "Everything is in order. Next, I fill in what the offices already know."),
+	checkWithNotes: L(
+		"Bitte beachten Sie die Hinweise. Als Nächstes trage ich ein, was die Ämter schon wissen.",
+		"Please note the remarks. Next, I fill in what the offices already know.",
+	),
 	blockedTitle: L("Das geht leider so nicht", "This isn't possible like this"),
 	blockedIntro: L("Diesen Antrag können Sie leider nicht stellen.", "Unfortunately you can't submit this application."),
 	blockedHelp: L(
 		"Ein Mensch vom Amt kann Ihnen weiterhelfen. Drücken Sie dafür auf „Mit einem Menschen sprechen“.",
-		"A member of staff can help you. Press „Talk to a person“ for that.",
+		"A member of staff can help you. Press “Talk to a person” for that.",
 	),
 	autofillGeneric: L("Das trage ich aus Ihren Daten ein: {value}.", "I'm entering this from your data: {value}."),
 	askGeneric: L("Bitte geben Sie an: {label}.", "Please enter: {label}."),
@@ -293,18 +296,21 @@ export const PHRASES = {
 	),
 	reviewTitle: L("Alles prüfen und bestätigen", "Check everything and confirm"),
 	review: L(
-		"Jetzt ist alles eingetragen. Bitte prüfen Sie es. Erst wenn Sie unten den Fingerabdruck gedrückt halten, wird der Antrag abgeschickt.",
-		"Everything is filled in now. Please check it. The application is only sent when you press and hold the fingerprint below.",
+		"Jetzt ist alles eingetragen. Bitte lesen Sie den Laufzettel noch einmal. Erst wenn Sie unten Ihr Siegel gedrückt halten, wird er eingereicht. Das können nur Sie.",
+		"Everything is filled in now. Please read the slip once more. It is only sent when you press and hold your seal below. Only you can do that.",
 	),
 	reviewProblems: L(
-		"Es fehlt noch etwas. Drücken Sie bei dem rot markierten Feld auf „Ändern“.",
-		"Something is still missing. Press „Change“ next to the field marked in red.",
+		"Es fehlt noch etwas. Drücken Sie in der rot markierten Zeile auf „Ändern“.",
+		"Something is still missing. Press “Change” in the row marked in red.",
 	),
-	doneTitle: L("Geschafft!", "Done!"),
+	doneTitle: L("Eingereicht", "Submitted"),
 	done: L(
-		"Geschafft! Ihr Antrag ist eingereicht. Ihre Nummer ist {ref}. Die brauchen Sie, wenn Sie beim Amt nachfragen.",
-		"Done! Your application has been submitted. Your number is {ref}. You'll need it if you contact the office.",
+		"Unterschrieben und eingereicht. Ihr Antrag liegt jetzt beim Amt. Ihre Nummer ist {ref}. Die brauchen Sie, wenn Sie beim Amt nachfragen.",
+		"Signed and submitted. Your application is now with the office. Your number is {ref}. You need it if you contact the office.",
 	),
+	questionsNone: L("Sie müssen nur noch unterschreiben.", "You only have to sign."),
+	questionsOne: L("Sie beantworten nur eine Frage.", "You only answer one question."),
+	questionsMany: L("Sie beantworten nur {count} Fragen.", "You only answer {count} questions."),
 	doneAppointment: L("Ihr Termin: {slot}, {office}.", "Your appointment: {slot}, {office}."),
 	yes: L("Ja", "Yes"),
 	no: L("Nein", "No"),
@@ -340,7 +346,7 @@ const CHECK_REWRITES: CheckRewrite[] = [
 	[/^No passport on file/, () => L("Sie haben noch keinen Reisepass. Sie können einen ersten Pass beantragen.", "You don't have a passport yet. You can apply for your first one.")],
 	[/^The passport on file \((.+)\) expired on (\d{4}-\d{2}-\d{2})/, (m) => L(`Ihr Reisepass ist seit ${formatDate(m[2], "de")} abgelaufen.`, `Your passport expired on ${formatDate(m[2], "en")}.`)],
 	[/^The current passport is still valid until (\d{4}-\d{2}-\d{2})/, (m) => L(`Ihr jetziger Pass ist noch bis ${formatDate(m[1], "de")} gültig.`, `Your current passport is valid until ${formatDate(m[1], "en")}.`)],
-	[/^MOCK RULES/, () => L("Hinweis: Diese Prüfung ist im Prototyp vereinfacht.", "Note: this check is simplified in the prototype.")],
+	[/^MOCK RULES/, () => L("Das ist eine erste Prüfung mit Ihren Daten. Genau prüft Ihre Krankenkasse.", "This is a first check with your data. Your health insurance checks it in detail.")],
 	[/^No child younger than 3/, () => L("In Ihrem Haushalt ist kein Kind unter 3 Jahren gemeldet.", "No child under 3 is registered in your household.")],
 	[/^Child in household: (.+)\.$/, (m) => L(`Kind im Haushalt: ${m[1].replace("born", "geboren")}.`, `Child in your household: ${m[1]}.`)],
 	[/^Valid residence permit on file/, () => L("Sie haben einen gültigen Aufenthaltstitel.", "You have a valid residence permit.")],

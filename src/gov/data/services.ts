@@ -136,11 +136,11 @@ export const SERVICES: ServiceDefinition[] = [
 		},
 		nextSteps: {
 			de: [
-				"Sie erhalten eine Meldebestätigung (im Mock: die Referenznummer).",
+				"Sie erhalten eine Meldebestätigung.",
 				"Denken Sie daran, Ihre neue Adresse z. B. bei Bank, Arbeitgeber und Versicherung bekanntzugeben.",
 			],
 			en: [
-				"You will receive a registration confirmation (in this mock: the reference number).",
+				"You will receive a registration confirmation (Meldebestätigung).",
 				"Remember to update your address with your bank, employer and insurance.",
 			],
 		},
@@ -296,11 +296,11 @@ export const SERVICES: ServiceDefinition[] = [
 		},
 		nextSteps: {
 			de: [
-				"Der Antrag wird vom Krankenversicherungsträger geprüft (im Mock: sofortige Referenznummer).",
+				"Ihr Krankenversicherungsträger prüft den Antrag.",
 				"Sie werden informiert, falls Unterlagen fehlen.",
 			],
 			en: [
-				"The application is reviewed by the health insurance provider (in this mock: instant reference number).",
+				"Your health insurance provider reviews the application.",
 				"You will be informed if any documents are missing.",
 			],
 		},

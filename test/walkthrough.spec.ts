@@ -261,6 +261,28 @@ describe("Stempelpass and time saved", () => {
 	});
 });
 
+describe("voice of the texts (docs/redesign/LAUFZETTEL.md)", () => {
+	it("speaks without exclamation marks or prototype labels, in every case and language", async () => {
+		const texts: string[] = [];
+		for (const persona of ["lena-huber", "josef-gruber", "amira-haddad", "thomas-berger", "sofia-rossi", "david-novak"])
+			for (const service of ["change-of-residence", "passport-renewal", "childcare-subsidy"])
+				for (const lang of ["de", "en"] as const) {
+					const w = await createWalkthrough(env, persona, service, lang, false);
+					for (const s of w.steps) texts.push(s.title, s.narration, ...(s.checks ?? []).map((c) => c.text));
+					const done = engine.markSubmitted(w, { referenceNumber: "MEL-2026-123456", authority: w.authority, submittedAt: "2026-10-15T10:00:00Z", nextSteps: getServiceDefinition(service)!.nextSteps[lang] });
+					texts.push(done.steps.at(-1)!.title, done.steps.at(-1)!.narration, ...done.result!.nextSteps);
+				}
+		expect(texts.filter((t) => t.includes("!"))).toEqual([]);
+		expect(texts.filter((t) => /mock|prototyp|simulation/i.test(t))).toEqual([]);
+	});
+
+	it("counts the questions in plain words", async () => {
+		const josef = await createWalkthrough(env, "josef-gruber", "passport-renewal", "en", false);
+		expect(josef.steps[0].narration).toContain("You only answer 2 questions.");
+		expect(josef.steps[0].narration).not.toContain("{");
+	});
+});
+
 describe("language switch", () => {
 	it("keeps step and answers when the walkthrough is rebuilt in another language", async () => {
 		let de = playUntilWaiting(await createWalkthrough(env, "lena-huber", "change-of-residence", "de", false));

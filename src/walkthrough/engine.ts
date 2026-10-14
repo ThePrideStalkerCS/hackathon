@@ -56,7 +56,7 @@ export function buildWalkthrough(input: BuildInput): Walkthrough {
 		kind: "intro",
 		chapter: "understand",
 		title: guide?.title[lang] ?? def.name[lang],
-		narration: guide ? fill(guide.intro[lang], { count }) : def.summary[lang],
+		narration: guide ? fill(guide.intro[lang], { questions: questionsPhrase(count, lang) }) : def.summary[lang],
 		waitsForCitizen: false,
 		done: false,
 	});
@@ -126,6 +126,11 @@ export function buildWalkthrough(input: BuildInput): Walkthrough {
 	const questions = steps.filter((s) => s.waitsForCitizen && s.kind !== "review").length;
 	steps.unshift(intro(questions));
 	return finalize(baseWalkthrough(input, guide, fields, steps));
+}
+
+/** "You only answer one question." / "… 3 questions." / "You only have to sign." */
+function questionsPhrase(count: number, lang: Language): string {
+	return count === 0 ? phrase("questionsNone", lang) : count === 1 ? phrase("questionsOne", lang) : phrase("questionsMany", lang, { count });
 }
 
 function baseWalkthrough(input: BuildInput, guide: ReturnType<typeof getGuide>, fields: PortalField[], steps: WalkthroughStep[]): Walkthrough {
