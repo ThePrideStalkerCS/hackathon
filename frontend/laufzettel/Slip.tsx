@@ -115,6 +115,7 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true, s
 				{showSeal && (
 					<figure className="lz-hero-seal" ref={heroSealRef}>
 						<Emblem motif={motif} done={done} total={total} serial={serial} label={tpl(t.lzSealLabel, { done, total })} />
+						<figcaption>{t.lzPeakGrows}</figcaption>
 					</figure>
 				)}
 			</header>
@@ -344,6 +345,11 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal =
 							{showSeal && <Emblem motif={motifFor(w.serviceId)} done={total} total={total} serial={`Nr. ${slipNumber(w)}`} size="md" label={tpl(t.lzSealLabel, { done: total, total })} />}
 							{seal && <Stamp spec={seal} delay={0.35} />}
 						</div>
+						{showSeal && (
+							<p className="lz-peak-earned">
+								{t.lzPeakSummit} <b>{t.lzPeakEarned}</b>
+							</p>
+						)}
 						{showSeal && minutes && (
 							<p className="lz-doc-kept">
 								<b>{tpl(t.lzKept, { time: formatMinutes(minutes, w.language) })}</b> {t.lzKeptHow}

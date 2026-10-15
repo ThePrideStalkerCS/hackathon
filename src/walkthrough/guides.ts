@@ -315,8 +315,8 @@ export const PHRASES = {
 	),
 	doneTitle: L("Eingereicht", "Submitted"),
 	done: L(
-		"Unterschrieben und eingereicht. Geschäftszahl: {ref}.",
-		"Signed and submitted. Reference number: {ref}.",
+		"Unterschrieben und eingereicht. Geschäftszahl: {ref}. Gipfelstempel erhalten.",
+		"Signed and submitted. Reference number: {ref}. Gipfelstempel earned.",
 	),
 	questionsNone: L("Sie unterschreiben nur noch.", "You only sign."),
 	questionsOne: L("Sie beantworten eine Frage.", "You answer one question."),

@@ -43,6 +43,9 @@ type Props = {
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
+/** The three errands of the Gipfelstempel pass, one emblem each (motifs.ts). */
+const PEAKS = ["change-of-residence", "passport-renewal", "childcare-subsidy"];
+
 export function Desk({ t, lang, name, overview, letters, busy, reply, recorder, onSend, onStart, onOpenLetter, onHuman, showSeal = true }: Props) {
 	const suggestions = overview?.suggestions ?? [];
 	const [first, ...more] = suggestions;
@@ -107,6 +110,38 @@ export function Desk({ t, lang, name, overview, letters, busy, reply, recorder, 
 				</section>
 			)}
 
+			{overview && showSeal && (
+				<section className="lz-peaks" aria-labelledby="lz-peaks-title">
+					<div className="lz-peaks-head">
+						<div>
+							<h2 className="lz-section" id="lz-peaks-title">
+								{t.lzPeakTitle}
+							</h2>
+							<p className="lz-peaks-line">{t.lzPeakLine}</p>
+						</div>
+						{overview.timeSavedMin > 0 && (
+							<p className="lz-kept-line">
+								<span>{t.lzKeptTotal}</span>
+								<b>{formatMinutes(overview.timeSavedMin, lang)}</b>
+							</p>
+						)}
+					</div>
+					<ul className="lz-peak-slots">
+						{PEAKS.map((serviceId) => {
+							const won = finished.find((f) => f.serviceId === serviceId);
+							const area = t.lzPeakAreas[serviceId] ?? serviceId;
+							return (
+								<li key={serviceId} className={`lz-peak ${won ? "is-earned" : "is-open"}`}>
+									<Emblem motif={motifFor(serviceId)} done={won ? 1 : 0} total={1} size="sm" serial={won?.date} label={won ? `${t.lzPeakEarned}: ${area}, ${won.date}` : `${area}: ${t.lzPeakOpen}`} />
+									<span className="lz-peak-name">{area}</span>
+									<small>{won ? won.date : t.lzPeakOpen}</small>
+								</li>
+							);
+						})}
+					</ul>
+				</section>
+			)}
+
 			<div className="lz-ask-desk">
 				<SayIt t={t} busy={busy} recorder={recorder} onSend={onSend} />
 				{reply && (
@@ -121,41 +156,21 @@ export function Desk({ t, lang, name, overview, letters, busy, reply, recorder, 
 				)}
 			</div>
 
-			{overview && (finished.length > 0 || records.length > 0) && (
+			{overview && records.length > 0 && (
 				<section className="lz-collection" aria-labelledby="lz-collection-title">
 					<div className="lz-collection-text">
 						<h2 className="lz-section" id="lz-collection-title">
-							{finished.length > 0 ? t.lzFinished : t.lzOnFile}
+							{t.lzOnFile}
 						</h2>
-						{showSeal && overview.timeSavedMin > 0 && (
-							<p className="lz-kept-line">
-								<span>{t.lzKeptTotal}</span>
-								<b>{formatMinutes(overview.timeSavedMin, lang)}</b>
-								<small>{t.lzKeptHow}</small>
-							</p>
-						)}
 					</div>
 					<div className="lz-collection-items">
-						{showSeal &&
-							finished.map((s) => (
-								<figure key={s.id} className="lz-collected">
-									<Emblem motif={motifFor(s.serviceId ?? "")} done={1} total={1} size="sm" serial={s.date} label={`${s.lines.join(" ")}, ${s.date}`} />
-									<figcaption>
-										{s.lines.join(" ")}
-										<small>{s.date}</small>
-									</figcaption>
-								</figure>
-							))}
-						{records.length > 0 && (
-							<div className="lz-records">
-								{finished.length > 0 && <span className="lz-label">{t.lzOnFile}</span>}
-								<div className="lz-sheet-row">
-									{records.map((s, i) => (
-										<Stamp key={s.id} spec={toSpec(s, t, i)} delay={0.1 * i} />
-									))}
-								</div>
+						<div className="lz-records">
+							<div className="lz-sheet-row">
+								{records.map((s, i) => (
+									<Stamp key={s.id} spec={toSpec(s, t, i)} delay={0.1 * i} />
+								))}
 							</div>
-						)}
+						</div>
 					</div>
 				</section>
 			)}
@@ -217,9 +232,10 @@ function Notice({ s, t, lang, name, showSeal, onStart, onHuman }: { s: Suggestio
 					{showSeal && minutes ? <p className="lz-notice-keep">{tpl(t.lzCardKeep, { time: formatMinutes(minutes, lang) })}</p> : null}
 				</div>
 				{showSeal && (
-					<div className="lz-notice-emblem">
+					<figure className="lz-notice-emblem">
 						<Emblem motif={motifFor(s.serviceId)} done={0} total={p?.rows ?? 6} size="md" label="" />
-					</div>
+						<figcaption>{t.lzPeakNext}</figcaption>
+					</figure>
 				)}
 			</div>
 		</article>

@@ -16,6 +16,7 @@ export type Run = { text: string; lang: Language };
 /** Official German words that appear in the English texts. Longest first, so compounds win. */
 export const GERMAN_TERMS = [
 	"Zentrales Melderegister",
+	"Gipfelstempel",
 	"Organstrafverfügung",
 	"Parkraumüberwachung",
 	"Kinderbetreuungsgeld",
