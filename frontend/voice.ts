@@ -9,6 +9,7 @@
  * 👉 EXTEND HERE: karaoke subtitles (word timestamps), streaming TTS, a voice picker.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { languageRuns } from "../src/shared/pronounce";
 import type { Language } from "../src/shared/types";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -117,22 +118,33 @@ export function useNarrator() {
 		// Watchdog: Chrome sometimes never fires `end` (no audio device, background tab, …).
 		// Without it the walkthrough would freeze on this step.
 		const maxMs = (readingTimeMs(text) / opts.rate) * 1.8 + 2000;
+		// German terms in English narration get a German voice (src/shared/pronounce.ts): one utterance per run.
+		const runs = languageRuns(text, opts.lang);
+		const keep: SpeechSynthesisUtterance[] = []; // Chrome drops `end` events of garbage-collected utterances
 		return withWatchdog(
 			new Promise<void>((resolve, reject) => {
 				if (!("speechSynthesis" in window)) return reject(new Error("no speechSynthesis"));
-				const u = new SpeechSynthesisUtterance(text);
-				u.lang = opts.lang === "de" ? "de-AT" : "en-GB";
 				const voices = window.speechSynthesis.getVoices();
-				u.voice = voices.find((v) => v.lang === u.lang) ?? voices.find((v) => v.lang.startsWith(opts.lang)) ?? null;
-				u.rate = opts.rate;
-				u.onend = () => resolve();
-				u.onerror = (e) => (e.error === "interrupted" || e.error === "canceled" ? resolve() : reject(new Error(e.error)));
-				utterance.current = u; // keep a reference: a garbage-collected utterance never fires `end` in Chrome
 				finish.current = resolve;
-				window.speechSynthesis.speak(u);
+				runs.forEach((run, i) => {
+					const u = new SpeechSynthesisUtterance(run.text);
+					u.lang = run.lang === "de" ? "de-AT" : "en-GB";
+					u.voice = voices.find((v) => v.lang === u.lang) ?? voices.find((v) => v.lang.startsWith(run.lang)) ?? null;
+					u.rate = opts.rate;
+					keep.push(u);
+					u.onerror = (e) => (e.error === "interrupted" || e.error === "canceled" ? resolve() : reject(new Error(e.error)));
+					if (i === runs.length - 1) {
+						u.onend = () => resolve();
+						utterance.current = u; // keep a reference: a garbage-collected utterance never fires `end` in Chrome
+					}
+					window.speechSynthesis.speak(u);
+				});
 			}),
 			maxMs,
-		).finally(() => window.speechSynthesis.cancel());
+		).finally(() => {
+			keep.length = 0;
+			window.speechSynthesis.cancel();
+		});
 	}
 
 	useEffect(() => stop, [stop]);

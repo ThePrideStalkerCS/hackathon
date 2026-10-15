@@ -17,6 +17,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { realSecret } from "../config";
+import { languageRuns } from "../shared/pronounce";
 
 /** Secrets/vars for voice. Optional so the app runs without them. */
 type VoiceEnv = { ELEVENLABS_API_KEY?: string; ELEVENLABS_VOICE_ID?: string };
@@ -55,22 +56,39 @@ voiceRoutes.post("/tts", async (c) => {
 	const cached = await cache.match(cacheKey);
 	if (cached) return cached;
 
-	const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_64`, {
-		method: "POST",
-		headers: { "xi-api-key": apiKey, "content-type": "application/json", accept: "audio/mpeg" },
-		body: JSON.stringify({
-			text,
-			model_id: TTS_MODEL,
-			language_code: language,
-			voice_settings: { stability: 0.6, similarity_boost: 0.75, speed },
+	// German terms in English narration ("Meldezettel") are spoken in German: one request per language
+	// run, with the neighbouring text as context so the voice keeps its flow, then joined (MP3 frames
+	// play back to back). A text without German terms stays one request.
+	const runs = languageRuns(text, language);
+	const parts = await Promise.all(
+		runs.map(async (run, i) => {
+			const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_64`, {
+				method: "POST",
+				headers: { "xi-api-key": apiKey, "content-type": "application/json", accept: "audio/mpeg" },
+				body: JSON.stringify({
+					text: run.text,
+					model_id: TTS_MODEL,
+					language_code: run.lang,
+					voice_settings: { stability: 0.6, similarity_boost: 0.75, speed },
+					...(runs.length > 1 ? { previous_text: runs[i - 1]?.text ?? undefined, next_text: runs[i + 1]?.text ?? undefined } : {}),
+				}),
+			});
+			if (!res.ok) {
+				console.error("[tts] ElevenLabs error", res.status, await res.text().catch(() => ""));
+				return null;
+			}
+			return new Uint8Array(await res.arrayBuffer());
 		}),
-	});
-	if (!res.ok) {
-		console.error("[tts] ElevenLabs error", res.status, await res.text().catch(() => ""));
-		return c.json({ error: "tts_failed" }, 502);
+	);
+	if (parts.some((p) => !p)) return c.json({ error: "tts_failed" }, 502);
+	const audio = new Uint8Array(parts.reduce((n, p) => n + p!.length, 0));
+	let offset = 0;
+	for (const p of parts) {
+		audio.set(p!, offset);
+		offset += p!.length;
 	}
 
-	const response = new Response(res.body, {
+	const response = new Response(audio, {
 		headers: { "content-type": "audio/mpeg", "cache-control": "public, max-age=86400" },
 	});
 	c.executionCtx.waitUntil(cache.put(cacheKey, response.clone()));

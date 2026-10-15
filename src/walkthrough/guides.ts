@@ -59,14 +59,14 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Meldezettel – Wohnsitz an- oder ummelden", "Registration form (Meldezettel) – register your residence"),
 		portalUrl: "portal.amt.example/meldewesen/meldezettel",
 		intro: L(
-			"Wenn Sie umziehen, müssen Sie Ihre neue Adresse beim Amt melden. Das Formular dafür heißt Meldezettel. Ich gehe es jetzt mit Ihnen durch. Was die Ämter schon wissen, kommt direkt aus ihren Registern. {questions}",
-			"When you move, you have to register your new address with the authorities. The form is called Meldezettel. I'll go through it with you now. Whatever the offices already know comes straight from their registers. {questions}",
+			"Sie sind umgezogen. Wir melden die neue Adresse mit dem Meldezettel an. Was die Ämter wissen, tragen sie selbst ein. {questions}",
+			"You moved, so we register your new address on the Meldezettel. The offices fill in what they know. {questions}",
 		),
 		fields: {
 			new_address: {
 				confirmed: L(
-					"{yourRole} {name} hat Ihre neue Adresse schon bestätigt: {value}. Damit steht sie auf Ihrem Laufzettel.",
-					"{yourRole} {name} has already confirmed your new address: {value}. So it is already on your slip.",
+					"{yourRole} {name} hat die neue Adresse bestätigt: {value}.",
+					"{yourRole} {name} confirmed your new address: {value}.",
 				),
 				question: L("Wie lautet Ihre neue Adresse?", "What is your new address?"),
 				officialTerm: L("Unterkunft (neue Adresse)", "Accommodation (new address)"),
@@ -76,7 +76,7 @@ export const GUIDES: Record<string, ServiceGuide> = {
 				),
 			},
 			move_in_date: {
-				confirmed: L("Auch das Einzugsdatum steht in der Bestätigung: {value}.", "The move-in date is in the confirmation too: {value}."),
+				confirmed: L("Eingezogen am {value}.", "Moved in on {value}."),
 				question: L("Wann sind Sie eingezogen?", "When did you move in?"),
 				officialTerm: L("Einzugsdatum", "Move-in date"),
 				explain: L(
@@ -88,8 +88,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 				question: L("Ist das jetzt Ihre Hauptwohnung?", "Is this now your main home?"),
 				officialTerm: L("Hauptwohnsitz oder Nebenwohnsitz", "Main or secondary residence"),
 				explain: L(
-					"Der Hauptwohnsitz ist dort, wo Sie hauptsächlich leben. Ein Nebenwohnsitz ist eine weitere Wohnung, zum Beispiel zum Studieren, wenn Ihr Lebensmittelpunkt woanders ist.",
-					"Your main residence is where you mainly live. A secondary residence is an additional home, for example for studying, while your life is centred somewhere else.",
+					"Hauptwohnsitz ist, wo Sie hauptsächlich leben. Nebenwohnsitz ist eine zusätzliche Wohnung, etwa fürs Studium.",
+					"Hauptwohnsitz is where you mainly live. Nebenwohnsitz is an extra home, for example for studying.",
 				),
 				optionExplain: {
 					main: L("Hier lebe ich hauptsächlich.", "This is where I mainly live."),
@@ -98,8 +98,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			previous_address: {
 				autofill: L(
-					"Ihre bisherige Adresse kommt aus dem Melderegister: {value}.",
-					"Your previous address comes from the population register: {value}.",
+					"Die alte Adresse kommt aus dem Melderegister: {value}.",
+					"Your old address comes from the Melderegister: {value}.",
 				),
 				question: L(
 					"Wo haben Sie bisher gewohnt? Wenn Sie aus dem Ausland kommen, können Sie das überspringen.",
@@ -113,14 +113,14 @@ export const GUIDES: Record<string, ServiceGuide> = {
 				question: L("Soll ich Ihre alte Adresse gleich abmelden?", "Shall I deregister your old address at the same time?"),
 				officialTerm: L("Abmeldung", "Deregistration"),
 				explain: L(
-					"Abmelden heißt: Sie sagen dem Amt, dass Sie dort nicht mehr wohnen. Das geht gleich zusammen mit der Anmeldung.",
-					"Deregistering means telling the authorities that you no longer live there. It can be done together with the registration.",
+					"Dann ist die alte Adresse im selben Schritt abgemeldet.",
+					"Then the old address is closed in the same step.",
 				),
 			},
 			landlord_signature: {
 				confirmed: L(
-					"{name} hat digital bestätigt, dass Sie dort wohnen. Die Unterschrift des Unterkunftgebers ist damit schon da.",
-					"{name} has confirmed digitally that you live there. So the accommodation provider's signature is already in place.",
+					"{name} hat als Vermieter digital unterschrieben.",
+					"{name} signed digitally as your landlord.",
 				),
 				question: L(
 					"Hat Ihre Vermieterin oder Ihr Vermieter den Meldezettel unterschrieben?",
@@ -138,8 +138,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			id_document: {
 				autofill: L(
-					"Im Register ist Ihr {value}. Der ist noch gültig und gilt als Ausweis.",
-					"The register has your {value}. It is still valid, so it counts as your ID.",
+					"Ihr {value} aus dem Register gilt als Ausweis.",
+					"Your {value} from the register counts as your ID.",
 				),
 				question: L(
 					"Ich habe keinen gültigen Ausweis mit Foto von Ihnen gefunden. Haben Sie einen anderen? Bitte nennen Sie die Art und die Nummer.",
@@ -286,12 +286,9 @@ export function fill(text: string, vars: Record<string, string | number>): strin
 
 export const PHRASES = {
 	checkTitle: L("Voraussetzungen prüfen", "Checking the requirements"),
-	checkIntro: L("Ich habe geprüft, ob Sie das beantragen können.", "I checked whether you can apply for this."),
-	checkAllGood: L("Es passt alles. Als Nächstes kommt, was die Ämter schon wissen.", "Everything is in order. Next comes what the offices already know."),
-	checkWithNotes: L(
-		"Bitte beachten Sie die Hinweise. Als Nächstes kommt, was die Ämter schon wissen.",
-		"Please note the remarks. Next comes what the offices already know.",
-	),
+	checkIntro: L("Ich habe die Voraussetzungen geprüft.", "I checked the requirements."),
+	checkAllGood: L("Alles passt.", "All fine."),
+	checkWithNotes: L("Bitte beachten Sie die Hinweise.", "Please note the remarks."),
 	blockedTitle: L("Das geht leider so nicht", "This isn't possible like this"),
 	blockedIntro: L("Diesen Antrag können Sie leider nicht stellen.", "Unfortunately you can't submit this application."),
 	blockedHelp: L(
@@ -309,8 +306,8 @@ export const PHRASES = {
 	),
 	reviewTitle: L("Alles prüfen und bestätigen", "Check everything and confirm"),
 	review: L(
-		"Jetzt ist alles eingetragen. Bitte lesen Sie den Laufzettel noch einmal. Erst wenn Sie unten Ihr Siegel gedrückt halten, wird er eingereicht. Das können nur Sie.",
-		"Everything is filled in now. Please read the slip once more. It is only sent when you press and hold your seal below. Only you can do that.",
+		"Alles ausgefüllt. Lesen Sie noch einmal drüber, dann halten Sie Ihr Siegel gedrückt. Das können nur Sie.",
+		"All filled in. Read it once more, then hold your seal to sign. Only you can do that.",
 	),
 	reviewProblems: L(
 		"Es fehlt noch etwas. Drücken Sie in der rot markierten Zeile auf „Ändern“.",
@@ -318,12 +315,12 @@ export const PHRASES = {
 	),
 	doneTitle: L("Eingereicht", "Submitted"),
 	done: L(
-		"Unterschrieben und eingereicht. Ihr Antrag liegt jetzt beim Amt. Ihre Nummer ist {ref}. Die brauchen Sie, wenn Sie beim Amt nachfragen.",
-		"Signed and submitted. Your application is now with the office. Your number is {ref}. You need it if you contact the office.",
+		"Unterschrieben und eingereicht. Ihre Nummer ist {ref}.",
+		"Signed and submitted. Your number is {ref}.",
 	),
-	questionsNone: L("Sie müssen nur noch unterschreiben.", "You only have to sign."),
-	questionsOne: L("Sie beantworten nur eine Frage.", "You only answer one question."),
-	questionsMany: L("Sie beantworten nur {count} Fragen.", "You only answer {count} questions."),
+	questionsNone: L("Sie unterschreiben nur noch.", "You only sign."),
+	questionsOne: L("Sie beantworten eine Frage.", "You answer one question."),
+	questionsMany: L("Sie beantworten {count} Fragen.", "You answer {count} questions."),
 	doneAppointment: L("Ihr Termin: {slot}, {office}.", "Your appointment: {slot}, {office}."),
 	yes: L("Ja", "Yes"),
 	no: L("Nein", "No"),

@@ -163,11 +163,11 @@ describe("guided walkthrough", () => {
 			"autofill:id_document",
 			"review",
 		]);
-		expect(w.steps[0].narration).toContain("You only answer 2 questions.");
+		expect(w.steps[0].narration).toContain("You answer 2 questions.");
 		const address = w.fields.find((f) => f.id === "new_address")!;
 		expect(address).toMatchObject({ value: "Florianigasse 18/5, 1080 Wien", source: "confirmed", confirmedBy: { name: "Karl Steiner", role: "Landlord" } });
 		expect(w.steps.find((s) => s.fieldId === "new_address")?.narration).toBe(
-			"Your landlord Karl Steiner has already confirmed your new address: Florianigasse 18/5, 1080 Wien. So it is already on your slip.",
+			"Your landlord Karl Steiner confirmed your new address: Florianigasse 18/5, 1080 Wien.",
 		);
 		expect(w.fields.find((f) => f.id === "previous_address")?.source).toBe("profile");
 
@@ -316,7 +316,7 @@ describe("voice of the texts (docs/redesign/LAUFZETTEL.md)", () => {
 
 	it("counts the questions in plain words", async () => {
 		const josef = await createWalkthrough(env, "josef-gruber", "passport-renewal", "en", false);
-		expect(josef.steps[0].narration).toContain("You only answer 2 questions.");
+		expect(josef.steps[0].narration).toContain("You answer 2 questions.");
 		expect(josef.steps[0].narration).not.toContain("{");
 	});
 });
