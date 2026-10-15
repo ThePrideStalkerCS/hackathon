@@ -19,6 +19,8 @@ type Props = {
 	speaking: boolean;
 	paused: boolean;
 	busy: boolean;
+	/** The citizen has to act: on a phone the caption keeps to two lines and rolls through the rest. */
+	compact?: boolean;
 	recorder: ReturnType<typeof useRecorder>;
 	onTogglePause: () => void;
 	onReplay: () => void;
@@ -28,7 +30,7 @@ type Props = {
 /** About one caption line of speech (roughly ten words). */
 const LINE_MS = 3400;
 
-export function CaptionBar({ t, caption, speaking, paused, busy, recorder, onTogglePause, onReplay, onSend }: Props) {
+export function CaptionBar({ t, caption, speaking, paused, busy, compact = false, recorder, onTogglePause, onReplay, onSend }: Props) {
 	const [typing, setTyping] = useState(false);
 	const [text, setText] = useState("");
 	const textRef = useRef<HTMLParagraphElement>(null);
@@ -59,7 +61,7 @@ export function CaptionBar({ t, caption, speaking, paused, busy, recorder, onTog
 						: caption;
 
 	return (
-		<div className="lz-captions" role="region" aria-label={t.assistant}>
+		<div className={`lz-captions ${compact ? "is-compact" : ""}`} role="region" aria-label={t.assistant}>
 			<div className="lz-captions-in">
 				<button type="button" className="lz-cap-btn" onClick={onTogglePause} aria-label={paused ? t.play : t.pause} title={paused ? t.play : t.pause}>
 					{paused ? (

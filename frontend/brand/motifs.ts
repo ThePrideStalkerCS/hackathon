@@ -311,8 +311,10 @@ function peaks(): { full: Layer[]; silhouette: Layer[] } {
 	sil.paper(pathOf(snow[0]));
 	sil.ink(place(IBEX, 34.2, -23.4, 0.9));
 	sil.ink(place(HORN, 34.2, -23.4, 0.9));
-	sil.ink(pathOf(left));
-	sil.ink(pathOf(right));
+	// One ground with the river as a thin line widening towards you: a broad white river at this
+	// size reads as a mouth under the sun and the snow.
+	sil.ink(pathOf([[-66, 30], [-48, 23], [-28, 25], [-10, 30], [-1, 29.4], [6, 32], [22, 26], [42, 25], [66, 27], [66, 66], [-66, 66]]));
+	sil.paper(swell([...curve([3, 25], [-8, 33], [0, 44]), ...curve([0, 44], [9, 53], [2, 66]).slice(1)], (t) => 0.6 + 7 * t * t));
 	return { full: pl.layers, silhouette: sil.layers };
 }
 

@@ -41,6 +41,13 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 		w.status === "blocked" ? null : answersLeft > 1 ? tpl(t.lzLeftMany, { n: answersLeft }) : answersLeft === 1 ? t.lzLeftOne : t.lzLeftSign,
 		showSeal && minutes && w.status !== "blocked" ? tpl(t.lzKeepEst, { time: formatMinutes(minutes, w.language) }) : null,
 	].filter(Boolean);
+	const progressShort = [
+		tpl(t.lzHeadOf, { done, total }),
+		w.status === "blocked" ? null : answersLeft > 0 ? tpl(t.lzHeadLeft, { n: answersLeft }) : t.lzHeadSign,
+		showSeal && minutes && w.status !== "blocked" ? tpl(t.lzHeadKeep, { time: formatMinutes(minutes, w.language) }) : null,
+	]
+		.filter(Boolean)
+		.join(" · ");
 	const listRef = useRef<HTMLOListElement>(null);
 	const heroSealRef = useRef<HTMLElement>(null);
 	const [heroSealInView, setHeroSealInView] = useState(true);
@@ -59,11 +66,18 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 	}, [showSeal, Boolean(w.result)]);
 
 	// Bring the current row into view, and put keyboard focus on a question that waits for the citizen.
+	// The row is centred in the room between the sticky heads and the captions; a row taller than that
+	// room (a question on a phone) starts just below the heads, so its title is never covered.
 	useEffect(() => {
 		const row = listRef.current?.querySelector<HTMLElement>(".lz-row.is-current");
 		if (!row) return;
 		const timer = setTimeout(() => {
-			row.scrollIntoView({ block: "center", behavior: reducedMotion() ? "auto" : "smooth" });
+			const above = (document.querySelector(".lz-top")?.getBoundingClientRect().height ?? 0) + (row.closest(".lz-slip")?.querySelector(".lz-slip-head")?.getBoundingClientRect().height ?? 0) + 12;
+			const below = (document.querySelector(".lz-captions")?.getBoundingClientRect().height ?? 0) + 12;
+			const room = window.innerHeight - above - below;
+			const r = row.getBoundingClientRect();
+			const top = r.top + window.scrollY - above - Math.max(0, (room - r.height) / 2);
+			window.scrollTo({ top: Math.max(0, top), behavior: reducedMotion() ? "auto" : "smooth" });
 			row.querySelector<HTMLElement>("[data-focus]")?.focus({ preventScroll: true });
 		}, 120);
 		return () => clearTimeout(timer);
@@ -106,6 +120,9 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 								{progress.map((p, i) => (
 									<span key={i}>{i === 0 ? <b>{p}</b> : p}</span>
 								))}
+							</p>
+							<p className="lz-head-short" aria-hidden="true">
+								{progressShort}
 							</p>
 						</div>
 					</div>

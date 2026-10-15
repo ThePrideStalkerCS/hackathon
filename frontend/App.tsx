@@ -116,6 +116,8 @@ export function App() {
 	const w = state.walkthrough;
 	const step = w?.steps[w.current];
 	const stepKey = w && step ? `${w.id}:${w.current}:${step.id}:${step.kind}:${step.done}` : null;
+	// While the citizen has to answer or sign, the captions shrink so the question keeps the screen.
+	const citizenTurn = Boolean(w && step && !w.result && w.status !== "blocked" && (step.kind === "ask" || step.kind === "review" || (step.kind === "appointment" && !step.done)));
 	const persona = personas.find((p) => p.id === state.personaId);
 	const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant");
 	const toolLabel = busy ? runningToolLabel(messages.at(-1), state.language) : null;
@@ -271,7 +273,8 @@ export function App() {
 					<div className="lz-top-tools">
 						<button type="button" className="lz-top-link" onClick={askHuman} title={t.humanLong} aria-label={t.humanLong}>
 							<Icon name="headset" size={20} />
-							<span>{t.human}</span>
+							<span className="lz-top-full">{t.human}</span>
+							<span className="lz-top-short">{t.humanShort}</span>
 						</button>
 						<button
 							type="button"
@@ -282,7 +285,7 @@ export function App() {
 							onClick={() => go(route === "goals" ? "" : "#/goals")}
 						>
 							<Icon name="checkCircle" size={20} />
-							<span>{t.goalsButton}</span>
+							<span className="lz-top-full">{t.goalsButton}</span>
 						</button>
 						<div className="lz-lang" role="group" aria-label={t.language}>
 							{(["en", "de"] as const).map((l) => (
@@ -347,6 +350,7 @@ export function App() {
 					speaking={narrator.speaking}
 					paused={!playing}
 					busy={busy}
+					compact={citizenTurn}
 					recorder={recorder}
 					onTogglePause={togglePause}
 					onReplay={() => {

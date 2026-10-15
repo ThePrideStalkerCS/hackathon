@@ -53,6 +53,10 @@ export const TEXT = {
 		lzLeftOne: "noch eine Antwort, dann unterschreiben Sie",
 		lzLeftSign: "nur noch Ihre Unterschrift",
 		lzKeepEst: "Sie behalten etwa {time} (geschätzt)",
+		lzHeadOf: "{done} von {total}",
+		lzHeadLeft: "noch {n}",
+		lzHeadSign: "Ihre Unterschrift",
+		lzHeadKeep: "etwa {time} behalten",
 		lzCardKeep: "Sie behalten etwa {time} (geschätzt).",
 		lzSealWhy: "Das Siegel zeigt nur Ihren Fortschritt. Nur Sie sehen es. Keine Punkte, keine Rangliste.",
 		lzSealSetting: "Siegel und Zeitersparnis zeigen",
@@ -122,6 +126,7 @@ export const TEXT = {
 
 		// Human help + profile menu
 		human: "Mit einem Menschen sprechen",
+		humanShort: "Beratung",
 		humanLong: "Mit einem Menschen vom Amt sprechen",
 		loggedIn: "Angemeldet mit ID Austria",
 		switchPerson: "Testperson wechseln",
@@ -274,6 +279,10 @@ export const TEXT = {
 		lzLeftOne: "one answer left, then you sign",
 		lzLeftSign: "only your signature left",
 		lzKeepEst: "about {time} you keep (estimate)",
+		lzHeadOf: "{done} of {total}",
+		lzHeadLeft: "{n} left",
+		lzHeadSign: "your signature",
+		lzHeadKeep: "about {time} kept",
 		lzCardKeep: "About {time} you keep (estimate).",
 		lzSealWhy: "The seal only shows your progress. Only you see it. No points, no ranking.",
 		lzSealSetting: "Show seal and time kept",
@@ -342,6 +351,7 @@ export const TEXT = {
 		examples: ["Hi, I just moved within Vienna, what do I have to do?", "My passport expired.", "We just had a baby."],
 
 		human: "Talk to a person",
+		humanShort: "A person",
 		humanLong: "Talk to a person at the office",
 		loggedIn: "Signed in with ID Austria",
 		switchPerson: "Switch test person",

@@ -2144,22 +2144,102 @@ h3 {
 		padding-top: 36px;
 		gap: 36px;
 	}
+	/* small emblem beside the kicker and title; reason, promise and button use the full width */
 	.lz-open-slip,
 	.lz-open-slip:has(> .lz-open-emblem) {
 		grid-template-columns: minmax(0, 1fr);
-		padding: 26px 22px;
-		gap: 18px;
+		padding: 24px 20px;
+		gap: 0 14px;
+		align-items: start;
 		transform: none;
 	}
+	.lz-open-slip:has(> .lz-open-emblem) {
+		grid-template-columns: 68px minmax(0, 1fr);
+	}
+	.lz-open-slip:has(> .lz-open-emblem) .lz-open-text {
+		display: contents;
+	}
 	.lz-open-emblem {
-		justify-items: start;
+		grid-column: 1;
+		grid-row: 1 / span 2;
+		align-self: center;
 	}
 	.lz-open-emblem .lz-emblem {
-		width: 120px;
+		width: 68px;
+	}
+	.lz-open-slip:has(> .lz-open-emblem) :is(.lz-open-kicker, .lz-open-title) {
+		grid-column: 2;
+	}
+	.lz-open-slip:has(> .lz-open-emblem) .lz-open-text > :not(.lz-open-kicker, .lz-open-title) {
+		grid-column: 1 / -1;
+	}
+	.lz-open-title {
+		font-size: 1.6rem;
+	}
+	.lz-open-go {
+		justify-self: start;
 	}
 	.lz-collection {
 		grid-template-columns: minmax(0, 1fr);
 		padding: 26px 22px;
+	}
+	.lz-top-link .lz-top-full {
+		display: none;
+	}
+	.lz-top-link .lz-top-short {
+		display: inline;
+	}
+	.lz-captions.is-compact .lz-cap-text {
+		max-height: 2.8em;
+	}
+}
+
+/* phones: the question gets the screen. One-row top bar, a one-line slip head, two caption lines
+   while the citizen has to act. The full progress sentence stays for screen readers. */
+.lz-top-short,
+.lz-head-short {
+	display: none;
+}
+@media (max-width: 600px) {
+	.lz-top-in {
+		flex-wrap: nowrap;
+		gap: 8px;
+		padding-inline: 12px;
+	}
+	.lz-top-tools {
+		flex-wrap: nowrap;
+		gap: 2px;
+	}
+	.lz-top-link {
+		padding: 0 8px;
+	}
+	.lz-lang button {
+		min-width: 40px;
+	}
+	.lz-slip-head {
+		padding: 8px 14px;
+		gap: 10px;
+	}
+	.lz-head-name,
+	.lz-head-progress {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+	.lz-head-short {
+		display: block;
+		margin: 0;
+		font-size: 0.95rem;
+		font-weight: 600;
+		line-height: 1.35;
+	}
+}
+@media (max-width: 480px) {
+	.lz-top .lz-lockup-name {
+		display: none;
 	}
 }
 @media (prefers-reduced-motion: reduce) {
