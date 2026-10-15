@@ -1781,6 +1781,19 @@ h3 {
 }
 
 /* ---- the desk ---- */
+.lz-open-slip:has(> .lz-open-emblem) {
+	grid-template-columns: 220px minmax(0, 1fr);
+}
+.menu-row-note > span {
+	display: grid;
+	gap: 2px;
+	max-width: 24ch;
+}
+.menu-row-note small {
+	font-size: 0.78rem;
+	line-height: 1.35;
+	color: var(--grau);
+}
 .lz-desk {
 	max-width: 1000px;
 	margin: 0 auto;
@@ -1789,7 +1802,7 @@ h3 {
 }
 .lz-open-slip {
 	display: grid;
-	grid-template-columns: 220px minmax(0, 1fr);
+	grid-template-columns: minmax(0, 1fr);
 	gap: 40px;
 	align-items: center;
 	padding: 40px 44px;
@@ -2131,7 +2144,8 @@ h3 {
 		padding-top: 36px;
 		gap: 36px;
 	}
-	.lz-open-slip {
+	.lz-open-slip,
+	.lz-open-slip:has(> .lz-open-emblem) {
 		grid-template-columns: minmax(0, 1fr);
 		padding: 26px 22px;
 		gap: 18px;
