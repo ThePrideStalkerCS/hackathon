@@ -12,6 +12,12 @@ import type { Citizen } from "../gov/types";
 import { openConfirmation } from "../gov/data/confirmations";
 import { formatDate } from "./guides";
 
+function addDays(isoDate: string, days: number): string {
+	const d = new Date(`${isoDate}T12:00:00Z`);
+	d.setUTCDate(d.getUTCDate() + days);
+	return d.toISOString().slice(0, 10);
+}
+
 function addMonths(isoDate: string, months: number): string {
 	const d = new Date(isoDate);
 	d.setMonth(d.getMonth() + months);
@@ -71,6 +77,8 @@ function collect(citizen: Citizen, today: string, lang: Language): Suggestion[] 
 			reason: de
 				? `${move.by.yourRole.de} ${move.by.name} hat bestätigt, dass Sie am ${formatDate(movedIn, "de")} in die ${address} eingezogen sind. Anmelden müssen Sie sich innerhalb von drei Tagen nach dem Einzug.`
 				: `${move.by.yourRole.en} ${move.by.name} confirmed that you moved into ${address} on ${formatDate(movedIn, "en")}. You have to register within three days of moving in.`,
+			// Meldegesetz: register within three days of moving in (src/knowledge).
+			due: addDays(movedIn, 3),
 		});
 	}
 

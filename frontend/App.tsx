@@ -25,6 +25,8 @@ import { InkFilter, Lockup } from "./brand/Brand";
 import { CaptionBar } from "./laufzettel/CaptionBar";
 import { Desk } from "./laufzettel/Desk";
 import { Slip } from "./laufzettel/Slip";
+import { LetterSheet, LetterToast, MailboxButton } from "./laufzettel/Postfach";
+import type { Letter } from "../src/shared/mail";
 import { Icon } from "./icons";
 import { TEXT } from "./i18n";
 import { GOALS, loadProgress, percent, saveProgress, type Goal, type Progress as GoalProgress } from "./goals/data";
@@ -58,6 +60,13 @@ export function App() {
 	const [showSeal, setShowSeal] = useState(() => localStorage.getItem("lz-seal") !== "off");
 	const [replayCount, setReplayCount] = useState(0);
 	const [caption, setCaption] = useState("");
+	// The digital Postfach: letters arrive during the errand they belong to (src/gov/data/mail.ts).
+	const [letters, setLetters] = useState<Letter[]>([]);
+	const [arrived, setArrived] = useState<string[]>([]);
+	const [paid, setPaid] = useState<string[]>([]);
+	const [openLetterId, setOpenLetterId] = useState<string | null>(null);
+	const [toastId, setToastId] = useState<string | null>(null);
+	const resumeAfterLetter = useRef(false);
 	const t = TEXT[state.language];
 	const narrator = useNarrator();
 
@@ -132,6 +141,48 @@ export function App() {
 		if (walkthroughOpen) return;
 		call<Overview & { suggestions: Suggestion[] }>("getOverview").then(setOverview).catch(() => setOverview(null));
 	}, [call, state.personaId, state.language, sessionId, walkthroughOpen]);
+
+	// Postfach: load the letters, and let a letter arrive while its errand runs (after the first answer).
+	useEffect(() => {
+		setArrived([]);
+		setPaid([]);
+		setOpenLetterId(null);
+		setToastId(null);
+	}, [state.personaId]);
+	useEffect(() => {
+		api.mail(state.personaId, state.language).then(setLetters).catch(() => setLetters([]));
+	}, [state.personaId, state.language]);
+	useEffect(() => {
+		for (const l of letters) {
+			if (arrived.includes(l.id)) continue;
+			const due = !l.arrivesDuring || (w?.serviceId === l.arrivesDuring && (Boolean(w.result) || w.steps.some((s) => s.kind === "ask" && s.done)));
+			if (!due) continue;
+			setArrived((a) => [...a, l.id]);
+			if (l.arrivesDuring) setToastId(l.id);
+		}
+	}, [letters, arrived, w]);
+	const openLetter = letters.find((l) => l.id === openLetterId);
+	const needsYou = letters.filter((l) => arrived.includes(l.id) && !paid.includes(l.id));
+
+	function showLetter(id: string) {
+		const letter = letters.find((l) => l.id === id);
+		if (!letter) return;
+		setToastId(null);
+		setOpenLetterId(id);
+		resumeAfterLetter.current = Boolean(w) && playing;
+		if (w) setPlaying(false);
+		setCaption(letter.spoken);
+		void narrator.speak(letter.spoken, { lang: state.language, rate, muted: !voiceOn });
+	}
+	function closeLetter() {
+		setOpenLetterId(null);
+		narrator.stop();
+		if (resumeAfterLetter.current) {
+			setPlaying(true);
+			setReplayCount((c) => c + 1);
+		}
+		resumeAfterLetter.current = false;
+	}
 
 	// The slip head sticks right under the top bar, whose height changes with wrapping and text size.
 	const topRef = useRef<HTMLElement>(null);
@@ -276,17 +327,7 @@ export function App() {
 							<span className="lz-top-full">{t.human}</span>
 							<span className="lz-top-short">{t.humanShort}</span>
 						</button>
-						<button
-							type="button"
-							className="lz-top-link"
-							aria-pressed={route === "goals"}
-							aria-label={t.goalsButton}
-							title={t.goalsButton}
-							onClick={() => go(route === "goals" ? "" : "#/goals")}
-						>
-							<Icon name="checkCircle" size={20} />
-							<span className="lz-top-full">{t.goalsButton}</span>
-						</button>
+						<MailboxButton t={t} unread={needsYou.length} onOpen={() => needsYou[0] && showLetter(needsYou[0].id)} />
 						<div className="lz-lang" role="group" aria-label={t.language}>
 							{(["en", "de"] as const).map((l) => (
 								<button key={l} type="button" lang={l} aria-pressed={state.language === l} onClick={() => updateSettings({ language: l })}>
@@ -331,8 +372,11 @@ export function App() {
 					<Desk
 						t={t}
 						lang={state.language}
-						firstName={persona?.name.split(" ")[0] ?? ""}
+						name={persona?.name ?? ""}
 						overview={overview}
+						letters={needsYou}
+						onOpenLetter={showLetter}
+						onHuman={() => void askHuman()}
 						busy={busy}
 						reply={busy ? (toolLabel ?? t.thinking) : messageText(lastAssistant)}
 						recorder={recorder}
@@ -346,9 +390,9 @@ export function App() {
 			{w && !goalsPage && (
 				<CaptionBar
 					t={t}
-					caption={busy ? (toolLabel ?? t.thinking) : caption}
+					caption={openLetter ? openLetter.spoken : busy ? (toolLabel ?? t.thinking) : caption}
 					speaking={narrator.speaking}
-					paused={!playing}
+					paused={!playing && !openLetter}
 					busy={busy}
 					compact={citizenTurn}
 					recorder={recorder}
@@ -361,6 +405,20 @@ export function App() {
 				/>
 			)}
 
+			{toastId && !openLetterId && letters.find((l) => l.id === toastId) && (
+				<LetterToast t={t} letter={letters.find((l) => l.id === toastId)!} onOpen={() => showLetter(toastId)} onLater={() => setToastId(null)} />
+			)}
+			{openLetter && (
+				<LetterSheet
+					t={t}
+					lang={state.language}
+					letter={openLetter}
+					paid={paid.includes(openLetter.id)}
+					onPay={() => setPaid((p) => [...p, openLetter.id])}
+					onClose={closeLetter}
+					onHuman={() => void askHuman()}
+				/>
+			)}
 			{handoff && <HandoffSheet result={handoff} t={t} onClose={() => setHandoff(null)} />}
 		</>
 	);

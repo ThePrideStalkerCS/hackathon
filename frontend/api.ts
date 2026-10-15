@@ -1,4 +1,5 @@
 /** Small helpers for calling the Worker's REST API from the browser. */
+import type { Letter } from "../src/shared/mail";
 import type { Language } from "../src/shared/types";
 
 export type Persona = { id: string; name: string; preferredLanguage: Language; scenarioHint: string };
@@ -20,6 +21,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
 	personas: () => request<Persona[]>("/api/gov/citizens"),
+	/** The citizen's digital Postfach (fictional letters, src/gov/data/mail.ts). */
+	mail: (citizenId: string, language: Language) => request<Letter[]>(`/api/gov/citizens/${citizenId}/mail?lang=${language}`),
 	/** Creates a human handoff ticket via REST (the UI uses the agent's requestHuman callable, which adds the walkthrough position). */
 	handoff: (input: { citizenId: string; sessionId: string; reason: string; summary: string }, language: Language) =>
 		request<HandoffResult>(`/api/gov/handoffs?lang=${language}`, { method: "POST", body: JSON.stringify(input) }),

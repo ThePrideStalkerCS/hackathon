@@ -80,6 +80,12 @@ const PATHS: Record<string, ReactNode> = {
 	),
 	sparkle: <path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z" />,
 	fingerprint: <path d="M12 4a8 8 0 0 0-8 8M17 6a8 8 0 0 1 3 6c0 3-1 5-2 7M12 7a5 5 0 0 0-5 5v2M12 10a2 2 0 0 0-2 2v4M14 12v3c0 2-1 4-2 5M17 12c0 2-.4 3.5-1 5" />,
+	mail: (
+		<>
+			<rect x="3" y="5" width="18" height="14" rx="2" />
+			<path d="M3.6 6.6 12 13l8.4-6.4" />
+		</>
+	),
 	sun: (
 		<>
 			<circle cx="12" cy="12" r="4" />

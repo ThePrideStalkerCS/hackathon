@@ -123,6 +123,8 @@ export type Suggestion = {
 	urgency: "high" | "normal";
 	/** What the slip will look like, for the desk card: rows in total, rows the offices fill, questions left for the citizen. */
 	preview?: { rows: number; byOffices: number; questions: number };
+	/** Legal deadline (ISO date), e.g. three days after moving in for the registration. */
+	due?: string;
 };
 
 /** Services waiting in line after the current walkthrough (combined requests). */

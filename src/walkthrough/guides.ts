@@ -138,8 +138,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			id_document: {
 				autofill: L(
-					"Ihr {value} aus dem Register gilt als Ausweis.",
-					"Your {value} from the register counts as your ID.",
+					"Ihr gültiger Ausweis aus dem Register reicht.",
+					"Your valid ID from the register is enough.",
 				),
 				question: L(
 					"Ich habe keinen gültigen Ausweis mit Foto von Ihnen gefunden. Haben Sie einen anderen? Bitte nennen Sie die Art und die Nummer.",

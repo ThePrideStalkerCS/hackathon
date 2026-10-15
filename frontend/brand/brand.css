@@ -2615,3 +2615,500 @@ h3 {
 		top: 34px;
 	}
 }
+
+/* =============================================================================================
+ * Core demo (16 Oct): the desk as an official notice for ONE errand, the mailbox and its letter.
+ * See docs/redesign/LAUFZETTEL.md ("The core demo").
+ * ============================================================================================= */
+.lz-notice {
+	position: relative;
+	overflow: hidden;
+	border-radius: var(--r-slip);
+	background: var(--papier) var(--grain);
+	box-shadow: var(--shadow-paper);
+}
+.lz-notice-head {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 14px;
+	padding: 14px 36px;
+	border-bottom: 1px solid var(--linie);
+	font: 600 0.8rem/1.3 var(--f-text);
+	color: var(--grau);
+}
+.lz-notice-flag {
+	display: inline-grid;
+	grid-template-rows: repeat(3, 1fr);
+	width: 24px;
+	height: 16px;
+	flex: none;
+	overflow: hidden;
+	border-radius: 2px;
+	box-shadow: 0 0 0 1px rgb(0 0 0 / 10%);
+}
+.lz-notice-flag i {
+	background: var(--rot);
+}
+.lz-notice-flag i:nth-child(2) {
+	background: #fff;
+}
+.lz-notice-from {
+	color: var(--tinte);
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+.lz-notice-date {
+	margin-left: auto;
+	font: 500 0.8rem var(--f-mono);
+}
+.lz-notice-body {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) 240px;
+	gap: 32px 48px;
+	align-items: center;
+	padding: 34px 40px 40px;
+}
+.lz-notice-title {
+	margin: 4px 0 14px;
+	font: 600 clamp(2.4rem, 5.2vw, 4.1rem) / 0.98 var(--f-display);
+	letter-spacing: -0.02em;
+	font-variation-settings: "SOFT" 50, "opsz" 144;
+	text-wrap: balance;
+}
+.lz-notice-reason {
+	margin: 0;
+	max-width: 56ch;
+	font-size: 1.15rem;
+	line-height: 1.55;
+	color: #3a3a40;
+}
+.lz-notice-due {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	margin: 22px 0 0;
+	padding: 6px 6px 6px 16px;
+	border-radius: 999px;
+	background: var(--warm);
+	font-weight: 700;
+}
+.lz-notice-due b {
+	padding: 4px 12px;
+	border-radius: 999px;
+	background: var(--rot);
+	color: #fff;
+	font-size: 0.88rem;
+}
+.lz-route-preview {
+	margin-top: 26px;
+}
+.lz-route-line {
+	display: flex;
+	align-items: center;
+	max-width: 520px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.lz-route-line li {
+	display: flex;
+	flex: 1;
+	align-items: center;
+	height: 22px;
+}
+.lz-route-line li:first-child {
+	flex: 0 0 auto;
+}
+.lz-route-line li::before {
+	content: "";
+	flex: 1;
+	margin: 0 3px;
+	border-top: 3px dotted var(--rot);
+}
+.lz-route-line li:first-child::before {
+	display: none;
+}
+.lz-route-line li::after {
+	content: "";
+	flex: none;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+}
+.lz-route-line li.is-office::after {
+	background: var(--stempel);
+}
+.lz-route-line li.is-you::after {
+	width: 18px;
+	height: 18px;
+	background: var(--marker);
+	box-shadow: inset 0 0 0 2px var(--tinte);
+}
+.lz-route-line li.is-seal::after {
+	width: 20px;
+	height: 20px;
+	background: var(--papier);
+	box-shadow: inset 0 0 0 3px var(--rot);
+}
+.lz-route-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px 18px;
+	margin: 10px 0 0;
+	font-size: 0.92rem;
+	color: var(--grau);
+}
+.lz-route-legend span {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+}
+.lz-route-legend span::before {
+	content: "";
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+}
+.lz-route-legend .is-office::before {
+	background: var(--stempel);
+}
+.lz-route-legend .is-you::before {
+	background: var(--marker);
+	box-shadow: inset 0 0 0 1.5px var(--tinte);
+}
+.lz-route-legend .is-seal::before {
+	box-shadow: inset 0 0 0 2.5px var(--rot);
+}
+.lz-notice-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 12px;
+	margin-top: 28px;
+}
+.lz-btn.is-ghost {
+	background: transparent;
+	border-color: var(--linie);
+}
+.lz-btn.is-ghost:hover {
+	background: var(--warm);
+}
+.lz-btn.is-small {
+	min-height: 40px;
+	padding: 0 16px;
+	font-size: 0.9rem;
+}
+.lz-notice-keep {
+	margin: 14px 0 0;
+	font-size: 0.95rem;
+	color: var(--grau);
+}
+.lz-notice-emblem {
+	display: grid;
+	place-items: center;
+}
+.lz-notice-emblem .lz-emblem {
+	width: 230px;
+}
+
+/* the mailbox: top-bar button, letters on the desk, the note when a letter arrives */
+.lz-badge {
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 999px;
+	background: var(--rot);
+	color: #fff;
+	font: 700 0.72rem/20px var(--f-text);
+	text-align: center;
+}
+.lz-desk-mail .lz-section {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.lz-desk-mail ul {
+	display: grid;
+	gap: 10px;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.lz-mail-item {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr) auto;
+	gap: 16px;
+	align-items: center;
+	width: 100%;
+	padding: 16px 20px;
+	border: 0;
+	border-radius: var(--r-soft);
+	background: var(--papier);
+	box-shadow: var(--shadow-paper);
+	color: var(--tinte);
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.lz-mail-tag {
+	padding: 4px 10px;
+	border-radius: 999px;
+	background: var(--marker);
+	font: 700 0.78rem var(--f-text);
+	white-space: nowrap;
+}
+.lz-mail-text strong {
+	display: block;
+	font: 600 1.15rem/1.25 var(--f-display);
+}
+.lz-mail-text span {
+	font-size: 0.9rem;
+	color: var(--grau);
+}
+.lz-toast {
+	position: fixed;
+	z-index: 40;
+	top: calc(var(--lz-top-h, 64px) + 14px);
+	right: clamp(12px, 3vw, 32px);
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	gap: 10px 14px;
+	width: min(400px, calc(100vw - 24px));
+	padding: 16px 18px;
+	border-radius: var(--r-soft);
+	background: var(--papier) var(--grain);
+	box-shadow: 0 24px 50px -20px rgb(31 35 51 / 45%), 0 0 0 1px var(--linie);
+	animation: lz-toast-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.lz-toast > .icon {
+	margin-top: 2px;
+	color: var(--rot);
+}
+.lz-toast-kicker {
+	display: block;
+	font: 700 0.75rem var(--f-text);
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--rot);
+}
+.lz-toast-text strong {
+	display: block;
+	margin: 2px 0;
+	font: 600 1.15rem/1.25 var(--f-display);
+}
+.lz-toast-from {
+	font-size: 0.85rem;
+	color: var(--grau);
+}
+.lz-toast-actions {
+	grid-column: 2;
+	display: flex;
+	gap: 8px;
+	margin-top: 4px;
+}
+@keyframes lz-toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(-12px);
+	}
+}
+
+/* the letter: the original next to what it means */
+.lz-letter-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	display: grid;
+	place-items: center;
+	padding: 20px;
+	overflow-y: auto;
+	background: rgb(31 35 51 / 45%);
+}
+.lz-letter {
+	width: min(1040px, 100%);
+	max-height: calc(100vh - 40px);
+	overflow-y: auto;
+	padding: 22px 26px 28px;
+	border-radius: var(--r-slip);
+	background: var(--pult) var(--grain);
+	box-shadow: 0 40px 80px -30px rgb(0 0 0 / 50%);
+}
+.lz-letter-head {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 16px;
+	margin-bottom: 18px;
+}
+.lz-letter-kicker {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 6px;
+	font-size: 0.9rem;
+	color: var(--grau);
+}
+.lz-letter-head h2 {
+	margin: 0;
+	font: 600 clamp(1.8rem, 3.6vw, 2.6rem) / 1.05 var(--f-display);
+}
+.lz-letter-close {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 44px;
+	height: 44px;
+	border: 0;
+	border-radius: 50%;
+	background: var(--papier);
+	color: var(--tinte);
+	cursor: pointer;
+}
+.lz-letter-grid {
+	display: grid;
+	grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+	gap: 22px;
+	align-items: start;
+}
+.lz-letter-original {
+	position: relative;
+	margin: 0;
+}
+.lz-letter-original .lz-band {
+	border-radius: var(--r-soft) var(--r-soft) 0 0;
+	background: #fff;
+}
+.lz-letter-paper {
+	position: relative;
+	padding: 16px 22px 26px;
+	border-radius: 0 0 var(--r-soft) var(--r-soft);
+	background: #fff;
+	box-shadow: var(--shadow-paper);
+	font: 400 0.9rem/1.5 var(--f-text);
+	color: #2b2b30;
+}
+.lz-letter-from {
+	margin: 0;
+	font-weight: 700;
+}
+.lz-letter-ref {
+	margin: 2px 0 12px;
+	font: 500 0.75rem var(--f-mono);
+	color: var(--grau);
+}
+.lz-letter-paper h3 {
+	margin: 0 0 8px;
+	font: 700 1rem var(--f-text);
+	letter-spacing: 0.03em;
+	text-transform: uppercase;
+}
+.lz-letter-paper p {
+	margin: 0 0 8px;
+}
+.lz-letter-stamp {
+	position: absolute;
+	right: 18px;
+	bottom: 16px;
+}
+.lz-letter-label {
+	margin: 8px 0 0;
+	font-size: 0.8rem;
+	color: var(--grau);
+	text-align: center;
+}
+.lz-letter-plain {
+	display: grid;
+	gap: 14px;
+	padding: 22px 24px 24px;
+	border-radius: var(--r-soft);
+	background: var(--papier);
+	box-shadow: var(--shadow-paper);
+}
+.lz-letter-what {
+	margin: 0;
+	font-size: 1.1rem;
+	line-height: 1.5;
+}
+.lz-letter-due {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 6px 14px;
+	margin: 0;
+	font-size: 1.05rem;
+	font-weight: 600;
+}
+.lz-letter-due b {
+	font: 600 2.4rem/1 var(--f-display);
+}
+.lz-letter-dl {
+	display: grid;
+	gap: 10px;
+	margin: 0;
+}
+.lz-letter-dl dt {
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+.lz-letter-dl dd {
+	margin: 2px 0 0;
+	font-size: 0.98rem;
+	line-height: 1.5;
+	color: #3a3a40;
+}
+.lz-letter-move {
+	margin: 0;
+	padding: 12px 14px;
+	border-radius: 12px;
+	background: var(--warm);
+	font-size: 0.98rem;
+	line-height: 1.5;
+}
+.lz-letter-paid {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	font-weight: 700;
+	color: var(--ok);
+}
+@media (max-width: 760px) {
+	.lz-notice-head {
+		padding: 12px 20px;
+	}
+	.lz-notice-date {
+		margin-left: 0;
+	}
+	.lz-notice-body {
+		grid-template-columns: minmax(0, 1fr);
+		padding: 22px 20px 28px;
+	}
+	.lz-notice-emblem {
+		display: none;
+	}
+	.lz-letter {
+		padding: 16px 14px 20px;
+	}
+	.lz-letter-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.lz-letter-plain {
+		order: -1;
+	}
+	.lz-mail-item {
+		grid-template-columns: minmax(0, 1fr) auto;
+	}
+	.lz-mail-tag {
+		grid-column: 1 / -1;
+		justify-self: start;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.lz-toast {
+		animation: none;
+	}
+}
+.lz-notice-band {
+	height: 18px;
+}

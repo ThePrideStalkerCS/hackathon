@@ -11,6 +11,7 @@ import { Hono, type Context } from "hono";
 import { z } from "zod";
 import type { Language } from "../shared/types";
 import { dbListApplications, dbListHandoffs, resetDatabase, ensureSeeded } from "./db";
+import { lettersFor } from "./data/mail";
 import { GovError } from "./errors";
 import * as gov from "./service";
 import type { SimulateMode } from "./service";
@@ -43,6 +44,9 @@ const formData = z.record(z.string(), z.union([z.string(), z.boolean()]));
 govRoutes.get("/citizens", async (c) => c.json(await gov.listPersonas(c.env)));
 
 govRoutes.get("/citizens/:id", async (c) => c.json(await gov.getCitizenProfile(c.env, c.req.param("id"), c.var.simulate)));
+
+/** The citizen's digital Postfach (official letters, fictional). */
+govRoutes.get("/citizens/:id/mail", (c) => c.json(lettersFor(c.req.param("id"), c.var.lang, new Date().toISOString().slice(0, 10))));
 
 // --- Services ------------------------------------------------------------------------------------
 

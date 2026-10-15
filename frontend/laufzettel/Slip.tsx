@@ -106,9 +106,6 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 				{showSeal && (
 					<figure className="lz-hero-seal" ref={heroSealRef}>
 						<Emblem motif={motif} done={done} total={total} serial={serial} label={tpl(t.lzSealLabel, { done, total })} />
-						<figcaption>
-							{t.lzSealWhy} {t.lzSealHide}
-						</figcaption>
 					</figure>
 				)}
 			</header>
