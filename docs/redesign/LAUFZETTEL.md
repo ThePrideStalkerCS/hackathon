@@ -47,6 +47,11 @@ brand book wherever the brand book caused the angular look.
   | `--marker` Marker | `#FFE45C` | **only behind the one question** that needs the citizen. At most once per screen |
 
 - **Mark and lockup** unchanged (flag read as a route, no coat of arms); the word "Laufzettel" is set in Fraunces.
+- **Phones: the question gets the screen.** Top bar on one row (below 480 px the mark alone is the
+  home button; "Talk to a person" keeps a short visible word, "A person" / "Beratung"); the sticky slip
+  head is one line; the captions keep to two lines while the citizen answers or signs; the current row
+  starts below the sticky heads when it is taller than the room left. On the desk card the emblem sits
+  small beside the title and the text runs full width.
 - **Motion:** stamp press, marker swipe, wreath leaf inking, emblem press when complete. Nothing else
   moves. `prefers-reduced-motion` shows the end state.
 - **Voice:** plain language, one thought per sentence, say what happens next, name who did it (the
@@ -67,9 +72,9 @@ Close-ups: `media/laufzettel/stamp-move.png`, `stamp-passport.png`, `stamp-child
 
 | Life event (service) | Motif | Why |
 |---|---|---|
-| Move (`change-of-residence`) | **Stone pine (Zirbe)** with its dense upright crown on a rocky ridge, mountains behind | puts down roots in a new place, survives on rock |
-| Passport (`passport-renewal`) | **Peaks with an ibex** on the shoulder, the **Danube** running towards you | going out into the world, coming home |
-| Child (`childcare-subsidy`) | **Edelweiss** with a bud | a small new life, cared for |
+| Move (`change-of-residence`) | **Stone pine (Zirbe)** with its dense upright crown on a rocky ridge, mountains behind; at 48 px a **young Zirbe**, still conical: three tiers to a point on a free-standing trunk | puts down roots in a new place, survives on rock |
+| Passport (`passport-renewal`) | **Peaks with an ibex** on the shoulder, the **Danube** running towards you (at 48 px a thin winding line) | going out into the world, coming home |
+| Child (`childcare-subsidy`) | **Edelweiss** with a bud, white against an engraved sky | a small new life, cared for |
 
 No birds, no federal coat of arms, no protected logo. Add a motif in `motifs.ts` (`DRAW`, `motifFor`, a sprig).
 
@@ -89,8 +94,14 @@ How the motifs are drawn (banknote engraving, not clip art):
 - light always from the upper left; a few **solid ink shadows** (under each needle pad, in the gaps of
   the crown, in rock cracks); full-strength ink, no pale tints;
 - burin lines are filled shapes (`swell`), not strokes, so they taper like a real cut;
-- the 48 px slip head gets a **solid silhouette** of the same scene (hatching would turn to mush);
-- judged at 250 px (hero), 200 px (desk card, confirmation) and 48 px (slip head).
+- white forms (edelweiss bracts, snow) need ink around them: an engraved sky or a hatched face behind;
+- the 48 px slip head gets a **solid silhouette** of the same scene (hatching would turn to mush).
+  Check it for faces and figures: a round crown over a mountain line read as a head and shoulders,
+  and a broad white river under the sun read as a mouth. Pointed, tiered, rooted shapes are safe;
+- judged at 250 px (hero), 200 px (desk card, confirmation), 68 px (desk card on a phone) and 48 px
+  (slip head). Close-ups of the small cut: `media/laufzettel/emblem-48px-*.png`.
+- An emblem without a label is decorative (`aria-hidden`); give it a label where it is the only
+  carrier of the progress (hero, sticky head once the hero has scrolled away, collection).
 
 Where it appears: the slip hero (one big emblem; the small one in the sticky head fades in only once
 the big one has scrolled away), the open slip on the desk (0 leaves inked), the confirmation (complete,
@@ -133,7 +144,7 @@ The nudge is the slip itself: you see how little is left for you and how much th
 | Where | What the citizen sees |
 |---|---|
 | Desk, open slip | the reason in plain words ("Your landlord Karl Steiner confirmed that you moved…"), then "The offices fill in 6 of 9 rows. You answer 2 questions, then you sign. About 45 min you keep (estimate)." |
-| Every slip screen | the sticky slip head: small emblem + "3 of 9 stamped · 2 answers left, then you sign · about 45 min you keep (estimate)" |
+| Every slip screen | the sticky slip head: small emblem + "3 of 9 stamped · 2 answers left, then you sign · about 45 min you keep (estimate)"; on a phone one line, "3 of 9 · 2 left · about 45 min kept" (screen readers still get the full sentence) |
 | Slip hero | "The seal only shows your progress. Only you see it. No points, no ranking." |
 | Each row | the stamp of whoever did it, the narration names the same source |
 | Confirmation | complete emblem, red seal, "time you kept" (labelled as an estimate) |
@@ -183,7 +194,7 @@ Nothing in the engine's flow changes for the view. The slip is a different *view
 | `frontend/laufzettel/stations.ts` | walkthrough → stations mapping (pure) |
 | `frontend/laufzettel/Slip.tsx` | the Laufzettel view of a running walkthrough + confirmation |
 | `frontend/laufzettel/Desk.tsx` | the start page ("your desk"): one open slip, further suggestions, say-it line, private collection |
-| `frontend/laufzettel/CaptionBar.tsx` | narration subtitles (rolling), talk dots, pause/replay, keyboard, mic |
+| `frontend/laufzettel/CaptionBar.tsx` | narration subtitles (rolling; `compact` = two lines on phones while the citizen acts), talk dots, pause/replay, keyboard, mic |
 | `frontend/laufzettel/HoldSeal.tsx` | hold to sign |
 | `src/gov/data/confirmations.ts` | third-party confirmations (landlord) of the mock backend |
 | `src/gov/data/offices.ts` | mock appointment offices with their region, `nearbyFirst` |
@@ -214,15 +225,18 @@ Keep this list honest: tick only what is done **and** checked in the browser.
 - [x] 15. Hand-pressed office stamps with calm type and the motif sprig; calm hero (life event title, form name once, one big emblem)
 - [x] 16. Seal and time kept can be switched off (profile menu, stored on the device)
 - [ ] 17. Optional: Bezirk coalition card (aggregates only, voluntary), lock-screen style notification for the proactive slip
+- [x] 18. Phones (design check 3): desk card stacked with a small emblem beside the title, top bar on one row with a short visible word for "Talk to a person", one-line slip head, two caption lines while the citizen acts, question title never under the sticky head. Checked at 390 px (EN, DE) and 360 px (DE), no horizontal overflow
+- [x] 19. 48 px cuts that cannot read as a person: a conical young Zirbe, the passport river as a thin line, the edelweiss with bud and ground; the edelweiss full cut with an engraved sky. Decorative emblems hidden from screen readers
 
 ### Known issues (fix in this order)
 
 1. The goals pages (`#/goals`, Elizaveta) still use the old look. Restyle in the Laufzettel look or fold into the desk (open question for the team).
 2. Old layer still in the repo (checklist item 11).
-3. On phones the caption bar covers about a fifth of the screen; the current row scrolls above it, but a "minimise captions" control would help.
-4. The 48 px edelweiss silhouette is weaker than the pine and peaks ones.
-5. Fixed on 15 Oct: appointment office by the citizen's postcode (Josef now gets Linz-Land first); exclamation marks and prototype labels in what the citizen hears; Lena's proactive slip; narration naming the register or landlord; caption text cut off mid-sentence.
-6. Everything is committed locally on `feature/glass-design`, nothing pushed (the repo is public). No AI attribution lines in commits.
+3. Phones: the caption bar still takes about 125 px (two lines plus the button row). A "minimise captions" control, or the buttons beside the text on wider phones, would win another 50 px.
+4. The German slip head wraps to two short lines at 360 px, and at 390 px on the signing step ("8 von 9 · Unterschrift · etwa 45 Min. / behalten"). Fine on those short rows, but a shorter German phrase would keep it on one. English stays on one line at 390 px on every step.
+5. Below 480 px the word "Laufzettel" leaves the top bar (the mark stays as the home button), so a phone shows the name only on the desk and the confirmation.
+6. Fixed on 15 Oct: appointment office by the citizen's postcode (Josef now gets Linz-Land first); exclamation marks and prototype labels in what the citizen hears; Lena's proactive slip; narration naming the register or landlord; caption text cut off mid-sentence (captions roll); the 2-column desk card on phones; the 48 px pine that read as a head and shoulders; the faint edelweiss.
+7. Everything is committed locally on `feature/glass-design`, nothing pushed (the repo is public). No AI attribution lines in commits.
 
 ### How to verify without clicking by hand
 
