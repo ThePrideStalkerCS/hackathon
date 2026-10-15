@@ -1,6 +1,5 @@
 /**
  * Building blocks of the assistant layer:
- *   VoiceMark    the assistant's sign: the red-white-red stripes, moving like a sound level when it speaks
  *   MicButton    push to talk (used by the caption bar and the desk's say-it line)
  *   ProfileMenu  everything secondary (test person, language, text size, voice) behind one button
  *   HandoffSheet confirmation when a person takes over
@@ -41,23 +40,6 @@ export function runningToolLabel(message: UIMessage | undefined, language: Langu
 	return TOOL_LABELS[toolNameOf(running)!]?.[language] ?? TEXT[language].toolWorking;
 }
 
-export type VoiceState = "idle" | "speaking" | "listening" | "thinking" | "paused";
-
-/**
- * The assistant's sign. Deliberately not a glowing "AI orb": three stripes in the national colours
- * that move like a level meter while the assistant speaks. Official, calm, recognisable.
- */
-export function VoiceMark({ state, size = "md" }: { state: VoiceState; size?: "sm" | "md" }) {
-	return (
-		<span className={`voicemark vm-${size} is-${state}`} aria-hidden="true">
-			<i />
-			<i />
-			<i />
-		</span>
-	);
-}
-
-/** Microphone button with its own listening state. */
 export function MicButton({ recorder, t, big }: { recorder: Recorder; t: UIText; big?: boolean }) {
 	const listening = recorder.state === "listening";
 	return (
@@ -92,9 +74,6 @@ export function ProfileMenu(props: {
 	/** Fair nudging switch: show the seal and the time kept (stored on this device only). */
 	sealOn?: boolean;
 	onSeal?: (on: boolean) => void;
-	/** Optional: the Laufzettel identity has one light look, so the app no longer passes these. */
-	theme?: "dark" | "light";
-	onTheme?: (theme: "dark" | "light") => void;
 }) {
 	const { t } = props;
 	const [open, setOpen] = useState(false);
@@ -158,18 +137,6 @@ export function ProfileMenu(props: {
 						</div>
 					</div>
 
-					{props.theme && props.onTheme && (
-						<div className="menu-row">
-							<span>{t.theme}</span>
-							<div className="segmented" role="group" aria-label={t.theme}>
-								{(["dark", "light"] as const).map((th) => (
-									<button key={th} type="button" aria-pressed={props.theme === th} onClick={() => props.onTheme?.(th)}>
-										{th === "dark" ? t.themeDark : t.themeLight}
-									</button>
-								))}
-							</div>
-						</div>
-					)}
 
 					<div className="menu-row">
 						<span>{t.voice}</span>

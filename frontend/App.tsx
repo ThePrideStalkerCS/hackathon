@@ -15,7 +15,7 @@
  */
 import { useAgentChat } from "@cloudflare/ai-chat/react";
 import { useAgent } from "agents/react";
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DEFAULT_STATE, type AssistantSettings, type AssistantState } from "../src/shared/types";
 import type { Suggestion } from "../src/shared/walkthrough";
 import type { Overview } from "../src/shared/stamps";
@@ -29,10 +29,6 @@ import { LetterSheet, LetterToast, MailboxButton } from "./laufzettel/Postfach";
 import type { Letter } from "../src/shared/mail";
 import { Icon } from "./icons";
 import { TEXT } from "./i18n";
-import { GOALS, loadProgress, percent, saveProgress, type Goal, type Progress as GoalProgress } from "./goals/data";
-import { GoalCelebration } from "./goals/GoalCelebration";
-import { GoalDetail } from "./goals/GoalDetail";
-import { GoalsOverview } from "./goals/GoalsOverview";
 import { useNarrator, useRecorder } from "./voice";
 import type { WalkthroughActions } from "./walkthrough/Answers";
 
@@ -69,38 +65,6 @@ export function App() {
 	const resumeAfterLetter = useRef(false);
 	const t = TEXT[state.language];
 	const narrator = useNarrator();
-
-	// Gamified goals pages (goals/). A tiny hash router: #/goals, #/goals/<id>, #/goals/<id>/done.
-	const [hash, setHash] = useState(() => window.location.hash);
-	const [progress, setProgress] = useState<GoalProgress>(loadProgress);
-	useEffect(() => {
-		const onHash = () => setHash(window.location.hash);
-		window.addEventListener("hashchange", onHash);
-		return () => window.removeEventListener("hashchange", onHash);
-	}, []);
-	const go = (h: string) => {
-		if (h) window.location.hash = h;
-		else history.replaceState(null, "", window.location.pathname);
-		setHash(h);
-		window.scrollTo(0, 0);
-	};
-	const [, route, goalId, goalDone] = hash.split("/");
-	const goal = GOALS.find((g) => g.id === goalId);
-	function toggleStep(g: Goal, stepId: string) {
-		const done = progress[g.id] ?? [];
-		const next = { ...progress, [g.id]: done.includes(stepId) ? done.filter((id) => id !== stepId) : [...done, stepId] };
-		setProgress(saveProgress(next));
-		// The bar is full: celebrate!
-		if (percent(g, next[g.id]) === 100) go(`#/goals/${g.id}/done`);
-	}
-	const goalProps = { t, lang: state.language, progress, go };
-	let goalsPage: ReactNode = null;
-	if (route === "goals") {
-		// The completion page only shows once the bar is really full.
-		if (goal && goalDone === "done" && percent(goal, progress[goal.id] ?? []) === 100) goalsPage = <GoalCelebration goal={goal} {...goalProps} />;
-		else if (goal) goalsPage = <GoalDetail goal={goal} {...goalProps} onToggle={(id) => toggleStep(goal, id)} />;
-		else goalsPage = <GoalsOverview {...goalProps} onReset={() => setProgress(saveProgress(null))} />;
-	}
 
 	// One agent instance per session. The server owns the state; we only receive it.
 	const agent = useAgent<AssistantState>({
@@ -317,7 +281,7 @@ export function App() {
 
 			<header className="lz-top" ref={topRef}>
 				<div className="lz-top-in">
-					<button type="button" className="lz-home" onClick={w ? actions.close : () => go("")} aria-label={t.toStart} title={t.toStart}>
+					<button type="button" className="lz-home" onClick={w ? actions.close : () => window.scrollTo(0, 0)} aria-label={t.toStart} title={t.toStart}>
 						<Lockup />
 					</button>
 
@@ -363,10 +327,8 @@ export function App() {
 				</div>
 			</header>
 
-			<main id="main" className={w && !goalsPage ? "lz-main is-slip" : "lz-main"}>
-				{goalsPage ? (
-					goalsPage
-				) : w ? (
+			<main id="main" className={w ? "lz-main is-slip" : "lz-main"}>
+				{w ? (
 					<Slip w={w} t={t} actions={actions} citizenName={persona?.name} queueNext={state.queue[0]?.name} showSeal={showSeal} sound={voiceOn} />
 				) : (
 					<Desk
@@ -387,7 +349,7 @@ export function App() {
 				)}
 			</main>
 
-			{w && !goalsPage && (
+			{w && (
 				<CaptionBar
 					t={t}
 					caption={openLetter ? openLetter.spoken : busy ? (toolLabel ?? t.thinking) : caption}
