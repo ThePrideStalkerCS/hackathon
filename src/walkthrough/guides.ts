@@ -166,8 +166,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			reason: {
 				question: L("Was ist mit Ihrem bisherigen Pass?", "What is the situation with your current passport?"),
 				autofill: L(
-					"Ihr Pass ist abgelaufen oder läuft bald ab. Als Grund ist deshalb „{value}“ vorbefüllt. Sie können das ändern.",
-					"Your passport has expired or expires soon, so “{value}” is prefilled as the reason. You can change it.",
+					"Grund: „{value}“, laut Ihren Passdaten.",
+					"Reason: “{value}”, from your passport data.",
 				),
 				officialTerm: L("Antragsgrund", "Reason for application"),
 				explain: L("Wählen Sie, was auf Sie zutrifft.", "Choose what applies to you."),
@@ -187,29 +187,29 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			delivery_address: {
 				autofill: L(
-					"Der neue Pass kommt per Post, an Ihre Adresse im Melderegister: {value}.",
-					"The new passport is sent by post to your address in the population register: {value}.",
+					"Zustellung per Post an: {value}.",
+					"Delivery by post to: {value}.",
 				),
-				question: L("An welche Adresse sollen wir den neuen Pass schicken?", "Where should we send the new passport?"),
+				question: L("An welche Adresse soll der neue Pass gehen?", "Which address should the new passport go to?"),
 				officialTerm: L("Zustelladresse", "Delivery address"),
 				explain: L("Die Adresse, an die die Post den fertigen Pass bringt.", "The address where the post delivers the finished passport."),
 			},
 			biometric_photo: {
-				question: L("Bringen Sie ein aktuelles Passfoto zum Termin mit?", "Will you bring a current passport photo to the appointment?"),
+				question: L("Wie kommt das Passfoto zum Amt?", "How does your passport photo reach the office?"),
 				officialTerm: L("Biometrisches Lichtbild", "Biometric photo"),
 				explain: L(
-					"Ein Foto, das den Regeln für Passfotos entspricht. Fotografen und Fotoautomaten kennen diese Regeln.",
-					"A photo that meets the rules for passport photos. Photographers and photo booths know these rules.",
+					"Beides geht online und wird sofort auf die Passfoto-Regeln geprüft. Ein Papierfoto ist nicht nötig.",
+					"Both work online and are checked against the passport photo rules right away. No paper photo needed.",
 				),
-				ifNo: L(
-					"Für den Antrag brauchen Sie ein Passfoto. Lassen Sie eines beim Fotografen oder am Fotoautomaten machen und antworten Sie dann mit Ja.",
-					"You need a passport photo for the application. Get one at a photographer or photo booth, then answer yes.",
-				),
+				optionExplain: {
+					phone: L("Vor einer hellen Wand, die App prüft das Foto.", "In front of a light wall; the app checks the photo."),
+					booth: L("Zertifizierte Fotoautomaten senden das Foto mit einem Code.", "Certified photo booths send the photo with a code."),
+				},
 			},
 		},
 		appointment: L(
-			"Jetzt suchen wir einen Termin bei der Passbehörde. Wählen Sie einen, der Ihnen passt. Gebucht wird er erst, wenn Sie am Ende bestätigen.",
-			"Now let's find an appointment at the passport office. Pick one that suits you. It is only booked when you confirm at the end.",
+			"Termin bei der Passbehörde: Bitte wählen Sie eine Zeit. Gebucht wird erst mit Ihrer Unterschrift.",
+			"Appointment at the passport office: please pick a time. It is booked only when you sign.",
 		),
 	},
 
@@ -347,7 +347,7 @@ export function phrase(key: keyof typeof PHRASES, lang: Language, vars: Record<s
 type CheckRewrite = [RegExp, (m: RegExpMatchArray) => Localized];
 
 const CHECK_REWRITES: CheckRewrite[] = [
-	[/^A valid official photo ID/, () => L("Wir haben keinen gültigen Ausweis mit Foto von Ihnen. Ihr Ausweis ist abgelaufen oder fehlt.", "We have no valid photo ID for you. Your ID has expired or is missing.")],
+	[/^A valid official photo ID/, () => L("Im Register liegt kein gültiger Lichtbildausweis auf. Er ist abgelaufen oder fehlt.", "No valid photo ID on record. It has expired or is missing.")],
 	[/^No current registered address/, () => L("Sie haben gerade keine gemeldete Adresse. Die bisherige Adresse kann leer bleiben.", "You have no registered address at the moment. The previous address can stay empty.")],
 	[/^Non-EU citizens should also bring/, () => L("Nehmen Sie auch Ihren Aufenthaltstitel mit.", "Also bring your residence permit.")],
 	[/^Everyone who moves into a home/, () => L("Wer in Österreich umzieht, muss die neue Adresse melden.", "Anyone who moves in Austria has to register the new address.")],

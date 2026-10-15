@@ -8,6 +8,7 @@
  *    then add a matching knowledge entry in src/knowledge/index.ts.
  */
 import type { Citizen, CitizenDocument, EligibilityResult, ServiceDefinition } from "../types";
+import { openConfirmation } from "./confirmations";
 
 const EU_EEA_CH = [
 	"AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU", "IE", "IT",
@@ -184,14 +185,24 @@ export const SERVICES: ServiceDefinition[] = [
 				required: true,
 			},
 			{
+				// 2030: the photo reaches the office online (a checked phone photo or a certified photo
+				// booth's code), no paper photo. Mock: choosing an option counts as "photo received".
 				id: "biometric_photo",
-				label: { de: "Ich bringe ein aktuelles Passfoto mit", en: "I will bring a current passport photo" },
-				type: "boolean",
+				label: { de: "Passfoto", en: "Passport photo" },
+				type: "select",
 				required: true,
-				mustBeTrue: true,
+				options: [
+					{ value: "phone", label: { de: "Jetzt mit dem Handy", en: "Now, with my phone" } },
+					{ value: "booth", label: { de: "Code vom Fotoautomaten", en: "Code from a photo booth" } },
+				],
 			},
 		],
-		prefill: (c): Record<string, string> => (c.primaryAddress ? { delivery_address: c.primaryAddress } : {}),
+		// The state already knows where the citizen lives: a move the landlord confirmed wins over the old register entry.
+		prefill: (c): Record<string, string> => {
+			const move = openConfirmation(c, "change-of-residence");
+			const address = move?.data(new Date().toISOString().slice(0, 10)).new_address ?? c.primaryAddress;
+			return address ? { delivery_address: address } : {};
+		},
 		eligibility: (c, today): EligibilityResult => {
 			if (c.nationality !== "AT") {
 				return {
@@ -218,12 +229,12 @@ export const SERVICES: ServiceDefinition[] = [
 		nextSteps: {
 			de: [
 				"Kommen Sie zum gebuchten Termin persönlich zur Passbehörde (Fingerabdrücke werden abgenommen).",
-				"Bringen Sie Ihren alten Pass, ein Passfoto und einen Lichtbildausweis mit.",
+				"Bringen Sie Ihren alten Pass und einen Lichtbildausweis mit. Das Passfoto ist schon da.",
 				"Der neue Pass wird per Post zugestellt.",
 			],
 			en: [
 				"Go to the passport authority in person at your appointment (fingerprints are taken).",
-				"Bring your old passport, a passport photo and a photo ID.",
+				"Bring your old passport and a photo ID. Your photo is already on file.",
 				"The new passport is sent to you by post.",
 			],
 		},
