@@ -36,8 +36,10 @@ instead of filling in, and signs with their own seal. Official, understandable, 
    they know, the citizen answers the rest.
 3. **Explain:** plain language for every official term and every letter (original next to plain words).
 4. **Sign:** a deliberate act by the citizen (hold the seal); the AI has no submit tool.
-5. **Reward (fair nudging):** the seal grows with every stamp, the time kept is shown, deadlines are met.
-   Voluntary, private, only positive, only official errands, explained openly.
+5. **Reward: the Gipfelstempel (nudging and gamification).** Every errand you finish is a summit; its
+   emblem is your summit stamp, collected in a personal pass, together with the time you kept. The route
+   shows how little is left, stamps land with a soft thump. Voluntary, private, only positive, only
+   official errands, explained openly.
 
 ## Why it is different from a chatbot
 

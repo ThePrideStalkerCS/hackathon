@@ -6,6 +6,12 @@ the background, the citizen watches the stamps land and only answers what nobody
 signs with their own seal.
 
 > **Signature sentence for the jury:** "The offices walk. You don't." / "Die Ämter laufen. Sie nicht."
+>
+> **Core idea (16 Oct, Paul): nudging and gamification, named the _Gipfelstempel_.** Austrians collect
+> summit stamps when they hike; here every errand you finish is a summit and its emblem the summit stamp,
+> collected in a personal pass (home, travel, family). Make it visible, make it fun, make it pay off,
+> and move from reactive to proactive. Fair rules: voluntary, private, only positive, official errands only.
+> Pitch (PowerPoint, 2 minutes, speaker notes with timings): [../pitch/Laufzettel-Pitch.pptx](../pitch/Laufzettel-Pitch.pptx).
 
 This file is the single source of truth for the redesign. **If you are the next agent, read this file
 first, then continue at the first unchecked box in [Build checklist](#build-checklist).** Update the
