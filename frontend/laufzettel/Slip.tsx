@@ -21,17 +21,26 @@ import { Emblem, motifFor } from "../brand/Emblem";
 import { formatSlot, tpl, type UIText } from "../i18n";
 import { Icon } from "../icons";
 import { AskInput, SlotPicker, type WalkthroughActions } from "../walkthrough/Answers";
+import { stampSound } from "../brand/thump";
 import { HoldSeal } from "./HoldSeal";
 import { buildStations, initials, slipNumber, type Station } from "./stations";
 
-type Props = { w: Walkthrough; t: UIText; actions: WalkthroughActions; citizenName?: string; queueNext?: string; showSeal?: boolean };
+type Props = { w: Walkthrough; t: UIText; actions: WalkthroughActions; citizenName?: string; queueNext?: string; showSeal?: boolean; sound?: boolean };
 
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }: Props) {
+export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true, sound = false }: Props) {
 	const stations = buildStations(w, t, citizenName);
 	const total = stations.length;
 	const done = stations.filter((s) => s.state === "done").length;
+
+	// A stamp lands: a soft thump (only with the voice on). Not on the first render of a slip.
+	const lastDone = useRef<{ id: string; done: number } | null>(null);
+	useEffect(() => {
+		const before = lastDone.current;
+		lastDone.current = { id: w.id, done };
+		if (sound && before?.id === w.id && done > before.done) stampSound();
+	}, [w.id, done, sound]);
 	const answersLeft = stations.filter((s) => (s.step.kind === "ask" || s.step.kind === "appointment") && s.state !== "done").length;
 	const minutes = TIME_SAVED_MINUTES[w.serviceId];
 	const motif = motifFor(w.serviceId);

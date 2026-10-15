@@ -7,7 +7,7 @@
  * mean?") and for understanding free-text / voice answers.
  *
  * Placeholders: {value} (field value), {questions} ("You only answer two questions."), {name} (first name,
- * or in `confirmed` texts the person who confirmed), {yourRole} ("Your landlord").
+ * or in `confirmed` texts the person who confirmed), {yourRole} ("Your landlord"), {role} ("landlord" / "Vermieter").
  *
  * ⚠️ Facts in these texts (deadlines, requirements) must match src/knowledge/ and be verified on
  *    oesterreich.gv.at before the demo. Explanations of terms are fine as they are.
@@ -59,14 +59,14 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Meldezettel – Wohnsitz an- oder ummelden", "Registration form (Meldezettel) – register your residence"),
 		portalUrl: "portal.amt.example/meldewesen/meldezettel",
 		intro: L(
-			"Sie sind umgezogen. Wir melden die neue Adresse mit dem Meldezettel an. Was die Ämter wissen, tragen sie selbst ein. {questions}",
-			"You moved, so we register your new address on the Meldezettel. The offices fill in what they know. {questions}",
+			"Wohnsitzwechsel. Formular: Meldezettel. Was die Ämter wissen, tragen sie selbst ein. {questions}",
+			"Change of residence. Form: Meldezettel. The offices fill in what they know. {questions}",
 		),
 		fields: {
 			new_address: {
 				confirmed: L(
-					"{yourRole} {name} hat die neue Adresse bestätigt: {value}.",
-					"{yourRole} {name} confirmed your new address: {value}.",
+					"Neue Adresse, bestätigt von Ihrem {role} {name}: {value}.",
+					"New address, confirmed by your {role} {name}: {value}.",
 				),
 				question: L("Wie lautet Ihre neue Adresse?", "What is your new address?"),
 				officialTerm: L("Unterkunft (neue Adresse)", "Accommodation (new address)"),
@@ -76,7 +76,7 @@ export const GUIDES: Record<string, ServiceGuide> = {
 				),
 			},
 			move_in_date: {
-				confirmed: L("Eingezogen am {value}.", "Moved in on {value}."),
+				confirmed: L("Einzug: {value}.", "Moved in: {value}."),
 				question: L("Wann sind Sie eingezogen?", "When did you move in?"),
 				officialTerm: L("Einzugsdatum", "Move-in date"),
 				explain: L(
@@ -98,8 +98,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			previous_address: {
 				autofill: L(
-					"Die alte Adresse kommt aus dem Melderegister: {value}.",
-					"Your old address comes from the Melderegister: {value}.",
+					"Bisherige Adresse, laut Melderegister: {value}.",
+					"Previous address, from the Melderegister: {value}.",
 				),
 				question: L(
 					"Wo haben Sie bisher gewohnt? Wenn Sie aus dem Ausland kommen, können Sie das überspringen.",
@@ -110,7 +110,7 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			deregister_previous: {
 				onlyIfFilled: "previous_address",
-				question: L("Soll ich Ihre alte Adresse gleich abmelden?", "Shall I deregister your old address at the same time?"),
+				question: L("Die alte Adresse gleich mit abmelden?", "Deregister the old address at the same time?"),
 				officialTerm: L("Abmeldung", "Deregistration"),
 				explain: L(
 					"Dann ist die alte Adresse im selben Schritt abgemeldet.",
@@ -119,8 +119,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 			},
 			landlord_signature: {
 				confirmed: L(
-					"{name} hat als Vermieter digital unterschrieben.",
-					"{name} signed digitally as your landlord.",
+					"Unterschrift des Vermieters: digital von {name}.",
+					"Landlord signature: given digitally by {name}.",
 				),
 				question: L(
 					"Hat Ihre Vermieterin oder Ihr Vermieter den Meldezettel unterschrieben?",
@@ -132,18 +132,18 @@ export const GUIDES: Record<string, ServiceGuide> = {
 					"The accommodation provider is the person who lets you live in the home, usually your landlord. By signing, they confirm that you live there.",
 				),
 				ifNo: L(
-					"Ohne diese Unterschrift kann ich den Antrag nicht einreichen. Bitten Sie Ihre Vermieterin oder Ihren Vermieter darum. Ihre Angaben bleiben gespeichert, Sie können später hier weitermachen.",
-					"I can't submit the application without this signature. Please ask your landlord to sign. Your answers are saved and you can continue here later.",
+					"Ohne diese Unterschrift kann der Antrag nicht eingereicht werden. Bitte holen Sie sie bei Ihrem Vermieter ein. Ihre Angaben bleiben gespeichert.",
+					"Without this signature the application cannot be submitted. Please ask your landlord to sign. Your answers are saved.",
 				),
 			},
 			id_document: {
 				autofill: L(
-					"Ihr gültiger Ausweis aus dem Register reicht.",
-					"Your valid ID from the register is enough.",
+					"Lichtbildausweis: gültig, liegt im Register auf.",
+					"Photo ID: valid, on record.",
 				),
 				question: L(
-					"Ich habe keinen gültigen Ausweis mit Foto von Ihnen gefunden. Haben Sie einen anderen? Bitte nennen Sie die Art und die Nummer.",
-					"I couldn't find a valid photo ID for you. Do you have another one? Please tell me the type and the number.",
+					"Im Register liegt kein gültiger Lichtbildausweis auf. Welchen Ausweis haben Sie? Bitte Art und Nummer.",
+					"No valid photo ID on record. Which ID do you have? Type and number, please.",
 				),
 				officialTerm: L("Amtlicher Lichtbildausweis", "Official photo ID"),
 				explain: L(
@@ -159,8 +159,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Reisepass – Antrag vorbereiten und Termin buchen", "Passport – prepare the application and book an appointment"),
 		portalUrl: "portal.amt.example/reisedokumente/reisepass",
 		intro: L(
-			"Einen neuen Reisepass beantragt man persönlich bei der Passbehörde, weil dort Fingerabdrücke genommen werden. Ich bereite den Antrag mit Ihnen vor und suche einen Termin. {questions}",
-			"You apply for a new passport in person at the passport office, because your fingerprints are taken there. I'll prepare the application with you and find an appointment. {questions}",
+			"Neuer Reisepass. Beantragt wird persönlich bei der Passbehörde, dort werden Fingerabdrücke genommen. Antrag und Termin werden hier vorbereitet. {questions}",
+			"New passport. You apply in person at the passport office, where your fingerprints are taken. Application and appointment are prepared here. {questions}",
 		),
 		fields: {
 			reason: {
@@ -218,8 +218,8 @@ export const GUIDES: Record<string, ServiceGuide> = {
 		portalTitle: L("Antrag auf Kinderbetreuungsgeld", "Application for childcare benefit (Kinderbetreuungsgeld)"),
 		portalUrl: "portal.amt.example/familie/kinderbetreuungsgeld",
 		intro: L(
-			"Kinderbetreuungsgeld ist Geld vom Staat für Eltern von kleinen Kindern. Zuständig ist Ihre Krankenkasse. Ich fülle den Antrag mit Ihnen aus. {questions}",
-			"Childcare benefit is money from the state for parents of young children. Your health insurance handles it. I'll fill in the application with you. {questions}",
+			"Kinderbetreuungsgeld: Geld vom Staat für Eltern kleiner Kinder, zuständig ist Ihre Krankenkasse. Der Antrag wird hier vorbereitet. {questions}",
+			"Childcare benefit: money from the state for parents of young children, handled by your health insurer. The application is prepared here. {questions}",
 		),
 		fields: {
 			child_name: {
@@ -260,7 +260,7 @@ export const GUIDES: Record<string, ServiceGuide> = {
 				),
 			},
 			iban: {
-				question: L("Auf welches Konto soll das Geld kommen? Ich brauche Ihre IBAN.", "Which account should the money go to? I need your IBAN."),
+				question: L("Auf welches Konto soll das Geld kommen? Bitte Ihre IBAN.", "Which account should the money go to? Your IBAN, please."),
 				officialTerm: L("IBAN", "IBAN"),
 				explain: L(
 					"Die IBAN ist Ihre Kontonummer. Sie finden sie im Online-Banking oder auf Ihren Kontoauszügen. In Österreich beginnt sie mit AT.",
@@ -286,8 +286,8 @@ export function fill(text: string, vars: Record<string, string | number>): strin
 
 export const PHRASES = {
 	checkTitle: L("Voraussetzungen prüfen", "Checking the requirements"),
-	checkIntro: L("Ich habe die Voraussetzungen geprüft.", "I checked the requirements."),
-	checkAllGood: L("Alles passt.", "All fine."),
+	checkIntro: L("Voraussetzungen geprüft.", "Requirements checked."),
+	checkAllGood: L("Alle erfüllt.", "All met."),
 	checkWithNotes: L("Bitte beachten Sie die Hinweise.", "Please note the remarks."),
 	blockedTitle: L("Das geht leider so nicht", "This isn't possible like this"),
 	blockedIntro: L("Diesen Antrag können Sie leider nicht stellen.", "Unfortunately you can't submit this application."),
@@ -295,7 +295,7 @@ export const PHRASES = {
 		"Ein Mensch vom Amt kann Ihnen weiterhelfen. Drücken Sie dafür auf „Mit einem Menschen sprechen“.",
 		"A member of staff can help you. Press “Talk to a person” for that.",
 	),
-	autofillGeneric: L("Das kommt aus Ihren Daten beim Amt: {value}.", "This comes from your records: {value}."),
+	autofillGeneric: L("Laut Ihren Daten beim Amt: {value}.", "From your records: {value}."),
 	confirmedGeneric: L("Das hat {name} schon bestätigt: {value}.", "{name} has already confirmed this: {value}."),
 	askGeneric: L("Bitte geben Sie an: {label}.", "Please enter: {label}."),
 	appointmentTitle: L("Termin aussuchen", "Choose an appointment"),
@@ -306,8 +306,8 @@ export const PHRASES = {
 	),
 	reviewTitle: L("Alles prüfen und bestätigen", "Check everything and confirm"),
 	review: L(
-		"Alles ausgefüllt. Lesen Sie noch einmal drüber, dann halten Sie Ihr Siegel gedrückt. Das können nur Sie.",
-		"All filled in. Read it once more, then hold your seal to sign. Only you can do that.",
+		"Alle Zeilen vollständig. Noch einmal prüfen, dann das Siegel gedrückt halten. Unterschreiben können nur Sie.",
+		"All rows complete. Check once more, then hold your seal to sign. Only you can sign.",
 	),
 	reviewProblems: L(
 		"Es fehlt noch etwas. Drücken Sie in der rot markierten Zeile auf „Ändern“.",
@@ -315,8 +315,8 @@ export const PHRASES = {
 	),
 	doneTitle: L("Eingereicht", "Submitted"),
 	done: L(
-		"Unterschrieben und eingereicht. Ihre Nummer ist {ref}.",
-		"Signed and submitted. Your number is {ref}.",
+		"Unterschrieben und eingereicht. Geschäftszahl: {ref}.",
+		"Signed and submitted. Reference number: {ref}.",
 	),
 	questionsNone: L("Sie unterschreiben nur noch.", "You only sign."),
 	questionsOne: L("Sie beantworten eine Frage.", "You answer one question."),

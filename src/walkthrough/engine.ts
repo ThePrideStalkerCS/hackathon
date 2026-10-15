@@ -190,7 +190,13 @@ function autofillStep(field: PortalField, fg: FieldGuide | undefined, lang: Lang
 		kind: "autofill",
 		chapter: "fill",
 		title: field.label,
-		narration: fill(template, { value: field.displayValue ?? field.value ?? "", name: confirmed?.name ?? "", yourRole: confirmed?.yourRole ?? "" }),
+		narration: fill(template, {
+			value: field.displayValue ?? field.value ?? "",
+			name: confirmed?.name ?? "",
+			yourRole: confirmed?.yourRole ?? "",
+			// "landlord" inside an English sentence; German nouns keep their capital ("Vermieter").
+			role: lang === "en" ? (confirmed?.role ?? "").toLowerCase() : (confirmed?.role ?? ""),
+		}),
 		fieldId: field.id,
 		officialTerm: fg?.officialTerm?.[lang] ?? field.label,
 		plainExplanation: fg?.explain?.[lang] ?? field.hint,

@@ -367,7 +367,7 @@ export function App() {
 				{goalsPage ? (
 					goalsPage
 				) : w ? (
-					<Slip w={w} t={t} actions={actions} citizenName={persona?.name} queueNext={state.queue[0]?.name} showSeal={showSeal} />
+					<Slip w={w} t={t} actions={actions} citizenName={persona?.name} queueNext={state.queue[0]?.name} showSeal={showSeal} sound={voiceOn} />
 				) : (
 					<Desk
 						t={t}

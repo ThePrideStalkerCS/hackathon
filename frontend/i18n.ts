@@ -86,7 +86,7 @@ export const TEXT = {
 		lzYourTurn: "Sie sind dran",
 		lzAppointment: "Termin",
 		lzYou: "Sie",
-		lzSignText: "Lesen Sie alles noch einmal und unterschreiben Sie mit Ihrem Siegel. Das kann ich nicht für Sie tun, das können nur Sie.",
+		lzSignText: "Noch einmal prüfen, dann mit Ihrem Siegel unterschreiben. Unterschreiben können nur Sie.",
 		lzHoldToSign: "Halten zum Unterschreiben",
 		lzHoldHint: "Siegel gedrückt halten, bis der Ring voll ist. Oder Leertaste halten.",
 		lzSigning: "Wird eingereicht",
@@ -137,8 +137,8 @@ export const TEXT = {
 		keyboard: "Schreiben statt sprechen",
 		mic: "Sprechen",
 		micStop: "Fertig gesprochen",
-		listening: "Ich höre zu …",
-		transcribing: "Ich schreibe mit …",
+		listening: "Aufnahme läuft …",
+		transcribing: "Wird erkannt …",
 		micUnavailable: "Spracheingabe ist in diesem Browser nicht verfügbar. Bitte schreiben Sie.",
 		typeHere: "Schreiben Sie hier …",
 		send: "Senden",
@@ -167,14 +167,14 @@ export const TEXT = {
 		ticket: "Fallnummer",
 		handoffNote: "Die Mitarbeiterin oder der Mitarbeiter sieht, wo Sie gerade stehen. Sie müssen nichts noch einmal erzählen.",
 
-		toolWorking: "Ich schaue nach …",
+		toolWorking: "Wird geprüft …",
 		error: "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
 
 		// Address suggestions (walkthrough/AddressInput.tsx)
 		addressSearching: "Suche Adressen …",
 		addressFound: "✓ Adresse auf Google Maps gefunden.",
 		addressPartial: "Adresse gefunden, aber ohne Hausnummer. Bitte ergänzen oder eine genauere Adresse wählen.",
-		addressNotFound: "Diese Adresse habe ich nicht gefunden.",
+		addressNotFound: "Diese Adresse wurde nicht gefunden.",
 		addressCustom: "Eigene Adresse verwenden: „{text}“",
 		addressCustomNote: "Eigene Adresse, nicht auf Google Maps geprüft. Bitte genau kontrollieren.",
 		addressDoor: "Stiege / Tür (falls vorhanden)",
@@ -206,7 +206,7 @@ export const TEXT = {
 		goalsCongratsText: "Sie haben alle Schritte für „{goal}“ erledigt.",
 		goalsOpenPct: "{pct} % erledigt",
 		goalsCollection: "Ihre abgeschlossenen Behördenwege ({n} von {total})",
-		goalsCelebrateNext: "Möchten Sie als Nächstes „{goal}“ erledigen? Ich begleite Sie Schritt für Schritt.",
+		goalsCelebrateNext: "Als Nächstes „{goal}“ erledigen? Der Laufzettel führt Schritt für Schritt.",
 	},
 	en: {
 		title: "oesterreich.gv.at 2030",
@@ -288,7 +288,7 @@ export const TEXT = {
 		lzYourTurn: "Your turn",
 		lzAppointment: "Appointment",
 		lzYou: "You",
-		lzSignText: "Read it once more and sign with your seal. I can’t do this for you. Only you can.",
+		lzSignText: "Check it once more, then sign with your seal. Only you can sign.",
 		lzHoldToSign: "Hold to sign",
 		lzHoldHint: "Hold the seal until the ring is full. Or hold the space bar.",
 		lzSigning: "Submitting",
@@ -337,7 +337,7 @@ export const TEXT = {
 		keyboard: "Type instead of speaking",
 		mic: "Speak",
 		micStop: "Done speaking",
-		listening: "I'm listening …",
+		listening: "Listening …",
 		transcribing: "Writing it down …",
 		micUnavailable: "Voice input isn't available in this browser. Please type.",
 		typeHere: "Type here …",
@@ -372,7 +372,7 @@ export const TEXT = {
 		addressSearching: "Looking for addresses …",
 		addressFound: "✓ Address found on Google Maps.",
 		addressPartial: "Address found, but without a house number. Please add it or pick a more precise address.",
-		addressNotFound: "I couldn't find this address.",
+		addressNotFound: "This address was not found.",
 		addressCustom: "Use my own address: “{text}”",
 		addressCustomNote: "Your own address, not checked on Google Maps. Please check it carefully.",
 		addressDoor: "Staircase / door (if any)",
@@ -404,7 +404,7 @@ export const TEXT = {
 		goalsCongratsText: "You have completed every step for “{goal}”.",
 		goalsOpenPct: "{pct} % done",
 		goalsCollection: "Your completed errands ({n} of {total})",
-		goalsCelebrateNext: "Would you like to handle “{goal}” next? I will guide you step by step.",
+		goalsCelebrateNext: "Handle “{goal}” next? The routing slip guides you step by step.",
 	},
 };
 
@@ -417,13 +417,13 @@ export function tpl(text: string, vars: Record<string, string | number>): string
 
 /** Friendly labels for tool calls shown while the assistant works. */
 export const TOOL_LABELS: Record<string, Record<Language, string>> = {
-	get_my_profile: { de: "Ich sehe in Ihren Daten nach …", en: "Looking at your data …" },
-	find_services: { de: "Ich suche das passende Amt …", en: "Finding the right service …" },
-	get_service_info: { de: "Ich schlage nach …", en: "Looking it up …" },
-	check_eligibility: { de: "Ich prüfe die Voraussetzungen …", en: "Checking the requirements …" },
-	start_guided_walkthrough: { de: "Ich öffne das Formular …", en: "Opening the form …" },
-	fill_form_field: { de: "Ich trage es ein …", en: "Filling it in …" },
-	request_human_help: { de: "Ich verständige einen Menschen …", en: "Contacting a person …" },
+	get_my_profile: { de: "Ihre Daten werden abgerufen …", en: "Retrieving your records …" },
+	find_services: { de: "Zuständiges Amt wird gesucht …", en: "Finding the responsible office …" },
+	get_service_info: { de: "Wird nachgeschlagen …", en: "Looking it up …" },
+	check_eligibility: { de: "Voraussetzungen werden geprüft …", en: "Checking the requirements …" },
+	start_guided_walkthrough: { de: "Laufzettel wird geöffnet …", en: "Opening the routing slip …" },
+	fill_form_field: { de: "Wird eingetragen …", en: "Filling it in …" },
+	request_human_help: { de: "Eine Mitarbeiterin wird verständigt …", en: "Contacting a member of staff …" },
 };
 
 /** Formats a slot like "Donnerstag, 15. Oktober, 09:30". */
