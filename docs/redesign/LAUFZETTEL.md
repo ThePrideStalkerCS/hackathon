@@ -15,7 +15,7 @@ checkboxes as you go, so the agent after you knows where to start.
 
 | What | Where |
 |---|---|
-| Brand book (logo, colours, type, stamps, patterns, voice, motion, applied screens). Open in a browser. | [laufzettel-ci.html](laufzettel-ci.html) |
+| Brand book v1 (logo, colours, type, stamps, patterns, voice, motion, applied screens). Open in a browser. **Identity v2 below overrides it** where they differ (type, forms, stamps, seal). | [laufzettel-ci.html](laufzettel-ci.html) |
 | Same brand book as a private claude.ai artifact (Paul's account) | https://claude.ai/artifact/6TaYVK7qPWH7LYjcJqZJ4v |
 | The three start-page proposals Paul chose from (Brief, Laufzettel, Aufruf) | [previous-iterations/03-brief-laufzettel-aufruf.html](previous-iterations/03-brief-laufzettel-aufruf.html) |
 | Full brief, history of rejected designs, non-negotiables | [README.md](README.md) |
@@ -23,107 +23,210 @@ checkboxes as you go, so the agent after you knows where to start.
 
 `signature-concepts-live.html` in this folder is an older exploration from someone else. It was **not** chosen.
 
-## The identity in one page
+## Identity v2: warm paper (15 Oct, Paul's course correction)
 
-- **Mark ("Wegmarke"):** the flag read as a route. Red, white, red in thirds; the white band carries a red
-  line with three stations: two filled (done), one open (waiting). Only red and white. Never rotated,
-  no gradient, no shadow. No federal coat of arms, no Chancellery logo (Wappengesetz).
-- **Lockup:** mark + "Laufzettel" (Archivo, width 125, weight 900) + endorsement "oesterreich.gv.at 2030" (mono).
-- **Colours have meaning** (this is the core rule, keep it strict):
+v1 read as too basic, angular and machine-made. v2 keeps the idea (paper, ink, stamps, one seal) and
+changes the hand: organic forms, warmth, character, calm whitespace. Paul's v2 direction wins over the
+brand book wherever the brand book caused the angular look.
+
+- **Paper, not a dashboard.** Warm paper (`--papier #fffdf7`) on a warm desk (`--pult #f1ebdf`), a faint
+  paper grain, slips with 28 px rounded corners and a soft paper shadow. No grid of identical cards: the
+  desk has **one** open slip (big), further suggestions as quiet lines, then the private collection.
+- **Type with personality.** Fraunces (soft axis on) for titles, the stamp words and numbers that matter;
+  Atkinson Hyperlegible Next for all running text (never under 17 px in the slip); Atkinson Hyperlegible
+  Mono only for slip and reference numbers. Labels in sentence case. Mono uppercase labels are gone.
+- **Colours keep their meaning** (unchanged rule, slightly warmer values):
+
   | Token | Hex | Only for |
   |---|---|---|
-  | `--rot` Staatsrot | `#C8102E` | the mark, the route line, the citizen's own seal |
-  | `--tinte` Tinte | `#12152A` | text, rules, buttons |
-  | `--papier` Papier | `#FFFFFF` | the slip and every document |
-  | `--pult` Pult | `#EEF0F4` | the desk behind the paper (page background) |
-  | `--stempel` Stempelblau | `#2A44B0` | **stamps only**: "an office has done this" |
-  | `--marker` Marker | `#FFE45C` | **only behind text**: "this needs you". At most once per screen |
-- **Type:** Archivo (Google Fonts, variable width 62 to 125). Width 125 for titles, 100 for text (never
-  under 17 px), 62 to 75 uppercase for stamps and labels. Martian Mono for reference numbers and dates.
-- **Stamps:** blue, one fixed shape per kind of office (round = register/Meldeamt, rectangle = Magistrat,
-  octagon = check/Finanzamt, oval = social insurance, ticket = third parties like the landlord). Red round
-  stamp with initials = the citizen's own seal, only after they signed.
-- **The seal (reward):** a guilloche rosette (security print like on passports). One ring per station;
-  each stamp turns a ring red. Complete, it is printed on the confirmation together with "time you kept".
-- **Patterns:** guilloche band at the head of documents, perforated left edge on the slip, yellow marker
-  swipe behind the one question that needs the citizen, red route line (solid = done, dashed = ahead).
-- **Motion:** only three, each reports an event: stamp press (420 ms), marker swipe (700 ms), seal ring.
-  `prefers-reduced-motion` shows the end state immediately.
-- **Voice of the texts:** plain language, one thought per sentence, always say what happens next, name
-  the office. "Sie" in German, "you" in English. No exclamation marks.
-- **Light only.** The identity is paper and ink; the old dark "Glasraum" theme is gone.
+  | `--rot` Staatsrot | `#C8102E` | the mark, the route line, the citizen's emblem and seal |
+  | `--tinte` Tinte | `#1f2333` | text, buttons |
+  | `--papier` Papier | `#fffdf7` | the slip and every document |
+  | `--pult` Pult | `#f1ebdf` | the desk behind the paper |
+  | `--stempel` Stempelblau | `#2A44B0` | **office stamps only**: "an office has done this" |
+  | `--marker` Marker | `#FFE45C` | **only behind the one question** that needs the citizen. At most once per screen |
+
+- **Mark and lockup** unchanged (flag read as a route, no coat of arms); the word "Laufzettel" is set in Fraunces.
+- **Motion:** stamp press, marker swipe, wreath leaf inking, emblem press when complete. Nothing else
+  moves. `prefers-reduced-motion` shows the end state.
+- **Voice:** plain language, one thought per sentence, say what happens next, name who did it (the
+  register, the office, the landlord, never "I'm entering it"). "Sie" in German. No exclamation marks.
+- **Light only.**
+
+## Emblems and stamps: the design system
+
+Two kinds of marks, never mixed: **red** belongs to the citizen (their emblem and seal), **blue** to the
+offices (stamps). Both look pressed by hand, both carry the motif of the life event, so all marks on
+one slip belong together.
+
+### The emblem (the citizen's seal for one errand)
+
+`frontend/brand/Emblem.tsx`, drawings in `motifs.ts`, engraving geometry in `engrave.ts`.
+Close-ups: `media/laufzettel/stamp-move.png`, `stamp-passport.png`, `stamp-child.png`; all sizes in
+`emblems-all-sizes.png`.
+
+| Life event (service) | Motif | Why |
+|---|---|---|
+| Move (`change-of-residence`) | **Stone pine (Zirbe)** with its dense upright crown on a rocky ridge, mountains behind | puts down roots in a new place, survives on rock |
+| Passport (`passport-renewal`) | **Peaks with an ibex** on the shoulder, the **Danube** running towards you | going out into the world, coming home |
+| Child (`childcare-subsidy`) | **Edelweiss** with a bud | a small new life, cared for |
+
+No birds, no federal coat of arms, no protected logo. Add a motif in `motifs.ts` (`DRAW`, `motifFor`, a sprig).
+
+Anatomy, from outside in:
+
+1. **Hand-pressed edge:** an uneven circle (a few slow waves on the radius), one strong line.
+2. **Wreath:** one leaf per station of the slip, two branches growing up from the bottom. A leaf is
+   inked when its station is stamped, so the wreath fills as the offices walk. This is the only
+   progress the emblem shows: no points, no levels.
+3. **Slip number** small at the bottom, in the gap of the wreath. No microtext ring.
+4. **Vignette:** the motif as an engraving inside a thin circle.
+
+How the motifs are drawn (banknote engraving, not clip art):
+
+- a strong silhouette first, then hatching **that follows the form** (lines bow over a rounded crown,
+  run down the fall line on a rock face) and **swells from thin on the lit side to thick in shadow**;
+- light always from the upper left; a few **solid ink shadows** (under each needle pad, in the gaps of
+  the crown, in rock cracks); full-strength ink, no pale tints;
+- burin lines are filled shapes (`swell`), not strokes, so they taper like a real cut;
+- the 48 px slip head gets a **solid silhouette** of the same scene (hatching would turn to mush);
+- judged at 250 px (hero), 200 px (desk card, confirmation) and 48 px (slip head).
+
+Where it appears: the slip hero (one big emblem; the small one in the sticky head fades in only once
+the big one has scrolled away), the open slip on the desk (0 leaves inked), the confirmation (complete,
+with the citizen's red seal pressed over its edge) and the private collection on the desk.
+
+### Office stamps (blue)
+
+`Stamp` in `frontend/brand/Brand.tsx`, specs from `frontend/laufzettel/stations.ts`. Specimen:
+`media/laufzettel/office-stamps.png`.
+
+- One shape per kind of office, all **hand-pressed** (superellipse outlines whose edge moves a little,
+  plus the SVG ink filter for uneven ink):
+
+  | Kind | Shape | Word |
+  |---|---|---|
+  | requirements check | soft rosette (scalloped circle), dotted inner ring | "Checked" / "Geprüft" |
+  | central register (value from a register) | circle with the register's name around the edge | "Filled" / "Eingetragen" |
+  | office prefilled a suggestion | pillow (soft rectangle), dotted inner line | "Prefilled" / "Vorbefüllt" |
+  | third party confirmed (landlord) | pillow, dotted inner line, "Landlord · K. Steiner" | "Confirmed" / "Bestätigt" |
+  | answer received from the citizen | rounded rectangle, solid inner line | "Received" / "Erhalten" |
+  | appointment | ellipse, office name on top | "Reserved" / "Reserviert" |
+
+- **Calm type:** the word in Fraunces 600, sentence case; office and date in Atkinson. No condensed
+  black uppercase.
+- **A sprig of the motif** on every office stamp: a pine twig with a cone, little peaks with the sun,
+  a small edelweiss.
+- Slightly rotated, a different angle per row, like stamps set by hand.
+
+### The citizen's seal (red)
+
+The last row of the slip is "You": hold the red seal with your initials for about a second to sign
+(`HoldSeal.tsx`, mouse, touch, or hold Space/Enter). Only this submits. On the confirmation the red
+round seal (initials in Fraunces italic, name, "Signed", reference number around the edge) is pressed
+over the complete emblem.
+
+## Fair nudging: how the slip carries it
+
+The nudge is the slip itself: you see how little is left for you and how much the offices already did.
+
+| Where | What the citizen sees |
+|---|---|
+| Desk, open slip | the reason in plain words ("Your landlord Karl Steiner confirmed that you moved…"), then "The offices fill in 6 of 9 rows. You answer 2 questions, then you sign. About 45 min you keep (estimate)." |
+| Every slip screen | the sticky slip head: small emblem + "3 of 9 stamped · 2 answers left, then you sign · about 45 min you keep (estimate)" |
+| Slip hero | "The seal only shows your progress. Only you see it. No points, no ranking." |
+| Each row | the stamp of whoever did it, the narration names the same source |
+| Confirmation | complete emblem, red seal, "time you kept" (labelled as an estimate) |
+| Desk, collection | finished emblems and stamps on file, time kept in total: private, on this device |
+
+Rules: **voluntary** (profile menu → "Show seal and time kept", stored on the device only; off hides
+the emblems, the collection and the time line), **private** (nothing is compared with other people),
+**only positive** (no streaks, no loss, no countdown pressure), **only official errands**, **explained
+openly** (the line above, estimates labelled as estimates).
 
 ## How the engine maps onto the slip
 
-Nothing in the engine changes. The slip is a different *view* of the same `Walkthrough`
-(`src/shared/walkthrough.ts`). The mapping lives in `frontend/laufzettel/stations.ts`.
+Nothing in the engine's flow changes for the view. The slip is a different *view* of the same
+`Walkthrough` (`src/shared/walkthrough.ts`). The mapping lives in `frontend/laufzettel/stations.ts`.
 
 | Walkthrough step | Station (row) on the slip | Stamp when done |
 |---|---|---|
-| `intro` | not a row; its narration plays as the first caption | none |
-| `check` | "Requirements" row with the check results | octagon "CHECKED" |
-| `autofill` (source `profile`) | field row, value shown, "from the register" | round "FILLED", ring text = register |
-| `autofill` (source `assistant`/`draft`) | field row, value shown | ticket "PREFILLED" |
-| `ask` | field row, the question with the **marker**, inline answer (Coach widgets) | rectangle "RECEIVED" |
-| `appointment` | row with the slot picker | oval "RESERVED" |
-| `review` | last row "You": hold-to-sign seal (`HoldToConfirm` logic, only the citizen submits) | red seal with initials "SIGNED" |
-| `done` | the slip turns into the **confirmation document** with the full seal | |
-| `blocked` | row with dashed red frame "Stopped here" and the human handoff | none |
+| `intro` | not a row; the life event is the hero title, the narration plays as the first caption | none |
+| `check` | "Requirements" row with the check results | rosette "Checked" |
+| `autofill` (source `profile`) | field row, value shown, "From the register" | circle "Filled", register around the edge |
+| `autofill` (source `confirmed`) | field row, "Confirmed by Karl Steiner" | pillow "Confirmed", "Landlord · K. Steiner" |
+| `autofill` (source `assistant`/`draft`) | field row, value shown, "Suggested from your data" | pillow "Prefilled" |
+| `ask` | field row, the question with the **marker**, inline answer (Coach widgets) | rectangle "Received" |
+| `appointment` | row with the slot picker (offices in the citizen's region first) | ellipse "Reserved" |
+| `review` | last row "You": hold-to-sign seal (only the citizen submits) | red seal with initials |
+| `done` | the slip turns into the **confirmation document** with the complete emblem | |
+| `blocked` | row "Stopped here" and the human handoff | none |
 
 - Seal count = stations with `done`; total = number of stations.
-- The current step's row is highlighted; rows after it are "pending" (dashed route line).
 - Playback is unchanged (App.tsx playback loop): autofill steps play by themselves, so the citizen
   watches the stamps land one by one while the caption bar narrates.
 - Combined requests (`state.queue`) appear on the confirmation as "Next slip".
+- Third-party confirmations (`src/gov/data/confirmations.ts`): Lena's landlord has confirmed the move.
+  The proactive rule turns that into the open slip on her desk; the engine marks those fields as
+  `confirmed` (the citizen's own answer always wins over them).
 
 ## File map of the new UI
 
 | File | What it is |
 |---|---|
-| `frontend/brand/brand.css` | tokens + all Laufzettel styles (loaded after the old `styles.css`) |
-| `frontend/brand/print.ts` | pure canvas drawing: seal rosette, guilloche band |
-| `frontend/brand/Brand.tsx` | `Mark`, `Lockup`, `Stamp` (SVG), `Seal`, `Band`, `InkFilter` |
+| `frontend/brand/brand.css` | tokens + all Laufzettel styles (v1 layer, then the "v2 · warm paper" layer at the end) |
+| `frontend/brand/Brand.tsx` | `Mark`, `Lockup`, `Stamp` (hand-pressed SVG + sprig), `Seal` (v1 rosette, unused now), `Band`, `InkFilter` |
+| `frontend/brand/Emblem.tsx` | the citizen's emblem (edge, wreath, serial, vignette) |
+| `frontend/brand/motifs.ts` | the engraved motifs, their 48 px silhouettes and the stamp sprigs (pure, cached) |
+| `frontend/brand/engrave.ts` | engraving geometry: swelling lines, form-following hatching, organic outlines |
+| `frontend/brand/print.ts` | canvas drawing: guilloche band (and the v1 seal rosette) |
 | `frontend/laufzettel/stations.ts` | walkthrough → stations mapping (pure) |
 | `frontend/laufzettel/Slip.tsx` | the Laufzettel view of a running walkthrough + confirmation |
-| `frontend/laufzettel/Desk.tsx` | the start page ("your desk"): open slips from suggestions, say-it line, finished slips, time kept |
-| `frontend/laufzettel/CaptionBar.tsx` | narration subtitles + talk dots + pause/replay + keyboard + mic |
+| `frontend/laufzettel/Desk.tsx` | the start page ("your desk"): one open slip, further suggestions, say-it line, private collection |
+| `frontend/laufzettel/CaptionBar.tsx` | narration subtitles (rolling), talk dots, pause/replay, keyboard, mic |
+| `frontend/laufzettel/HoldSeal.tsx` | hold to sign |
+| `src/gov/data/confirmations.ts` | third-party confirmations (landlord) of the mock backend |
+| `src/gov/data/offices.ts` | mock appointment offices with their region, `nearbyFirst` |
 
-Old visual layer, still in the repo but no longer used by the main flow once the checklist is done:
+Old visual layer, still in the repo but no longer used by the main flow:
 `frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `frontend/reward.tsx` (AmtsRing, StampPass), the glass
-parts of `styles.css`. Delete them only after the new flow is verified (last box of the checklist).
-`Coach.tsx` stays: its `AskInput` and `SlotPicker` are reused inside the slip rows.
-Elizaveta's goals pages (`frontend/goals/*`, `#/goals`) still use the old styles; restyle them in the
-Laufzettel look or fold them into the desk (open question for the team).
+parts of `styles.css`. `Coach.tsx` stays: its `AskInput` and `SlotPicker` are reused inside the slip rows.
+Elizaveta's goals pages (`frontend/goals/*`, `#/goals`) still use the old styles.
 
 ## Build checklist
 
 Keep this list honest: tick only what is done **and** checked in the browser.
 
-- [x] 1. Fonts (Archivo + Martian Mono) in `index.html`, light only (`data-theme="paper"`), `brand.css` with tokens
-- [x] 2. Brand components (`Mark`, `Lockup`, `Stamp`, `Seal`, `Band`, `InkFilter`) + canvas drawing (`print.ts`)
-- [x] 3. Top bar: lockup, "Talk to a person", goals link, EN/DE, profile menu (theme switch removed from the app, still optional in `ProfileMenu`)
+- [x] 1. Fonts in `index.html` (v2: Fraunces, Atkinson Hyperlegible Next + Mono; Archivo kept for the v1 rules), light only, `brand.css` with tokens
+- [x] 2. Brand components (`Mark`, `Lockup`, `Stamp`, `Band`, `InkFilter`) + canvas drawing (`print.ts`)
+- [x] 3. Top bar: lockup, "Talk to a person", goals link, EN/DE, profile menu (with the seal switch)
 - [x] 4. `stations.ts` mapping + `Slip.tsx` running walkthrough (rows, stamps, marker, inline answers via Coach's `AskInput`/`SlotPicker`)
-- [x] 5. Hold-to-sign row (`HoldSeal.tsx`) → `submit`; confirmation document with full seal, red citizen stamp, reference number, time kept, next steps, next slip button
-- [x] 6. `CaptionBar` replaces the dock (captions, talk dots, pause, replay, keyboard, mic)
-- [x] 7. `Desk.tsx` start page: greeting, open slips (suggestions), say-it line, examples, stamps on file, time kept
+- [x] 5. Hold-to-sign row (`HoldSeal.tsx`) → `submit`; confirmation document with complete emblem, red seal, reference number, time kept, next steps, next slip button
+- [x] 6. `CaptionBar` replaces the dock (captions roll up while spoken, talk dots, pause, replay, keyboard, mic)
+- [x] 7. `Desk.tsx` start page: greeting, one open slip, further suggestions, say-it line, private collection
 - [x] 8. i18n: all new texts in EN and DE (`lz*` and `stamp*` keys in `frontend/i18n.ts`)
-- [ ] 9. Verify in the browser: **done on 15 Oct:** passport (Josef) end to end on desktop incl. hold-to-sign and confirmation; childcare (Thomas) in German at phone width (390 px, no horizontal scroll) up to the first question. **Still to do:** change of residence (Lena, needs the AI chat, so run `pnpm dev` with a valid `npx wrangler login`), childcare to the end, keyboard only, screen reader
-- [x] 10. Type checks (Worker + frontend) clean, `pnpm test` 24/24 green (15 Oct)
-- [ ] 11. Remove the unused old layer and update `docs/CORE.md` design principles. No longer imported by the app: `frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `HoldToConfirm.tsx`, `frontend/reward.tsx`, and in `components.tsx` `Dock` + `CommandBar`. `VoiceMark` is still used by `Coach.tsx` (card header, unused in the slip) and `goals/shared.tsx`. `reward.tsx` and `HoldToConfirm.tsx` are not committed yet: commit or delete deliberately. Then strip the glass rules from `styles.css` (keep what Coach widgets, ProfileMenu, HandoffSheet, AddressInput and goals need)
-- [ ] 12. Optional: Bezirk coalition card (aggregates only, voluntary), landlord confirmation as a live third party, lock-screen style notification
+- [x] 9. Verified in the browser (15 Oct, 01:30 to 02:10 Vienna, own sessions, mock backend reset after each): Lena EN + DE desktop and EN at 390 px end to end incl. hold-to-sign and confirmation; Josef (passport, appointment) and Thomas (childcare, IBAN) EN end to end; Amira desk; keyboard only (Tab to the slip, focus lands on each question, hold Space on the seal signs). Screenshots in `media/laufzettel/`
+- [x] 10. Type checks (Worker + frontend) clean, `pnpm test` 30/30 green, `pnpm evals` see the morning report
+- [ ] 11. Remove the unused old layer and update `docs/CORE.md` design principles. No longer imported by the app: `frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `HoldToConfirm.tsx`, `frontend/reward.tsx`, the v1 `Seal` + `drawSeal`, and in `components.tsx` `Dock` + `CommandBar`. `VoiceMark` is still used by `Coach.tsx` and `goals/shared.tsx`. Then strip the glass rules from `styles.css` (keep what Coach widgets, ProfileMenu, HandoffSheet, AddressInput and goals need) and fold the v1 rules of `brand.css` into the v2 layer
+- [x] 12. Landlord confirmation as a live third party + proactive "Register your new address" slip on Lena's desk (engine test in `test/walkthrough.spec.ts`)
+- [x] 13. Identity v2: warm paper, soft forms, Fraunces + Atkinson, sticky slip head with the nudge line, one open slip on the desk
+- [x] 14. Engraved emblems per life event (pine, peaks, edelweiss) with 48 px silhouettes; wreath progress; serial at the bottom
+- [x] 15. Hand-pressed office stamps with calm type and the motif sprig; calm hero (life event title, form name once, one big emblem)
+- [x] 16. Seal and time kept can be switched off (profile menu, stored on the device)
+- [ ] 17. Optional: Bezirk coalition card (aggregates only, voluntary), lock-screen style notification for the proactive slip
 
-### Known issues found while verifying (fix in this order)
+### Known issues (fix in this order)
 
-1. **Appointment office does not match the citizen:** Josef lives in Linz but the mock slots are "Passbehörde Wien – Bezirksamt Mitte". Slots come from the mock backend (`src/gov/`); pick offices by the citizen's postcode.
-2. **Narration has exclamation marks** ("Done! Your application has been submitted."). The brand voice has none; fix the texts in `src/walkthrough/guides.ts` / the engine phrases.
-3. **Lena's case starts only through the free-text line** (no proactive suggestion), so it needs the AI. Consider a proactive "You moved?" suggestion from the landlord confirmation or the ZMR, which would also be the stronger 2030 story.
-4. The goals pages (`#/goals`, Elizaveta) still use the old look.
-5. A check line says "Hinweis: Diese Prüfung ist im Prototyp vereinfacht" (childcare). The brief forbids prototype labels in the main UI; reword it in the engine/service rules.
-6. Nothing of this is committed yet (branch `feature/glass-design`, many uncommitted files). Ask Paul before committing or pushing; the repo is public. No AI attribution lines in commits.
+1. The goals pages (`#/goals`, Elizaveta) still use the old look. Restyle in the Laufzettel look or fold into the desk (open question for the team).
+2. Old layer still in the repo (checklist item 11).
+3. On phones the caption bar covers about a fifth of the screen; the current row scrolls above it, but a "minimise captions" control would help.
+4. The 48 px edelweiss silhouette is weaker than the pine and peaks ones.
+5. Fixed on 15 Oct: appointment office by the citizen's postcode (Josef now gets Linz-Land first); exclamation marks and prototype labels in what the citizen hears; Lena's proactive slip; narration naming the register or landlord; caption text cut off mid-sentence.
+6. Everything is committed locally on `feature/glass-design`, nothing pushed (the repo is public). No AI attribution lines in commits.
 
 ### How to verify without clicking by hand
 
-A headless Chrome driver was used: start Chrome with `--remote-debugging-port`, then send DevTools commands over the WebSocket (click with `Runtime.evaluate`, capture with `Page.captureScreenshot`). In headless Chrome the audio cannot play without a user gesture; the narrator falls back to reading time, so playback still advances.
+A headless Chrome driver was used: start Chrome with `--remote-debugging-port`, then send DevTools commands over the WebSocket (click with `Runtime.evaluate`, capture with `Page.captureScreenshot`, press and hold with `Input.dispatchMouseEvent`). In headless Chrome the audio cannot play without a user gesture; the narrator falls back to reading time, so playback still advances. Signing submits into the shared mock backend: reset it afterwards with `POST /api/gov/admin/reset`.
 If the page stays blank and `document.readyState` is stuck at `interactive`, the Vite dependency cache is stale: stop the dev server, `rm -rf node_modules/.vite`, start again.
 
 ## Rules that still apply

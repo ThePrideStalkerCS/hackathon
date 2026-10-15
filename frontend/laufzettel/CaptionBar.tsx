@@ -4,8 +4,10 @@
  * pause, replay, type or press the microphone to answer in their own words.
  *
  * The three red dots are the stations of the mark; they light up one after another while speaking.
+ * A long caption rolls up one line at a time while it is spoken, like TV subtitles, so no sentence
+ * stays cut off at the bottom.
  */
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MicButton } from "../components";
 import { Icon } from "../icons";
 import type { UIText } from "../i18n";
@@ -23,9 +25,28 @@ type Props = {
 	onSend: (text: string) => void;
 };
 
+/** About one caption line of speech (roughly ten words). */
+const LINE_MS = 3400;
+
 export function CaptionBar({ t, caption, speaking, paused, busy, recorder, onTogglePause, onReplay, onSend }: Props) {
 	const [typing, setTyping] = useState(false);
 	const [text, setText] = useState("");
+	const textRef = useRef<HTMLParagraphElement>(null);
+
+	useEffect(() => {
+		textRef.current?.scrollTo({ top: 0 });
+	}, [caption]);
+
+	useEffect(() => {
+		const el = textRef.current;
+		if (!el || !speaking || paused) return;
+		const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		const timer = setInterval(() => {
+			if (el.scrollTop + el.clientHeight >= el.scrollHeight - 2) return;
+			el.scrollBy({ top: parseFloat(getComputedStyle(el).lineHeight) || 24, behavior: smooth ? "smooth" : "auto" });
+		}, LINE_MS);
+		return () => clearInterval(timer);
+	}, [caption, speaking, paused]);
 	const status =
 		recorder.state === "listening"
 			? t.listening
@@ -80,7 +101,7 @@ export function CaptionBar({ t, caption, speaking, paused, busy, recorder, onTog
 						</button>
 					</form>
 				) : (
-					<p className="lz-cap-text" aria-live="polite">
+					<p className="lz-cap-text" aria-live="polite" ref={textRef}>
 						{status}
 					</p>
 				)}
