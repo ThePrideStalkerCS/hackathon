@@ -1,9 +1,9 @@
 # Notes for coding agents (and humans)
 
 Challenge 3 hackathon project: an assistant for Austrian government services that works like a
-**guided video tutorial, not a chatbot**. The citizen watches the official form being filled in step
-by step (simulated portal + ghost cursor + narration), answers only what the system can't know, and
-submits with a button.
+**guided video tutorial, not a chatbot**. The citizen watches a routing slip (the Laufzettel) fill
+itself station by station (stamps from the offices + spoken captions), answers only what the system
+can't know, and signs by holding the seal.
 
 **Read [docs/CORE.md](docs/CORE.md) before changing the walkthrough, the agent or the UI.**
 **Working on the UI? The design is decided: the Laufzettel. Read [docs/redesign/LAUFZETTEL.md](docs/redesign/LAUFZETTEL.md) first** (identity, engine mapping, build checklist with the current status). Background: [docs/redesign/README.md](docs/redesign/README.md).
@@ -12,7 +12,7 @@ Open tasks are in [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md). Ask the team a
 
 ## Invariants of the core (details in docs/CORE.md)
 
-1. **The AI never submits or books.** There is no tool for it. Only the `submit` callable (citizen's button on the review step) does.
+1. **The AI never submits or books.** There is no tool for it. Only the `submit` callable (the citizen holds the seal on the review step) does.
 2. **Agent state is server-controlled.** The frontend never calls `agent.setState`; it calls `@callable()` methods (`agent.call("answer", [...])`).
 3. **The walkthrough engine (`src/walkthrough/engine.ts`) is pure.** I/O goes into `controller.ts`. Add a test in `test/walkthrough.spec.ts` for every engine change.
 4. **Narration and explanations are hand-written** in `src/walkthrough/guides.ts` (DE + EN), not generated.
@@ -30,13 +30,13 @@ Open tasks are in [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md). Ask the team a
 - `src/agent/run-assistant.ts`: non-streaming run of the same agent, used by `/api/evals/chat`.
 - `src/walkthrough/`: the core. `engine.ts` (pure step logic), `controller.ts` (backend I/O, submit), `guides.ts` (plain-language texts), `proactive.ts` (suggestions from the profile).
 - `src/shared/walkthrough.ts`: walkthrough types shared with the frontend.
-- `src/shared/stamps.ts` + `src/walkthrough/overview.ts`: reward layer (Stempelpass, time saved, life-areas ring), `getOverview` callable. `frontend/reward.tsx` renders it.
+- `src/shared/stamps.ts` + `src/walkthrough/overview.ts`: reward layer (Stempelpass, time saved, life-areas ring), `getOverview` callable. `frontend/laufzettel/Desk.tsx` renders it (stamp collection, time kept, emblem wreath via `frontend/brand/Emblem.tsx`).
 - `src/voice/elevenlabs.ts`: `/api/voice/tts|stt|status` (ElevenLabs, key in `.dev.vars` / wrangler secret).
 - `src/gov/service.ts`: business logic, used by both the Hono routes and the tools. Add new backend features here first.
 - `src/gov/db.ts`: D1 schema + lazy seeding. After changing the schema or personas, call `POST /api/gov/admin/reset`.
 - `src/gov/data/`: personas, services (forms, eligibility rules), human contact.
 - `src/knowledge/index.ts`: service facts with source URLs.
-- `frontend/`: React (Vite). `App.tsx` (layout + playback loop), `walkthrough/` (`Portal` = the page as main window, `Coach` = card at the active field, `Progress` = chapter bar), `components.tsx` (Orb, Dock, CommandBar, ProfileMenu, HandoffSheet), `icons.tsx`, `voice.ts` (TTS/STT with browser fallback). Texts are in `frontend/i18n.ts` (German + English, keep both in sync). Design principles: docs/CORE.md.
+- `frontend/`: React (Vite). `App.tsx` (layout + playback loop), `laufzettel/` (`Slip` = the routing slip as main window, `Desk` = start page, `CaptionBar` = spoken captions + mic, `HoldSeal` = hold to sign, `stations.ts` = walkthrough steps → slip rows), `brand/` (`Brand.tsx` lockup + stamps, `Emblem.tsx` + `motifs.ts` + `engrave.ts` = engraved life-event emblems, `brand.css`), `walkthrough/Coach.tsx` (answer widgets: `AskInput`, `SlotPicker`), `goals/` (personal goals tracker), `components.tsx` (ProfileMenu, HandoffSheet, MicButton), `icons.tsx`, `voice.ts` (TTS/STT with browser fallback). Texts are in `frontend/i18n.ts` (German + English, keep both in sync). Design principles: docs/CORE.md. Not used any more (v1 portal, left for the team to delete): `walkthrough/Portal.tsx`, `Progress.tsx`, `HoldToConfirm.tsx`, `reward.tsx`, `Dock`/`CommandBar` in `components.tsx`.
 - `evals/`: scenarios (`scenarios.json`) + runner (`run.ts`).
 
 ## Rules for new code

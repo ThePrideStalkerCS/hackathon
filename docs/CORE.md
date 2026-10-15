@@ -6,26 +6,30 @@
 ## The idea in one paragraph
 
 Not a chatbot. The citizen says (or types) what they need, in their own words, dialect included.
-The assistant opens the **official form in a simulated portal** and fills it in **while the citizen
-watches**, like a YouTube tutorial. A ghost cursor moves to each field, values from the citizen's
-data are typed in, and a voice explains what is happening (with subtitles in the **voice dock**).
-When the citizen has to answer something, a **coach card** appears right below that field: one
-question, the official term ("Amtsdeutsch") explained in plain words, big answer buttons. A
-**progress bar** with chapters shows where they are. Only the citizen can submit, with the page's own
-"Submit application" button. A person can take over at any time and sees exactly where the citizen stopped.
+The assistant opens the official form as a **Laufzettel** (routing slip) and walks it **while the
+citizen watches**, like a YouTube tutorial: each row is a station, the offices fill in what their
+registers already know and stamp it, and a voice explains what is happening (with subtitles in the
+**caption bar**). When the citizen has to answer something, the question appears in that row: one
+question behind the yellow marker, the official term ("Amtsdeutsch") explained in plain words, big
+answer buttons. The sticky slip head shows how much is stamped and how little is left. Only the
+citizen can submit, by holding the red seal on the last row. A person can take over at any time and
+sees exactly where the citizen stopped.
 
 ## Design principles (frontend)
 
-1. **The web page is the main window.** The authority's form page fills the screen; the assistant is a layer on top of it, not a side panel.
-2. **"Glasraum", but official.** A night-blue room with frosted glass sheets (dark by default, a light variant for contrast). Identity: the "oesterreich.gv.at 2030" wordmark, the red-white-red mark, the red progress bar, "Simulation" labels. No neon, no sparkles, no chat bubbles.
-3. **Two visual layers.** Authority = glass sheets and red identity. Assistant = light: luminous edges on the active field and the hint card, the ghost cursor, the voice mark (red-white-red stripes moving like a level meter).
-4. **A card only when the citizen must act** (ask, appointment, review, done, blocked). Everything else plays by itself and is narrated in the dock.
-5. **Hold to submit.** The citizen holds the fingerprint until the ring is full (keyboard: hold Space or Enter). A deliberate act; the AI can never do it.
-6. **Fair nudging (reward layer).** Time saved (estimates, labelled as such) and the Stempelpass: every finished errand earns an ink stamp on real-looking paper. Rules: voluntary, private (no ranking, no comparison), only positive, only official errands, openly explained. Code: `src/shared/stamps.ts`, `src/walkthrough/overview.ts`, `frontend/reward.tsx`.
+The full identity, the engine mapping and the build status are in
+[redesign/LAUFZETTEL.md](redesign/LAUFZETTEL.md). The short version:
+
+1. **The slip is the main window.** The form is shown as a routing slip on warm paper; the assistant is a voice and a caption line, not a side panel or a chat.
+2. **Paper, ink, stamps.** Warm paper, soft forms, Fraunces for titles and Atkinson Hyperlegible for reading; light only. Blue = office stamps ("an office did this"), red = the route, the mark and the citizen's own emblem and seal, yellow marker only behind the one question the citizen has to answer. No glass, no gradients, no orb, no sparkles, no chat bubbles, no "simulation" or "demo" labels in what the citizen sees.
+3. **Name who did it.** Each row carries the stamp of whoever filled it (register, office, landlord), and the narration names the same source.
+4. **The citizen acts only where needed** (ask, appointment, review, blocked). Everything else plays by itself and is narrated in the captions; on phones the captions keep to two lines while the citizen acts.
+5. **Hold to sign.** The citizen holds the red seal until it is pressed (keyboard: hold Space or Enter). A deliberate act; the AI can never do it.
+6. **Fair nudging, carried by the slip.** The open slip says how much the offices fill in and how little is left; the emblem's wreath inks one leaf per stamped station; time kept is an estimate, labelled as such. Rules: voluntary (profile menu, "Show seal and time kept"), private (no ranking, no comparison), only positive, only official errands, openly explained. Code: `src/shared/stamps.ts`, `src/walkthrough/overview.ts`, `frontend/brand/Emblem.tsx`, `frontend/laufzettel/`.
 7. **One question, plain words.** Ask the way a person would, explain each option, name the official term last ("Im Formular heißt das: …"). Never explain a term with itself.
 8. **Voice first, never voice only.** Everything spoken is in the captions; everything answerable by voice is also clickable.
 
-Logo: we deliberately use a text wordmark, not the Federal Chancellery's logo or the federal coat of arms (protected by the Wappengesetz). If the Chancellery provides its logo for the demo, swap it into `.brand` in `frontend/App.tsx`.
+Logo: we deliberately use a text wordmark, not the Federal Chancellery's logo or the federal coat of arms (protected by the Wappengesetz). If the Chancellery provides its logo for the demo, swap it into `Lockup` in `frontend/brand/Brand.tsx`.
 
 ## Architecture
 
@@ -33,10 +37,10 @@ Logo: we deliberately use a text wordmark, not the Federal Chancellery's logo or
 Browser (React)                                     Worker (Cloudflare)
 ┌──────────────────────────────────────┐            ┌─────────────────────────────────────────────┐
 │ App.tsx  layout + playback loop      │  WebSocket │ CitizenAssistant (Durable Object, 1/session)│
-│  ├ Portal.tsx    the page (main win.)│◄──state────│  state = { personaId, language,             │
-│  ├ Coach.tsx     card at active field│            │            walkthrough, queue }             │
-│  ├ Progress.tsx  chapters bar        │──callable─►│  @callable advance/answer/submit/…          │
-│  ├ Dock / CommandBar  captions + mic │──chat─────►│  onChatMessage:                             │
+│  ├ laufzettel/Slip.tsx  the slip     │◄──state────│  state = { personaId, language,             │
+│  ├ laufzettel/Desk.tsx  start page   │            │            walkthrough, queue }             │
+│  ├ walkthrough/Coach  answer widgets │──callable─►│  @callable advance/answer/submit/…          │
+│  ├ laufzettel/CaptionBar  captions   │──chat─────►│  onChatMessage:                             │
 │  └ voice.ts      TTS / STT           │            │    1. extractAnswer (deterministic)         │
 └──────────┬───────────────────────────┘            │    2. routeIntent  (keywords → force tool)  │
            │ /api/voice/tts|stt                      │    3. LLM (Workers AI) + tools              │
