@@ -2253,3 +2253,343 @@ h3 {
 		animation: none !important;
 	}
 }
+
+/* =============================================================================================
+ * Goals pages (frontend/goals/, #/goals) in the slip's look: one paper sheet instead of a grid of
+ * cards, the slip's red route instead of gradient bars, red for the citizen's own progress (never
+ * green), the yellow marker left to the slip. Markup and logic unchanged.
+ * ============================================================================================= */
+.goals-page {
+	max-width: 780px;
+	margin: 0 auto;
+	padding-top: 56px;
+	gap: 22px;
+}
+.goals-page h2 {
+	margin: 0;
+	font: 600 clamp(2rem, 4.4vw, 2.8rem) / 1.08 var(--f-display);
+	letter-spacing: -0.015em;
+	font-variation-settings: "SOFT" 100, "opsz" 96;
+}
+.goals-page h3 {
+	margin: 10px 0 0;
+	font: 600 1.4rem/1.2 var(--f-display);
+	font-variation-settings: "SOFT" 100;
+}
+.goals-page .goal-bot {
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: 0;
+	box-shadow: none;
+	font-size: 1.12rem;
+	line-height: 1.55;
+	color: #3a3c49;
+	animation: none;
+}
+.goals-page .goal-bot p {
+	margin: 0;
+	padding: 0;
+	max-width: 58ch;
+}
+.goals-page button {
+	min-height: 48px;
+	padding: 0 20px;
+	border: 1.5px solid var(--tinte);
+	background: var(--papier);
+	color: var(--tinte);
+	font: 700 0.98rem var(--f-text);
+	box-shadow: none;
+}
+.goals-page button:hover:not(:disabled) {
+	background: var(--warm);
+	border-color: var(--tinte);
+}
+.goals-page button.primary {
+	border-color: var(--tinte);
+	background: var(--tinte);
+	color: var(--papier);
+	box-shadow: 0 10px 22px -14px rgb(31 35 51 / 70%);
+}
+.goals-page button.primary:hover:not(:disabled) {
+	background: #262a44;
+}
+.goals-page button.big {
+	min-height: 54px;
+	padding: 0 26px;
+	font-size: 1.02rem;
+}
+.goals-page button.link-button {
+	min-height: 44px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--tinte);
+	font-weight: 600;
+	text-decoration: underline;
+	text-decoration-color: var(--linie);
+	text-decoration-thickness: 2px;
+	text-underline-offset: 5px;
+	box-shadow: none;
+}
+.goals-page button[aria-pressed="true"] {
+	border-color: var(--linie);
+	background: transparent;
+	color: var(--grau);
+}
+.goals-page .fine-print {
+	margin: 4px 0 0;
+	font-size: 0.88rem;
+	color: var(--grau);
+}
+
+/* the route: solid red where it is done, red dots where it still runs */
+.goals-page .goal-bar {
+	position: relative;
+	height: 4px;
+	border: 0;
+	border-radius: 0;
+	overflow: visible;
+	background: radial-gradient(circle, rgb(200 16 46 / 55%) 1.5px, transparent 1.9px) left center / 9px 4px repeat-x;
+}
+.goals-page .goal-bar-fill,
+.goals-page .goal-bar-fill.full {
+	height: 4px;
+	border-radius: 3px;
+	background: var(--rot);
+}
+.goals-page .goal-pct {
+	font: 600 0.95rem var(--f-text);
+	color: var(--grau);
+	font-variant-numeric: tabular-nums;
+}
+
+/* overview: the errands as rows on one sheet */
+.goals-page .goal-list {
+	gap: 0;
+	padding: 10px;
+	border-radius: var(--r-slip);
+	background: var(--papier) var(--grain);
+	box-shadow: var(--shadow-paper);
+}
+.goals-page .goal-card,
+.goals-page .goal-card.complete {
+	gap: 18px;
+	padding: 18px 16px;
+	border: 0;
+	border-radius: var(--r-soft);
+	background: none;
+	box-shadow: none;
+}
+.goals-page .goal-card:hover {
+	background: var(--warm);
+}
+.goals-page .goal-icon {
+	box-sizing: border-box;
+	width: 48px;
+	height: 48px;
+	padding: 11px;
+	border-radius: 50%;
+	background: var(--warm);
+	color: var(--tinte);
+}
+.goals-page .goal-card.complete .goal-icon {
+	background: var(--rot);
+	color: var(--papier);
+}
+.goals-page .goal-head h3 {
+	margin: 0 0 10px;
+	font: 600 1.2rem/1.25 var(--f-display);
+}
+
+/* one errand: its steps on the slip's route */
+.goals-page .goal-title {
+	gap: 14px;
+}
+.goals-page .goal-title .goal-icon {
+	flex: none;
+}
+.goals-page .goal-summary {
+	gap: 18px;
+}
+.goals-page .goal-summary .goal-bar {
+	height: 6px;
+	background-size: 10px 6px;
+}
+.goals-page .goal-summary .goal-bar-fill {
+	height: 6px;
+}
+.goals-page .goal-summary .goal-pct {
+	font: 600 1.15rem var(--f-text);
+}
+.goals-page .goal-steps {
+	padding: 14px 18px 14px 12px;
+	border-radius: var(--r-slip);
+	background: var(--papier) var(--grain);
+	box-shadow: var(--shadow-paper);
+}
+.goals-page .goal-step {
+	gap: 18px;
+	padding: 12px 0;
+}
+.goals-page .goal-step:not(:last-child)::before {
+	left: 20px;
+	top: 40px;
+	bottom: -14px;
+	width: 3px;
+	border-radius: 3px;
+	background: radial-gradient(circle, var(--rot) 1.5px, transparent 1.9px) center top / 4px 9px repeat-y;
+}
+.goals-page .goal-step.done:not(:last-child)::before {
+	background: var(--rot);
+}
+.goals-page .goal-step-dot {
+	width: 40px;
+	height: 40px;
+	border: 3px solid var(--rot);
+	background: var(--papier);
+	color: var(--rot);
+	font: 700 0.95rem var(--f-text);
+	box-shadow: 0 0 0 5px var(--papier);
+}
+.goals-page .goal-step.done .goal-step-dot {
+	border-color: var(--rot);
+	background: var(--rot);
+	color: var(--papier);
+}
+.goals-page .goal-step.current .goal-step-dot {
+	border-color: var(--rot);
+	color: var(--rot);
+	box-shadow: 0 0 0 5px var(--papier);
+}
+.goals-page .goal-step-body,
+.goals-page .goal-step.current .goal-step-body {
+	padding: 6px 0 2px;
+	border: 0;
+	border-radius: 0;
+	background: none;
+}
+.goals-page .goal-step.current .goal-step-body {
+	margin: -6px 0;
+	padding: 12px 16px;
+	border-radius: var(--r-soft);
+	background: var(--warm);
+}
+.goals-page .goal-step.todo .goal-step-body {
+	color: var(--grau);
+}
+.goals-page .goal-step-body h4 {
+	margin: 0 0 4px;
+	font: 600 1.15rem/1.3 var(--f-display);
+	font-variation-settings: "SOFT" 100;
+}
+.goals-page .goal-step-body p {
+	line-height: 1.5;
+}
+
+/* done: a calm confirmation sheet, a red seal, the other errands as quiet lines */
+.goals-page .completion-card {
+	gap: 14px 24px;
+	padding: 34px 36px;
+	border: 0;
+	border-radius: var(--r-slip);
+	background: var(--papier) var(--grain);
+	box-shadow: var(--shadow-paper);
+}
+.goals-page .completion-card h2 {
+	margin: 0 0 6px;
+	font-size: clamp(1.9rem, 4vw, 2.5rem);
+}
+.goals-page .completion-kicker {
+	margin: 0 0 6px;
+	font: 500 0.95rem/1.4 var(--f-text);
+	letter-spacing: 0;
+	text-transform: none;
+	color: var(--grau);
+}
+.goals-page .completion-seal {
+	width: 88px;
+	height: 88px;
+	border: 3px solid var(--rot);
+	background: var(--papier);
+	color: var(--rot);
+	box-shadow: inset 0 0 0 5px var(--papier), inset 0 0 0 6.5px rgb(200 16 46 / 45%);
+}
+.goals-page .completion-seal-icon {
+	width: 38px;
+	height: 38px;
+}
+.goals-page .completion-seal-check {
+	background: var(--rot);
+	border-color: var(--papier);
+}
+.goals-page .badge-grid {
+	grid-template-columns: minmax(0, 1fr);
+	gap: 0;
+	padding: 8px 10px;
+	border-radius: var(--r-slip);
+	background: var(--papier) var(--grain);
+	box-shadow: var(--shadow-paper);
+}
+.goals-page .badge,
+.goals-page .badge.earned {
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: flex-start;
+	margin: 0;
+	gap: 14px;
+	padding: 12px 10px;
+	border: 0;
+	border-radius: var(--r-soft);
+	background: none;
+}
+.goals-page .badge-icon {
+	flex: none;
+	box-sizing: border-box;
+	width: 40px;
+	height: 40px;
+	padding: 9px;
+	border-radius: 50%;
+	background: var(--warm);
+	color: var(--grau);
+}
+.goals-page .badge.earned .badge-icon {
+	background: var(--rot);
+	color: var(--papier);
+}
+.goals-page .badge-label {
+	font: 600 1.05rem/1.3 var(--f-display);
+}
+.goals-page .badge-status {
+	margin-left: auto;
+	white-space: nowrap;
+	color: var(--grau);
+}
+.goals-page .badge.earned .badge-status {
+	color: var(--rot);
+}
+@media (max-width: 600px) {
+	.goals-page {
+		padding-top: 30px;
+	}
+	.goals-page .goal-card {
+		grid-template-columns: 48px minmax(0, 1fr);
+	}
+	.goals-page .goal-card > button,
+	.goals-page .goal-step > button {
+		grid-column: 2;
+		justify-self: start;
+	}
+	.goals-page .completion-card {
+		padding: 26px 22px;
+	}
+	.goals-page .goal-step-dot {
+		width: 34px;
+		height: 34px;
+	}
+	.goals-page .goal-step:not(:last-child)::before {
+		left: 17px;
+		top: 34px;
+	}
+}

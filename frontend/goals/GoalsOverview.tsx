@@ -27,7 +27,7 @@ export function GoalsOverview({ t, lang, progress, go, onReset }: Common & { onR
 								<ProgressBar value={pct} label={g.name[lang]} />
 								<p className="fine-print">{tpl(t.goalsStepsDone, { n: done.filter((id) => g.steps.some((s) => s.id === id)).length, total: g.steps.length })}</p>
 							</div>
-							<button type="button" className={pct === 100 ? "" : "primary"} onClick={() => go(pct === 100 ? `#/goals/${g.id}/done` : `#/goals/${g.id}`)}>
+							<button type="button" className={g === nearest ? "primary" : ""} onClick={() => go(pct === 100 ? `#/goals/${g.id}/done` : `#/goals/${g.id}`)}>
 								{pct === 100 ? t.goalsSeeSticker : `${t.goalsOpen} →`}
 							</button>
 						</li>
