@@ -117,7 +117,11 @@ export function Desk({ t, lang, firstName, overview, busy, reply, recorder, onSe
 							) : (
 								<p className="lz-kept-line">{t.lzKeptNone}</p>
 							))}
-						{showSeal && <p className="lz-why">{t.lzSealWhy}</p>}
+						{showSeal && (
+							<p className="lz-why">
+								{t.lzSealWhy} {t.lzSealHide}
+							</p>
+						)}
 					</div>
 					<div className="lz-collection-items">
 						{showSeal &&

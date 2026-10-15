@@ -23,7 +23,7 @@ export const TEXT = {
 		eyebrow: "Angemeldet mit ID Austria · Ihre Daten werden automatisch eingetragen",
 		urgent: "Dringend",
 		startTask: "Starten",
-		footer: "Konzept-Demo für die Challenge „Digital Assistants 2030“. Personen und Daten sind erfunden.",
+		footer: "Ein Konzept für die Challenge „Digital Assistants 2030“. Personen und Daten sind erfunden.",
 		brandYear: "2030",
 
 		// Laufzettel (docs/redesign/LAUFZETTEL.md)
@@ -59,6 +59,7 @@ export const TEXT = {
 		lzHeadKeep: "etwa {time} behalten",
 		lzCardKeep: "Sie behalten etwa {time} (geschätzt).",
 		lzSealWhy: "Das Siegel zeigt nur Ihren Fortschritt. Nur Sie sehen es. Keine Punkte, keine Rangliste.",
+		lzSealHide: "Ausblenden können Sie es im Menü mit Ihren Initialen.",
 		lzSealSetting: "Siegel und Zeitersparnis zeigen",
 		lzSealSettingHint: "Bleibt auf diesem Gerät. Freiwillig, jederzeit abschaltbar.",
 		lzCardOffices: "Die Ämter füllen {done} von {total} Zeilen aus.",
@@ -249,7 +250,7 @@ export const TEXT = {
 		eyebrow: "Signed in with ID Austria · your details are filled in automatically",
 		urgent: "Urgent",
 		startTask: "Start",
-		footer: "Concept demo for the “Digital Assistants 2030” challenge. People and data are fictional.",
+		footer: "A concept for the “Digital Assistants 2030” challenge. People and data are fictional.",
 		brandYear: "2030",
 
 		// Laufzettel (docs/redesign/LAUFZETTEL.md)
@@ -285,6 +286,7 @@ export const TEXT = {
 		lzHeadKeep: "about {time} kept",
 		lzCardKeep: "About {time} you keep (estimate).",
 		lzSealWhy: "The seal only shows your progress. Only you see it. No points, no ranking.",
+		lzSealHide: "You can hide it in the menu with your initials.",
 		lzSealSetting: "Show seal and time kept",
 		lzSealSettingHint: "Stays on this device. Voluntary, switch it off any time.",
 		lzCardOffices: "The offices fill in {done} of {total} rows.",
