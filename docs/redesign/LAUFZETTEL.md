@@ -204,9 +204,11 @@ Nothing in the engine's flow changes for the view. The slip is a different *view
 | `src/gov/data/offices.ts` | mock appointment offices with their region, `nearbyFirst` |
 
 Old visual layer, still in the repo but no longer used by the main flow:
-`frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `frontend/reward.tsx` (AmtsRing, StampPass), the glass
-parts of `styles.css`. `Coach.tsx` stays: its `AskInput` and `SlotPicker` are reused inside the slip rows.
-Elizaveta's goals pages (`frontend/goals/*`, `#/goals`) still use the old styles.
+`frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `HoldToConfirm.tsx`, `frontend/reward.tsx` (AmtsRing,
+StampPass), `Dock` and `CommandBar` in `components.tsx`, the glass parts of `styles.css`. `Coach.tsx`
+stays: its `AskInput` and `SlotPicker` are reused inside the slip rows. Elizaveta's goals pages
+(`frontend/goals/*`, `#/goals`) keep their markup and get the slip's look from the scoped block at the
+end of `brand.css`.
 
 ## Build checklist
 
@@ -220,8 +222,8 @@ Keep this list honest: tick only what is done **and** checked in the browser.
 - [x] 6. `CaptionBar` replaces the dock (captions roll up while spoken, talk dots, pause, replay, keyboard, mic)
 - [x] 7. `Desk.tsx` start page: greeting, one open slip, further suggestions, say-it line, private collection
 - [x] 8. i18n: all new texts in EN and DE (`lz*` and `stamp*` keys in `frontend/i18n.ts`)
-- [x] 9. Verified in the browser (15 Oct, 01:30 to 02:10 Vienna, own sessions, mock backend reset after each): Lena EN + DE desktop and EN at 390 px end to end incl. hold-to-sign and confirmation; Josef (passport, appointment) and Thomas (childcare, IBAN) EN end to end; Amira desk; keyboard only (Tab to the slip, focus lands on each question, hold Space on the seal signs). Screenshots in `media/laufzettel/`
-- [x] 10. Type checks (Worker + frontend) clean, `pnpm test` 30/30 green, `pnpm evals` see the morning report
+- [x] 9. Verified in the browser (last pass 15 Oct, 02:55 to 03:20 Vienna, own sessions, mock backend reset after each), end to end including hold-to-sign and the confirmation: Lena EN + DE desktop and EN + DE at 390 px; Josef (passport, appointment at BH Linz-Land) EN + DE; Thomas (childcare, IBAN) EN desktop and 390 px; Amira (childcare) DE. Keyboard only (3 Tabs to the slip, focus lands on each question, hold Space on the seal signs, 4 landmarks, h1 on the confirmation). Text at 140 % at 390 px. Screenshots in the Project store, `media/laufzettel/`
+- [x] 10. Type checks (Worker + frontend) clean, `pnpm test` 30/30 green, `pnpm evals` 9/9 (15 Oct, 03:18 Vienna)
 - [ ] 11. Remove the unused old layer. (`docs/CORE.md` design principles and the `AGENTS.md` map already describe the Laufzettel.) No longer imported by the app: `frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `HoldToConfirm.tsx`, `frontend/reward.tsx`, the v1 `Seal` + `drawSeal`, and in `components.tsx` `Dock` + `CommandBar`. `VoiceMark` is still used by `Coach.tsx` and `goals/shared.tsx`. Then strip the glass rules from `styles.css` (keep what Coach widgets, ProfileMenu, HandoffSheet, AddressInput and goals need) and fold the v1 rules of `brand.css` into the v2 layer
 - [x] 12. Landlord confirmation as a live third party + proactive "Register your new address" slip on Lena's desk (engine test in `test/walkthrough.spec.ts`)
 - [x] 13. Identity v2: warm paper, soft forms, Fraunces + Atkinson, sticky slip head with the nudge line, one open slip on the desk
