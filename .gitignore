@@ -168,3 +168,6 @@ dist
 
 # Eval reports (pnpm evals)
 test-results/
+
+# Office lock files (an open PowerPoint)
+~$*

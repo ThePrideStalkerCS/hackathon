@@ -1,233 +1,181 @@
-# Digital Public Service Assistant 2030
+# Laufzettel · oesterreich.gv.at 2030
 
-> **Our approach: a guided tutorial instead of a chatbot.** The citizen says what they need (voice or
-> text, dialect welcome). The assistant opens the official form in a simulated portal and fills it in
-> while the citizen watches: a ghost cursor, a narrating voice, the official term next to a
-> plain-language explanation. The citizen only answers what the system can't know and submits with a
-> button. A person can take over at any time and sees where the citizen stopped.
->
-> - How it works: [docs/CORE.md](docs/CORE.md)
-> - Who does what next: [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md)
-> - Voice: `cp .dev.vars.example .dev.vars` and add the ElevenLabs key (optional, falls back to browser speech)
->
-> The rest of this README describes the original starter template.
+**"The offices walk. You don't."** / *"Die Ämter laufen. Sie nicht."*
 
----
+Our entry for the challenge **"Digital Assistants: Evolution to 2030 (Public Sector)"** of the Federal
+Chancellery (Austrian Startup Summit 2026 Hackathon, Challenge 3).
 
-# Starter Template
+## The core idea
 
-**Austrian Startup Summit 2026 Hackathon · Challenge 3 (Federal Chancellery)**
+Today the citizen is the courier between offices: forms in Amtsdeutsch, data the state already has,
+deadlines nobody mentions. The assistant of 2030 is **not a chatbot**. It is the **Laufzettel**, the old
+Austrian routing slip, and in 2030 it walks by itself:
 
-**What you get is mainly the backend:** a mock e-government API with fictional citizens (personas), services,
-forms, eligibility rules, appointments and applications. On top of that sits **one chat agent with one tool**
-(`get_my_profile`), a minimal system prompt, a plain chat UI and an eval runner.
+1. **Proactive, not reactive.** The state notices a life event (here: the landlord confirms a move) and
+   puts an official notice on the citizen's desk: what to do, the legal deadline, the days left.
+2. **The offices fill in what they know.** Row by row the registers and the landlord stamp the slip,
+   narrated in one short official sentence per step, with subtitles. German official terms keep their
+   German pronunciation inside English speech.
+3. **The citizen only answers what nobody else knows.** Two questions, by voice (dialect welcome), tap
+   or keyboard. Every official term comes with plain words.
+4. **Only the citizen signs.** Hold the red seal to submit. The AI has no submit, book or pay tool.
+5. **Gipfelstempel: nudging and gamification.** Austrians collect summit stamps when they hike. Here
+   every finished errand is a summit: its engraved emblem fills up while the offices stamp, lands with a
+   soft thump, and is collected in a personal pass together with the time you kept. Make it cool, make
+   it fun, and fair: voluntary, private, only positive, only official errands.
 
-> **There is no working end-to-end flow yet:** The agent can look up the
-> logged-in citizen's profile, nothing more. Which tools it needs, how they chain together, how the
-> citizen confirms, and what the UI looks like is the challenge. Look for `👉 EXTEND HERE` comments.
+Letters are explained too: during the demo a parking fine arrives in the mailbox, shown as the German
+original next to plain words (what happened, deadline, what if you do nothing, what if you disagree)
+and linked to the move (with the new Hauptwohnsitz you can get a Parkpickerl).
 
-*All citizen data is fictional. Service rules are simplified mocks.*
+## The two-minute demo
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/Nlea/austrian-startup-summit-hackathon)
+Persona **Lena Huber** (default), English, German one click away (top right).
 
----
+1. **Desk:** the official notice "Register your new address", deadline with days left, the route
+   (6 rows by the offices, 2 questions, your seal). Press **Start this slip**.
+2. **Slip:** watch the stamps land and listen. Answer "Main residence".
+3. **Mailbox:** a parking fine arrives. Open it, read the plain words, pay (simulated) or "Later".
+4. **Sign:** answer the last question, hold the seal. The confirmation shows the reference number,
+   everything that was submitted, the Gipfelstempel and the time kept. **Save as PDF** prints it.
+5. **Back at the desk:** the earned Gipfelstempel, the new residence on file, the unpaid fine waiting.
 
-## What's inside
+Other personas (profile menu, top right): Josef Gruber (78, dialect, passport), Thomas Berger
+(childcare benefit), Amira Haddad (residence permit, English), David Novak (no address on file).
+Try typing on the desk, e.g. *"I bin grad nach Wien zogn"* or *"How much does a new passport cost?"*.
 
-| Part | What it does | Where |
-|---|---|---|
-| **Mock e-government backend** | The main part. Fictional citizens, 3 services, forms, eligibility, appointments, applications, human handoff. REST API built with **Hono**, plus the same logic as plain functions for your tools | `src/gov/` |
-| **Chat agent** | Streams answers, remembers the conversation, **one example tool** (`get_my_profile`), **minimal system prompt** | `src/agent/` |
-| **Knowledge** | Facts about each service with source URLs (⚠️ verify before your demo!) | `src/knowledge/` |
-| **Frontend** | Plain chat UI: simulated ID Austria login, DE/EN, text size, tool status | `frontend/` |
-| **Evals** | Runner + 3 example scenarios → test report. Writing the real test set is up to you | `evals/` |
+## Run it locally (for tutors and the jury)
 
-**Cloudflare products used:** Workers, Agents SDK (Durable Objects + SQLite), Workers AI, AI Gateway, D1, Static Assets, Workers Observability.
-
-```
-Browser (React)
-   │  WebSocket                     REST (Hono)
-   ▼                                   ▼
-CitizenAssistant agent ──tools──► Mock gov service ──► D1 (citizens, applications, …)
-(Durable Object, chat history)        ▲
-   │                                  │
-   └──► Workers AI (via AI Gateway)   └── src/knowledge (facts + sources)
-```
-
----
-
-## Quick start
-
-You need Node.js 20+, pnpm (`npm i -g pnpm`) and a Cloudflare account.
+You need **Node.js 20+** and **pnpm** (`npm i -g pnpm`).
 
 ```bash
-git clone https://github.com/Nlea/austrian-startup-summit-hackathon.git
-cd austrian-startup-summit-hackathon
-pnpm install
-npx wrangler login
-pnpm dev              # http://localhost:5173
+git clone https://github.com/ThePrideStalkerCS/hackathon.git
 ```
 
-Workers AI calls run against your Cloudflare account, even in local dev (that's why you need to log in).
+```bash
+cd hackathon && pnpm install
+```
 
-**Error "More than one account available but unable to select one"?** Your login has access to several
-Cloudflare accounts. Pick one by setting its account id (Dashboard → Account home → ⋯ → Copy account ID):
+**Option A, no account needed (recommended for a quick look):** the whole walkthrough works (desk,
+slip, stamps, mailbox, signing, confirmation, both languages). Only free text on the desk needs the AI.
+
+```bash
+pnpm dev:offline
+```
+
+**Option B, with the AI (Workers AI on Cloudflare):** log in with a Cloudflare account that has Workers
+AI. `wrangler.jsonc` names our team account; use your own by setting its id first.
+
+```bash
+npx wrangler login
+```
 
 ```bash
 export CLOUDFLARE_ACCOUNT_ID=<your-account-id>
 ```
 
-**Changed `wrangler.jsonc`?** After adding or renaming a binding (D1, KV, R2, AI, vars, …), regenerate the TypeScript types, otherwise you get errors like `Property 'GOV_DB' does not exist on type 'Env'`:
-
 ```bash
-pnpm cf-typegen       # rewrites worker-configuration.d.ts – commit the result
+pnpm dev
 ```
 
-**Deploy:**
+Then open **http://localhost:5173**. The demo data resets with
+`curl -X POST http://localhost:5173/api/gov/admin/reset` (or "Start over" in the profile menu).
 
-```bash
-pnpm run deploy       # builds the frontend and deploys everything
-```
+**Voice:** without a key the browser's built-in voice reads the narration. For the ElevenLabs voice,
+copy `.dev.vars.example` to `.dev.vars` and add `ELEVENLABS_API_KEY` (never commit that file; it is
+git-ignored). On a deployed worker the key is a secret: `npx wrangler secret put ELEVENLABS_API_KEY`.
 
-The D1 database is created automatically on the first deploy, and the tables fill themselves with test data on the first request. No migrations are needed.
+**Blank page after an install?** Stop the server, delete `node_modules/.vite`, start again.
 
----
+## How it answers the brief
 
-## Try it
-
-Pick a persona in the "Logged in as" menu. Each one is a fictional citizen with their own data
-(address, documents, household, residence status), built to test a specific scenario once you've added the tools:
-
-| Persona | Good for testing |
+| The brief asks for | Where it is |
 |---|---|
-| Lena Huber | Change of residence (the main flow) |
-| Josef Gruber | Expired passport, low digital literacy, dialect |
-| Amira Haddad | Non-EU residence permit, childcare benefit, combined requests, English |
-| Thomas Berger | Childcare benefit (newborn) |
-| Sofia Rossi | Change of residence in English (EU citizen) |
-| David Novak | Incomplete data (no current address) |
+| Colloquial and dialect input | say-it line and voice answers; a keyword router and answer extraction run before the model |
+| Plain language | every row shows the official term and plain words; letters show the original next to plain words |
+| Guide through multi-step forms, verify prerequisites | the slip: requirements row, rows from registers and the landlord, questions, seal |
+| Structured administrative output | confirmation with reference number, authority, date, all submitted data, PDF |
+| Proactive assistance | notice from the landlord's confirmation with the legal deadline; letters arrive on their own |
+| German and English, accessibility | switch in the top bar; captions for all speech, keyboard only (hold Space to sign), large targets, text size, reduced motion, phone layout |
+| Human contact point | "Talk to a person" in the top bar, on the notice and in letters; the handoff carries the current step |
+| Guardrails | no submit or pay tool for the AI, server-side validation, facts with source links, tools scoped to the logged-in citizen |
+| Pre-announced cases | change of residence, passport renewal, childcare benefit; combined requests queue a second slip |
 
-Example: as Josef, ask *"Ist mein Reisepass noch gültig?"*. The agent calls `get_my_profile` and sees that the passport expired in 2025.
-Anything beyond that (finding the right service, filling in the form, submitting) needs tools you add.
+## Documentation
 
----
+| Deliverable | File |
+|---|---|
+| Strategy (vision, personas, value proposition, framework) | [docs/STRATEGY.md](docs/STRATEGY.md) |
+| Technical documentation (architecture, data and APIs, AI design, guardrails, limitations, setup) | [docs/TECHNICAL.md](docs/TECHNICAL.md) |
+| Design and demo script | [docs/DESIGN.md](docs/DESIGN.md), brand book [docs/brand-book.html](docs/brand-book.html) |
+| Engine invariants | [docs/CORE.md](docs/CORE.md) |
+| Test results | [docs/TEST-RESULTS.md](docs/TEST-RESULTS.md) |
+| Pitch (2 minutes, PowerPoint) | [docs/pitch/Laufzettel-Pitch.pptx](docs/pitch/Laufzettel-Pitch.pptx) |
 
-## The mock API (Hono)
+## Tests
 
-Base URL: `/api/gov`. Every endpoint accepts `?lang=de|en` and `?simulate=slow|error`.
-The agent tools don't call these over HTTP. They call the same functions directly from `src/gov/service.ts`
-(the list is at the top of `src/agent/tools.ts`).
+```bash
+pnpm test
+```
+
+```bash
+pnpm evals
+```
+
+`pnpm test` runs the unit tests (walkthrough engine, router, voice runs; no AI). `pnpm evals` needs
+`pnpm dev` running and writes `test-results/report.md` (dialect, combined requests, prompt injection,
+no false "submitted", out of scope).
+
+## Architecture in one picture
+
+```
+Browser (React, Vite)        Desk (official notice) · Laufzettel (rows, stamps, seal) · captions · mailbox
+   │  WebSocket (Agents SDK): state sync + @callable methods + chat stream
+   ▼
+CitizenAssistant (Durable Object, one per session)
+   ├── walkthrough engine (src/walkthrough, pure, unit tested) ──► gov service layer (src/gov) ──► D1
+   ├── router + answer extraction (deterministic, before the LLM)
+   └── Workers AI @cf/zai-org/glm-4.7-flash via AI Gateway (tools, no submit tool)
+
+/api/gov/*     mock e-government REST API (Hono)
+/api/voice/*   ElevenLabs TTS/STT, key server-side; browser speech as fallback
+```
+
+Cloudflare: Workers, Agents SDK (Durable Objects + SQLite), Workers AI, AI Gateway, D1, Static Assets.
+Deploy with `pnpm run deploy`.
+
+### The mock API
+
+Base URL `/api/gov`, every endpoint accepts `?lang=de|en` and `?simulate=slow|error`.
 
 | Method | Path | |
 |---|---|---|
-| GET | `/citizens` · `/citizens/:id` | Personas, full profile (documents with expiry status) |
-| GET | `/services` · `/services/search?q=` · `/services/:id` | Services, keyword search, facts + form fields |
-| GET | `/services/:id/eligibility?citizenId=` | Eligibility check |
-| GET | `/services/:id/appointments` | Free slots (passport) |
-| POST | `/appointments/:slotId/book` | `{citizenId}` |
-| POST | `/applications` | `{citizenId, serviceId, data?}` → draft, pre-filled |
-| PATCH | `/applications/:id` | `{data}` |
-| POST | `/applications/:id/submit` | Validates server-side, returns a reference number |
-| POST/GET | `/handoffs` | Human handoff tickets |
-| POST | `/admin/reset` | Reset the database to the seed data |
+| GET | `/citizens` · `/citizens/:id` | personas, full profile |
+| GET | `/citizens/:id/mail` | the citizen's letters (the parking fine) |
+| GET | `/services` · `/services/search?q=` · `/services/:id` | services, search, facts and form fields |
+| GET | `/services/:id/eligibility?citizenId=` | eligibility check |
+| GET | `/services/:id/appointments` | free slots (passport) |
+| POST | `/appointments/:slotId/book` | book a slot (only on the citizen's signature) |
+| POST · PATCH | `/applications` · `/applications/:id` | draft application, prefilled |
+| POST | `/applications/:id/submit` | validates server-side, returns the reference number |
+| POST · GET | `/handoffs` | human handoff tickets |
+| POST | `/admin/reset` | reset the demo data |
 
-```bash
-curl "http://localhost:5173/api/gov/services/search?q=umzug"
-curl "http://localhost:5173/api/gov/citizens/josef-gruber"
-curl -X POST "http://localhost:5173/api/gov/admin/reset"
-```
-
-Other endpoint: `POST /api/evals/chat` (used by the evals).
-
-**Testing robustness:** set `MOCK_FAILURE_RATE` (e.g. `"0.2"`) or `MOCK_LATENCY_MS` in `wrangler.jsonc`, and check that your assistant handles outages gracefully.
-
----
-
-## Evals → your "logs and test results" deliverable
-
-```bash
-pnpm dev                                   # terminal 1
-pnpm evals                                 # terminal 2
-BASE_URL=https://your-worker.workers.dev pnpm evals
-pnpm evals english                         # run only some scenarios
-```
-
-This writes `test-results/report.md` and `results.json`. Only 3 example scenarios ship with the template. Add your own to `evals/scenarios.json`: the announced cases, noisy and combined requests, guardrails. The jury will try unannounced ones.
-
-Unit tests for the mock backend (no AI): `pnpm test`.
-
-**Logs:** every model call is logged in **AI Gateway** (Dashboard → AI → AI Gateway → `default`), including prompt, response, tokens and latency, and is tagged with session and persona. Worker logs are in **Workers & Pages → your worker → Logs**.
-
----
-
-## Switching models
-
-Change `MODEL_ID` in `src/config.ts`, then re-run `pnpm evals` to compare. Check German quality and tool calling in particular: the default `glm-4.7-flash` handles multi-step tool calls well, while Llama 4 Scout often writes tool calls as plain text instead.
-
----
-
-## What's built
-
-- **The mock backend**, including server-side validation: it rejects incomplete applications, whatever the AI says.
-- **Data isolation:** the example tool takes the citizen id from the session, never from the model.
-- **Safe evals:** tools listed in `EVAL_STUBBED_TOOLS` (`src/agent/tools.ts`) never execute during `pnpm evals`.
-- **Handoff API:** `POST /api/gov/handoffs` creates a ticket for a human case worker, and `HandoffCard` in the frontend can display it. Nothing uses it yet.
-
-## Up to you:
-
-- **The tools:** which ones, how they're described, how they chain from "understand" to "submit".
-- **The UI for results:** right now tool results show up as raw JSON. Confirmation steps, success cards, reference numbers, downloads are yours to build.
-- **Confirmation:** how does the citizen check and confirm before anything is submitted or booked?
-- **Human fallback:** how and when does a citizen reach a person? A button, the AI handing over, both?
-- **Error handling:** what does the citizen hear when the backend is slow or down? (Try `MOCK_FAILURE_RATE`.)
-- **The system prompt:** tone, dialect, sources and confidence, out-of-scope answers, prompt-injection rules.
-- **The test scenarios.**
-- all other cool extension ideas
-
-
-## Working with a coding agent
-
-`AGENTS.md` tells your coding agent (Claude Code, Cursor, OpenCode, Codex, Copilot, …) how this project
-works and which traps to avoid (pinned dependencies, a patched package, the default model). Most agents
-read it automatically; for Claude Code, `CLAUDE.md` imports it. If yours doesn't, point it to the file.
-
-Give your agent up-to-date Cloudflare knowledge, since its training data may be outdated:
-
-- **Cloudflare skills** (Workers, Agents SDK, Durable Objects, Wrangler, …) bundled with the Cloudflare MCP servers:
-  ```bash
-  npx skills add https://github.com/cloudflare/skills
-  ```
-  In Claude Code: `/plugin marketplace add cloudflare/skills`. Cursor: install from the Cursor Marketplace.
-- **Cloudflare MCP server** (Cloudflare API + documentation), add it to your agent's MCP settings:
-  ```json
-  { "mcpServers": { "cloudflare-api": { "url": "https://mcp.cloudflare.com/mcp" } } }
-  ```
-  You log in with OAuth on first use and choose which permissions the agent gets.
-
-Step-by-step guides for each agent: https://developers.cloudflare.com/agent-setup/
-
-Tip: ask your agent to run `pnpm evals` after every change to the prompt or the tools.
-
-## Project structure
+### Project structure
 
 ```
 src/
-  index.ts                 Hono app: routes /api/*, /agents/*
-  config.ts                Model + AI Gateway settings
-  agent/                   Chat agent, system prompt, tools (one example), eval runner
-  gov/                     Mock backend: routes (Hono), service logic, D1, personas, services
-  knowledge/               Service facts + sources (verify!)
-  shared/types.ts          Types shared with the frontend
-frontend/                  React app (Vite)
-evals/                     Test scenarios + runner
-test/                      Backend unit tests (vitest)
-docs/TECHNICAL.md          Skeleton for your technical documentation
+  agent/        Durable Object agent, system prompt, router, tools, eval runner
+  walkthrough/  engine (pure), controller (I/O), hand-written guides, proactive suggestions
+  gov/          mock backend: routes, service logic, D1, personas, services, letters
+  knowledge/    service facts with source URLs (verified on oesterreich.gv.at)
+  voice/        ElevenLabs TTS/STT
+  shared/       types and helpers shared with the frontend
+frontend/       React app: laufzettel/ (Desk, Slip, CaptionBar, HoldSeal, Postfach), brand/
+evals/          AI scenarios + runner
+test/           unit tests (vitest)
+docs/           strategy, technical documentation, design, test results, pitch
 ```
 
-## Useful docs
-
-- Agents SDK: https://developers.cloudflare.com/agents/
-- Hono on Workers: https://hono.dev/docs/getting-started/cloudflare-workers
-- Workers AI models: https://developers.cloudflare.com/workers-ai/models/
-- D1: https://developers.cloudflare.com/d1/
-- AI Gateway: https://developers.cloudflare.com/ai-gateway/
+*All people and data are fictional. Service rules are simplified. The online passport photo is a 2030
+concept. Paying in the mailbox is simulated.*

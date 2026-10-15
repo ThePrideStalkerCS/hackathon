@@ -11,7 +11,7 @@
  *   Confirmation  after submitting the slip turns into the confirmation document with the full seal
  *
  * The playback loop in App.tsx is unchanged: autofill rows get stamped one by one while the caption
- * bar narrates. See docs/redesign/LAUFZETTEL.md.
+ * bar narrates. See docs/DESIGN.md.
  */
 import { useEffect, useRef, useState } from "react";
 import type { Walkthrough } from "../../src/shared/walkthrough";
@@ -109,6 +109,13 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true, s
 					{queueNext && (
 						<p className="lz-hero-form lz-hero-next">
 							{t.lzAfterThis} <span>{queueNext}</span>
+						</p>
+					)}
+					{w.sourceUrl && (
+						<p className="lz-source">
+							<a href={w.sourceUrl} target="_blank" rel="noreferrer">
+								<Icon name={w.factsVerified ? "checkCircle" : "alert"} size={16} /> {w.factsVerified ? t.lzSourceChecked : t.lzSourceOpen}
+							</a>
 						</p>
 					)}
 				</div>
@@ -292,6 +299,8 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal =
 	const submitted = new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(new Date(result.submittedAt));
 	const stamps = buildStations(w, t, citizenName);
 	const seal = stamps.find((s) => s.step.kind === "review")?.stamp;
+	// The structured output: every form field as it was submitted.
+	const entries = w.fields.filter((f) => f.displayValue || f.value);
 
 	return (
 		<article className="lz-view lz-done-view" aria-labelledby="lz-confirm-title">
@@ -309,6 +318,13 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal =
 							{t.lzConfirmation}
 						</h1>
 						<p className="lz-doc-sub">{lifeEventTitle(w)}</p>
+						{w.sourceUrl && (
+							<p className="lz-source">
+								<a href={w.sourceUrl} target="_blank" rel="noreferrer">
+									<Icon name={w.factsVerified ? "checkCircle" : "alert"} size={16} /> {w.factsVerified ? t.lzSourceChecked : t.lzSourceOpen}
+								</a>
+							</p>
+						)}
 						<dl className="lz-doc-dl">
 							<div>
 								<dt>{t.referenceNumber}</dt>
@@ -361,6 +377,19 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal =
 								<li key={s}>{s}</li>
 							))}
 						</ol>
+						{entries.length > 0 && (
+							<>
+								<h2 className="lz-doc-h2">{t.lzEntries}</h2>
+								<dl className="lz-doc-dl is-entries">
+									{entries.map((f) => (
+										<div key={f.id}>
+											<dt>{f.label}</dt>
+											<dd>{f.displayValue || f.value}</dd>
+										</div>
+									))}
+								</dl>
+							</>
+						)}
 						<div className="lz-actions">
 							{queueNext && (
 								<button type="button" className="lz-btn is-primary" onClick={actions.startNext}>
@@ -369,6 +398,9 @@ function Confirmation({ w, t, actions, citizenName, queueNext, total, showSeal =
 							)}
 							<button type="button" className={`lz-btn ${queueNext ? "" : "is-primary"}`} onClick={actions.close}>
 								{t.lzBackToDesk}
+							</button>
+							<button type="button" className="lz-btn" onClick={() => window.print()}>
+								<Icon name="download" size={20} /> {t.lzSavePdf}
 							</button>
 						</div>
 					</div>

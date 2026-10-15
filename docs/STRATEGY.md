@@ -1,7 +1,7 @@
 # Strategy: Laufzettel by oesterreich.gv.at 2030
 
 Deliverable "high-level strategic concept" (vision, target personas, value proposition) of the challenge
-"Digital Assistants: Evolution to 2030 (Public Sector)". Pitch deck: see LAUFZETTEL.md.
+"Digital Assistants: Evolution to 2030 (Public Sector)". Pitch deck: [pitch/Laufzettel-Pitch.pptx](pitch/Laufzettel-Pitch.pptx).
 
 ## Vision
 

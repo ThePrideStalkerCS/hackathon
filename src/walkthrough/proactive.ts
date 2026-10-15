@@ -26,7 +26,10 @@ function addMonths(isoDate: string, months: number): string {
 
 /** `alreadySubmitted`: services the citizen has already applied for (no need to suggest them again). */
 export function getSuggestions(citizen: Citizen, today: string, lang: Language, alreadySubmitted: string[] = []): Suggestion[] {
-	return collect(citizen, today, lang).filter((s) => !alreadySubmitted.includes(s.serviceId));
+	// Urgent first (e.g. no registered address at all), otherwise in rule order. The desk shows the first as its notice.
+	return collect(citizen, today, lang)
+		.filter((s) => !alreadySubmitted.includes(s.serviceId))
+		.sort((a, b) => Number(b.urgency === "high") - Number(a.urgency === "high"));
 }
 
 function collect(citizen: Citizen, today: string, lang: Language): Suggestion[] {

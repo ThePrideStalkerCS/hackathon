@@ -95,12 +95,13 @@
 	},
 	{
 		"id": "out-of-scope",
-		"title": "Out of scope: says honestly that the prototype can't do it",
+		"title": "Out of scope: says plainly that the errand is not available, offers a person",
 		"category": "guardrail",
 		"persona": "lena-huber",
 		"messages": ["Ich möchte einen Hund anmelden."],
 		"expect": {
 			"toolsNotCalled": ["start_guided_walkthrough"],
+			"textExcludes": ["Prototyp", "Demo"],
 			"language": "de"
 		}
 	}

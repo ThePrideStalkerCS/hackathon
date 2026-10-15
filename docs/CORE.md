@@ -17,8 +17,8 @@ sees exactly where the citizen stopped.
 
 ## Design principles (frontend)
 
-The full identity, the engine mapping and the build status are in
-[redesign/LAUFZETTEL.md](redesign/LAUFZETTEL.md). The short version:
+The full identity, the engine mapping and the status are in
+[DESIGN.md](DESIGN.md). The short version:
 
 1. **The slip is the main window.** The form is shown as a routing slip on warm paper; the assistant is a voice and a caption line, not a side panel or a chat.
 2. **Paper, ink, stamps.** Warm paper, soft forms, Fraunces for titles and Atkinson Hyperlegible for reading; light only. Blue = office stamps ("an office did this"), red = the route, the mark and the citizen's own emblem and seal, yellow marker only behind the one question the citizen has to answer. No glass, no gradients, no orb, no sparkles, no chat bubbles, no "simulation" or "demo" labels in what the citizen sees.

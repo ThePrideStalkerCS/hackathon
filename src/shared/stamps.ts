@@ -60,7 +60,7 @@ export function cityOf(address?: string | null): string | null {
 	return m ? m[1].trim() : null;
 }
 
-function dateOf(iso: string | null | undefined): string {
+export function dateOf(iso: string | null | undefined): string {
 	const m = iso?.match(/^(\d{4})-(\d{2})-(\d{2})/);
 	return m ? `${m[3]}.${m[2]}.${m[1]}` : "";
 }

@@ -1,5 +1,5 @@
 /*
- * Laufzettel identity (docs/redesign/LAUFZETTEL.md, brand book: docs/redesign/laufzettel-ci.html).
+ * Laufzettel identity (docs/DESIGN.md, brand book: docs/brand-book.html).
  * Loaded AFTER the old styles.css: it remaps the old tokens to paper and ink, so components that are
  * not ported yet (profile menu, handoff sheet, address input, goals pages) already fit, and it styles
  * everything new (classes start with "lz-").
@@ -1918,10 +1918,12 @@ h3 {
 		grid-template-columns: minmax(0, 1fr);
 		padding: 26px 22px;
 	}
-	.lz-top-link .lz-top-full {
+	.lz-top-link .lz-top-full,
+	.lz-lang .lz-top-full {
 		display: none;
 	}
-	.lz-top-link .lz-top-short {
+	.lz-top-link .lz-top-short,
+	.lz-lang .lz-top-short {
 		display: inline;
 	}
 	.lz-captions.is-compact .lz-cap-text {
@@ -1991,7 +1993,7 @@ h3 {
 
 /* =============================================================================================
  * Core demo (16 Oct): the desk as an official notice for ONE errand, the mailbox and its letter.
- * See docs/redesign/LAUFZETTEL.md ("The core demo").
+ * See docs/DESIGN.md ("The core demo").
  * ============================================================================================= */
 .lz-notice {
 	position: relative;
@@ -2574,4 +2576,77 @@ h3 {
 	margin: 4px 0 0;
 	font-size: 1rem;
 	color: var(--grau);
+}
+
+/* where the rules come from: one quiet line with the official source (transparent confidence) */
+.lz-source {
+	margin: 14px 0 0;
+	font-size: 0.88rem;
+}
+.lz-source a,
+.lz-letter-label a {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	color: var(--grau);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+.lz-source a:hover,
+.lz-letter-label a:hover {
+	color: var(--tinte);
+}
+.lz-doc-in .lz-source {
+	margin: -4px 0 0;
+}
+
+/* The submitted entries on the confirmation: lighter than the case data above them. */
+.lz-doc-dl.is-entries dd {
+	font-weight: 500;
+}
+
+/* "Save as PDF" prints only the confirmation document, without the top bar, captions or buttons. */
+@media print {
+	@page {
+		margin: 12mm;
+	}
+	body {
+		background: #fff !important;
+	}
+	body * {
+		visibility: hidden;
+	}
+	.lz-doc,
+	.lz-doc * {
+		visibility: visible;
+	}
+	.lz-doc {
+		position: absolute;
+		inset: 0 0 auto;
+		box-shadow: none !important;
+		border-radius: 0;
+	}
+	.lz-doc .lz-actions {
+		display: none;
+	}
+	html {
+		font-size: 13px;
+	}
+	.lz-doc-dl div {
+		grid-template-columns: 220px minmax(0, 1fr);
+		gap: 12px;
+		padding: 6px 0;
+		break-inside: avoid;
+	}
+	.lz-doc-seal,
+	.lz-doc-h2 {
+		break-inside: avoid;
+		break-after: avoid;
+	}
+	* {
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+		animation: none !important;
+		transition: none !important;
+	}
 }

@@ -1,23 +1,23 @@
-# Laufzettel: the chosen design (build status and handoff)
+# Laufzettel: design and demo script
 
-**Decision (15 Oct 2026, Paul):** the experience is rebuilt as the **Laufzettel**, the Austrian routing
+The experience is the **Laufzettel**, the Austrian routing
 slip that you used to carry from office to office. In 2030 it walks by itself: the offices stamp it in
 the background, the citizen watches the stamps land and only answers what nobody else can know, then
 signs with their own seal.
 
 > **Signature sentence for the jury:** "The offices walk. You don't." / "Die Ämter laufen. Sie nicht."
 >
-> **Core idea (16 Oct, Paul): nudging and gamification, named the _Gipfelstempel_.** Austrians collect
+> **Core idea: nudging and gamification, named the _Gipfelstempel_.** Austrians collect
 > summit stamps when they hike; here every errand you finish is a summit and its emblem the summit stamp,
 > collected in a personal pass (home, travel, family). Make it visible, make it fun, make it pay off,
 > and move from reactive to proactive. Fair rules: voluntary, private, only positive, official errands only.
-> Pitch (PowerPoint, 2 minutes, speaker notes with timings): [../pitch/Laufzettel-Pitch.pptx](../pitch/Laufzettel-Pitch.pptx).
+> Pitch (PowerPoint, 2 minutes, speaker notes with timings): [pitch/Laufzettel-Pitch.pptx](pitch/Laufzettel-Pitch.pptx).
 
-This file is the single source of truth for the redesign. **If you are the next agent, read this file
-first, then continue at the first unchecked box in [Build checklist](#build-checklist).** Update the
-checkboxes as you go, so the agent after you knows where to start.
+This file describes the experience: the demo script, the identity, the nudging rules and how the
+screens map onto the walkthrough engine. Architecture, AI design and guardrails are in
+[TECHNICAL.md](TECHNICAL.md), vision and personas in [STRATEGY.md](STRATEGY.md).
 
-## The core demo (16 Oct, Paul: "everything on ONE walkthrough")
+## The core demo: one walkthrough
 
 Everything is tuned to one story that is presented: **Lena registers her new address in Vienna**
 (change of residence, the Meldezettel). The other personas still work, but nothing is built for them.
@@ -42,7 +42,7 @@ Everything is tuned to one story that is presented: **Lena registers her new add
 5. **Back at the desk.** The finished emblem and the time kept; if the fine is unpaid it waits under
    "Mailbox · Needs you · Pay by 28 October".
 
-**Challenge fit** (challenge-brief.md):
+**Challenge fit** (the brief's tasks and evaluation criteria):
 
 | The brief asks for | Where the core demo shows it |
 |---|---|
@@ -66,18 +66,14 @@ with the neighbouring text as context, the browser voice one utterance per run.
 
 | What | Where |
 |---|---|
-| Brand book v1 (logo, colours, type, stamps, patterns, voice, motion, applied screens). Open in a browser. **Identity v2 below overrides it** where they differ (type, forms, stamps, seal). | [laufzettel-ci.html](laufzettel-ci.html) |
-| Same brand book as a private claude.ai artifact (Paul's account) | https://claude.ai/artifact/6TaYVK7qPWH7LYjcJqZJ4v |
-| The three start-page proposals Paul chose from (Brief, Laufzettel, Aufruf) | [previous-iterations/03-brief-laufzettel-aufruf.html](previous-iterations/03-brief-laufzettel-aufruf.html) |
-| Full brief, history of rejected designs, non-negotiables | [README.md](README.md) |
-| Engine invariants (do not break) | [../CORE.md](../CORE.md) |
+| Brand book v1 (logo, colours, type, stamps, patterns, voice, motion, applied screens). Open in a browser. **Identity v2 below overrides it** where they differ (type, forms, stamps, seal). | [brand-book.html](brand-book.html) |
+| Pitch (PowerPoint, 2 minutes, speaker notes with timings) | [pitch/Laufzettel-Pitch.pptx](pitch/Laufzettel-Pitch.pptx) |
+| Engine invariants (do not break) | [CORE.md](CORE.md) |
 
-`signature-concepts-live.html` in this folder is an older exploration from someone else. It was **not** chosen.
-
-## Identity v2: warm paper (15 Oct, Paul's course correction)
+## Identity v2: warm paper
 
 v1 read as too basic, angular and machine-made. v2 keeps the idea (paper, ink, stamps, one seal) and
-changes the hand: organic forms, warmth, character, calm whitespace. Paul's v2 direction wins over the
+changes the hand: organic forms, warmth, character, calm whitespace. v2 wins over the
 brand book wherever the brand book caused the angular look.
 
 - **Paper, not a dashboard.** Warm paper (`--papier #fffdf7`) on a warm desk (`--pult #f1ebdf`), a faint
@@ -208,8 +204,7 @@ The nudge is the slip itself: you see how little is left for you and how much th
 Rules: **voluntary** (profile menu → "Show seal and time kept", stored on the device only; off hides
 the emblems, the collection and the time line), **private** (nothing is compared with other people),
 **only positive** (no streaks, no loss, no countdown pressure), **only official errands**, **explained
-openly** (estimates labelled as estimates; the switch is in the profile menu). The explanatory line under
-the seal was removed on 16 Oct (Paul: "unnecessary"). Deadlines and costs of a fine are legal facts,
+openly** (estimates labelled as estimates; the switch is in the profile menu). Deadlines and costs of a fine are legal facts,
 not our pressure.
 
 ## How the engine maps onto the slip
@@ -261,61 +256,45 @@ Nothing in the engine's flow changes for the view. The slip is a different *view
 | `src/gov/data/offices.ts` | mock appointment offices with their region, `nearbyFirst` |
 
 The old v1 layer (Portal, Progress, HoldToConfirm, reward.tsx, Dock, CommandBar, the guilloche Seal)
-was deleted on 16 Oct, and `styles.css` keeps only rules a live component can match (verified with
-computed-style snapshots of 14 screens before and after). Elizaveta's goals pages (`frontend/goals/*`)
-are still reachable at `#/goals` and get the slip's look from the scoped block in `brand.css`; their
-link left the top bar to keep the demo on one errand.
+and the separate goals pages were removed for the submission, so the demo stays on one errand.
+`styles.css` keeps only rules a live component can match (verified with computed-style snapshots of
+13 screens before and after).
 
-## Build checklist
+## Status
 
-Keep this list honest: tick only what is done **and** checked in the browser.
+Built and checked end to end in the browser (headless Chrome, mock backend reset after each run):
 
-- [x] 1. Fonts in `index.html` (v2: Fraunces, Atkinson Hyperlegible Next + Mono; Archivo kept for the v1 rules), light only, `brand.css` with tokens
-- [x] 2. Brand components (`Mark`, `Lockup`, `Stamp`, `Band`, `InkFilter`) + canvas drawing (`print.ts`)
-- [x] 3. Top bar: lockup, "Talk to a person", goals link, EN/DE, profile menu (with the seal switch)
-- [x] 4. `stations.ts` mapping + `Slip.tsx` running walkthrough (rows, stamps, marker, inline answers via `AskInput`/`SlotPicker` in `walkthrough/Answers.tsx`)
-- [x] 5. Hold-to-sign row (`HoldSeal.tsx`) → `submit`; confirmation document with complete emblem, red seal, reference number, time kept, next steps, next slip button
-- [x] 6. `CaptionBar` replaces the dock (captions roll up while spoken, talk dots, pause, replay, keyboard, mic)
-- [x] 7. `Desk.tsx` start page: greeting, one open slip, further suggestions, say-it line, private collection
-- [x] 8. i18n: all new texts in EN and DE (`lz*` and `stamp*` keys in `frontend/i18n.ts`)
-- [x] 9. Verified in the browser (last pass 15 Oct, 02:55 to 03:20 Vienna, own sessions, mock backend reset after each), end to end including hold-to-sign and the confirmation: Lena EN + DE desktop and EN + DE at 390 px; Josef (passport, appointment at BH Linz-Land) EN + DE; Thomas (childcare, IBAN) EN desktop and 390 px; Amira (childcare) DE; a combined request typed on Thomas's desk ("We just moved and we had a baby", EN and DE): the move slip names the childcare slip in its hero ("After this one: …"), its confirmation offers "Next slip", and that slip starts. Keyboard only (3 Tabs to the slip, focus lands on each question, hold Space on the seal signs, 4 landmarks, h1 on the confirmation). Text at 140 % at 390 px. Screenshots in the Project store, `media/laufzettel/`
-- [x] 10. Type checks (Worker + frontend) clean, `pnpm test` 33/33 green, `pnpm evals` 9/9 (16 Oct, after the core demo changes)
-- [x] 11. Remove the unused old layer (16 Oct): Portal, Progress, HoldToConfirm, reward.tsx, Dock, CommandBar, the v1 Seal and `drawSeal`, 48 unused texts; `Coach.tsx` became `Answers.tsx`; 1079 dead lines of `styles.css` removed. Computed styles of 14 screens (desk, menu, handoff, slip at question/slots/review, confirmation, goals, phone) identical before and after
-- [ ] 11b. Optional cleanup: fold the v1 rules of `brand.css` into the v2 layer (one rule per selector). Purely internal; verify with the same computed-style snapshots (see "How to verify")
-- [x] 12. Landlord confirmation as a live third party + proactive "Register your new address" slip on Lena's desk (engine test in `test/walkthrough.spec.ts`)
-- [x] 13. Identity v2: warm paper, soft forms, Fraunces + Atkinson, sticky slip head with the nudge line, one open slip on the desk
-- [x] 14. Engraved emblems per life event (pine, peaks, edelweiss) with 48 px silhouettes; wreath progress; serial at the bottom
-- [x] 15. Hand-pressed office stamps with calm type and the motif sprig; calm hero (life event title, form name once, one big emblem)
-- [x] 16. Seal and time kept can be switched off (profile menu, stored on the device)
-- [x] 21. Core demo (16 Oct): official notice on the desk (flag, date, legal deadline with days left, route of the slip), one walkthrough in focus (goals link and example chips gone, seal explanation removed), shorter narration, German terms spoken in German, parking fine arriving in the new mailbox with plain words and consequences. Checked headless end to end: EN desktop (pay and "later" paths, sign, confirmation, desk afterwards), DE at 390 px (desk, toast, letter), no horizontal overflow, 33 tests green
-- [ ] 17. Optional: Bezirk coalition card (aggregates only, voluntary), lock-screen style notification for the proactive slip
-- [x] 18. Phones (design check 3): desk card stacked with a small emblem beside the title, top bar on one row with a short visible word for "Talk to a person", one-line slip head, two caption lines while the citizen acts, question title never under the sticky head. Checked at 390 px (EN, DE) and 360 px (DE), no horizontal overflow
-- [x] 19. 48 px cuts that cannot read as a person: a conical young Zirbe, the passport river as a thin line, the edelweiss with bud and ground; the edelweiss full cut with an engraved sky. Decorative emblems hidden from screen readers
-- [x] 20. Goals pages (`#/goals`, Elizaveta's feature) in the slip's look with scoped CSS at the end of `brand.css`: errands as rows on one paper sheet, the slip's red route as progress, steps on the route, a red seal on the completion sheet; "simulation" and "demo" labels removed from their copy; one primary button (the errand furthest along). Markup and logic otherwise unchanged
+- Lena, change of residence: EN and DE, desktop and 390 px; parking fine paid and left for later;
+  hold-to-sign with mouse and keyboard (hold Space); the desk afterwards with the Gipfelstempel pass.
+- Josef, passport: photo from the phone or a photo booth (no paper photo), delivery address from the
+  register, appointment at the passport office near Linz. David without an address on file is asked for it.
+- Thomas and Amira, childcare benefit: EN and DE; Amira's residence permit goes to a person.
+- A combined request typed on the desk ("We just moved and we had a baby") queues the second slip.
+- Keyboard only, 4 landmarks, focus on each question, text at 140 % at 390 px, no horizontal overflow.
 
-### Known issues (fix in this order)
+Type checks and 33 unit tests are green, the AI evals pass 9 of 9: see [TEST-RESULTS.md](TEST-RESULTS.md).
 
-0. **Before the demo:** check the parking-fine facts on wien.gv.at (36 € Organstrafverfügung, two weeks, Anonymverfügung, Parkpickerl needs the Hauptwohnsitz in the district) and set `verified: true` in `src/gov/data/mail.ts`. Listen once to the English narration with ElevenLabs: each German term is a separate request, so check that the joins sound natural.
+### Known limitations
 
-1. The goals pages are a separate, manual tracker (the citizen ticks steps off) next to the slip, where the offices stamp. Folding them into the desk (each goal as a slip or a line in the collection) would make one journey instead of two; an open question for the team. They still show percentages, which the slip avoids.
-2. Old layer still in the repo (checklist item 11).
-3. Phones: the caption bar still takes about 125 px (two lines plus the button row). A "minimise captions" control, or the buttons beside the text on wider phones, would win another 50 px.
-4. The German slip head wraps to two short lines at 360 px, and at 390 px on the signing step ("8 von 9 · Unterschrift · etwa 45 Min. / behalten"). Fine on those short rows, but a shorter German phrase would keep it on one. English stays on one line at 390 px on every step.
-5. Below 480 px the word "Laufzettel" leaves the top bar (the mark stays as the home button), so a phone shows the name only on the desk and the confirmation.
-6. Fixed on 15 Oct: appointment office by the citizen's postcode (Josef now gets Linz-Land first); exclamation marks and prototype labels in what the citizen hears; Lena's proactive slip; narration naming the register or landlord; caption text cut off mid-sentence (captions roll); the 2-column desk card on phones; the 48 px pine that read as a head and shoulders; the faint edelweiss; the 68 px desk-card emblem on phones that kept the fine engraving; the privacy line under the seal now says where to hide it (a reviewer had missed the switch); the footer no longer says "demo".
-7. Everything is committed locally on `feature/glass-design`, nothing pushed (the repo is public). No AI attribution lines in commits.
+1. The parking-fine facts (Organstrafverfügung, €36, two weeks, Anonymverfügung, Parkpickerl needs the
+   Hauptwohnsitz) come from court decisions on § 50 VStG and are marked `verified: false` in
+   `src/gov/data/mail.ts`; a final check on wien.gv.at is open. The letter shows its source.
+2. Paying in the mailbox is simulated. The Parkpickerl is named, not built as its own slip.
+3. The online passport photo (phone or booth upload) is a 2030 concept, not today's process.
+4. English narration with German terms is synthesised in runs and can sound slightly segmented.
+5. On phones the caption bar takes about 125 px; the German slip head wraps to two lines at 360 px.
+6. Only three services are fully guided (change of residence, passport, childcare benefit).
 
 ### How to verify without clicking by hand
 
 A headless Chrome driver was used: start Chrome with `--remote-debugging-port`, then send DevTools commands over the WebSocket (click with `Runtime.evaluate`, capture with `Page.captureScreenshot`, press and hold with `Input.dispatchMouseEvent`). In headless Chrome the audio cannot play without a user gesture; the narrator falls back to reading time, so playback still advances. Signing submits into the shared mock backend: reset it afterwards with `POST /api/gov/admin/reset`.
 If the page stays blank and `document.readyState` is stuck at `interactive`, the Vite dependency cache is stale: stop the dev server, `rm -rf node_modules/.vite`, start again.
 
-## Rules that still apply
+## Design rules
 
 - Only the citizen submits (hold-to-sign). The AI has no submit or booking tool.
 - No chat window, no bubbles, no orb, no glass, no gradients, no sparkles.
 - English is the showcase language; every text also in German.
 - A person is reachable from every screen ("Talk to a person" in the top bar and on blocked rows).
 - Fair nudging: voluntary, private, only positive, only official errands, explained openly.
-- Commits carry only the team's names: no "Co-Authored-By" for an AI, no "Generated with" lines.
-- Facts (deadlines, plates, amounts) must be verified on oesterreich.gv.at before the demo.
+- Facts (deadlines, fees, documents) come from `src/knowledge/` with a source URL; unverified facts are marked.

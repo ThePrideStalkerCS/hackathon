@@ -1,7 +1,7 @@
 /**
  * The citizen's digital Postfach: official letters. ALL DATA IS FICTIONAL.
  *
- * The demo story (docs/redesign/LAUFZETTEL.md): while Lena registers her new address, a parking fine
+ * The demo story (docs/DESIGN.md): while Lena registers her new address, a parking fine
  * from the City of Vienna arrives. The Laufzettel shows the original letter and says in plain words
  * what it is, by when to pay, what happens if nothing is done, and what it has to do with the move
  * (with the new main residence she can get a Parkpickerl for the district).

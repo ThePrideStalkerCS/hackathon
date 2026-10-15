@@ -4,7 +4,7 @@
  *
  *   drawBand   the fine wavy band at the head of every document (like on passports and banknotes)
  *
- * See docs/redesign/LAUFZETTEL.md ("Patterns").
+ * See docs/DESIGN.md ("Patterns").
  */
 
 /** Sizes the canvas to its CSS box (sharp on retina screens) and returns a cleared 2D context. */

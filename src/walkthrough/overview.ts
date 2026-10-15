@@ -4,7 +4,7 @@
  */
 import type { Language } from "../shared/types";
 import type { Suggestion } from "../shared/walkthrough";
-import { SERVICE_AREA, TIME_SAVED_MINUTES, cityOf, stampForApplication, type Area, type AreaId, type Overview, type Stamp } from "../shared/stamps";
+import { SERVICE_AREA, TIME_SAVED_MINUTES, cityOf, dateOf, stampForApplication, type Area, type AreaId, type Overview, type Stamp } from "../shared/stamps";
 import type { Application, Citizen } from "../gov/types";
 
 const AREAS: AreaId[] = ["home", "travel", "family", "mobility"];
@@ -27,10 +27,12 @@ export function buildOverview(citizen: Citizen, suggestions: Suggestion[], appli
 		.sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""))
 		.map((a) => stampForApplication(a, lang));
 
-	// … plus what the citizen's records already show (marked as such, no date).
-	const city = cityOf(citizen.primaryAddress);
-	if (city && !submitted.some((a) => a.serviceId === "change-of-residence")) {
-		stamps.push({ id: "record-home", lines: [de ? "Wohnsitz" : "Residence", city], date: "", ink: "blue", source: "record" });
+	// … plus what the citizen's records already show (marked as such). A change of residence
+	// submitted here updates the record at once: the new town, dated the day it was signed.
+	const moved = submitted.find((a) => a.serviceId === "change-of-residence");
+	const city = cityOf(moved?.data.new_address ?? citizen.primaryAddress);
+	if (city) {
+		stamps.push({ id: "record-home", lines: [de ? "Wohnsitz" : "Residence", city], date: dateOf(moved?.submittedAt), ink: "blue", source: "record" });
 	}
 	for (const doc of citizen.documents) {
 		if (!doc.validUntil || doc.validUntil < today) continue;

@@ -14,7 +14,7 @@ export const TEXT = {
 		// Start page
 		footer: "Ein Konzept für die Challenge „Digital Assistants 2030“. Personen und Daten sind erfunden.",
 
-		// Laufzettel (docs/redesign/LAUFZETTEL.md)
+		// Laufzettel (docs/DESIGN.md)
 		lzHello: "Guten Tag, {name}.",
 		lzNoticeHead: "Ein Laufzettel für Sie",
 		lzPeakTitle: "Ihre Gipfelstempel",
@@ -68,7 +68,10 @@ export const TEXT = {
 		lzHeadSign: "Unterschrift",
 		lzHeadKeep: "etwa {time} behalten",
 		lzCardKeep: "Sie behalten etwa {time} (geschätzt).",
-		lzSealSetting: "Siegel und Zeitersparnis zeigen",
+		lzSealSetting: "Gipfelstempel und Zeitersparnis zeigen",
+		lzSourceChecked: "Rechtsgrundlage geprüft auf oesterreich.gv.at",
+		lzSourceOpen: "Laut unseren Unterlagen, Quelle: oesterreich.gv.at",
+		lzLetterSource: "Rechtsgrundlage: § 50 VStG (RIS)",
 		lzSealSettingHint: "Bleibt auf diesem Gerät. Freiwillig, jederzeit abschaltbar.",
 		lzFromConfirmed: "Bestätigt von {name}",
 		stampConfirmed: "Bestätigt",
@@ -97,6 +100,8 @@ export const TEXT = {
 		lzNextSlip: "Nächster Laufzettel: {name}",
 		lzAfterThis: "Danach:",
 		lzBackToDesk: "Zurück zum Pult",
+		lzEntries: "Ihre Angaben",
+		lzSavePdf: "Als PDF sichern",
 		stampCheckTop: "Voraussetzung",
 		stampChecked: "Geprüft",
 		stampRegisterRing: "Zentrales Register · ID Austria · ",
@@ -178,7 +183,7 @@ export const TEXT = {
 
 		footer: "A concept for the “Digital Assistants 2030” challenge. People and data are fictional.",
 
-		// Laufzettel (docs/redesign/LAUFZETTEL.md)
+		// Laufzettel (docs/DESIGN.md)
 		lzHello: "Hello, {name}.",
 		lzNoticeHead: "A routing slip for you",
 		lzPeakTitle: "Your Gipfelstempel",
@@ -232,7 +237,10 @@ export const TEXT = {
 		lzHeadSign: "sign next",
 		lzHeadKeep: "about {time} kept",
 		lzCardKeep: "About {time} you keep (estimate).",
-		lzSealSetting: "Show seal and time kept",
+		lzSealSetting: "Show Gipfelstempel and time kept",
+		lzSourceChecked: "Rules checked on oesterreich.gv.at",
+		lzSourceOpen: "According to our information, source: oesterreich.gv.at",
+		lzLetterSource: "Legal basis: § 50 VStG (RIS)",
 		lzSealSettingHint: "Stays on this device. Voluntary, switch it off any time.",
 		lzFromConfirmed: "Confirmed by {name}",
 		stampConfirmed: "Confirmed",
@@ -261,6 +269,8 @@ export const TEXT = {
 		lzNextSlip: "Next slip: {name}",
 		lzAfterThis: "After this one:",
 		lzBackToDesk: "Back to your desk",
+		lzEntries: "What was submitted",
+		lzSavePdf: "Save as PDF",
 		stampCheckTop: "Eligibility",
 		stampChecked: "Checked",
 		stampRegisterRing: "Central register · ID Austria · ",

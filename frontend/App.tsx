@@ -1,5 +1,5 @@
 /**
- * The citizen-facing app in the Laufzettel identity (docs/redesign/LAUFZETTEL.md):
+ * The citizen-facing app in the Laufzettel identity (docs/DESIGN.md):
  *
  *   Start page     the desk (Desk.tsx): open routing slips from proactive suggestions, one "say it" line
  *                  (voice first), finished stamps and the time kept
@@ -264,11 +264,15 @@ export function App() {
 		void call("updateSettings", [patch]);
 	}
 
-	function restart() {
+	/** "Start over" in the profile menu: a fresh session and fresh demo data, so the story can be shown again. */
+	async function restart() {
 		narrator.stop();
 		clearHistory();
 		setHandoff(null);
 		setCaption("");
+		setArrived([]);
+		setPaid([]);
+		await fetch("/api/gov/admin/reset", { method: "POST" }).catch(() => undefined);
 		setSessionId(getSessionId(true));
 	}
 
@@ -295,7 +299,8 @@ export function App() {
 						<div className="lz-lang" role="group" aria-label={t.language}>
 							{(["en", "de"] as const).map((l) => (
 								<button key={l} type="button" lang={l} aria-pressed={state.language === l} onClick={() => updateSettings({ language: l })}>
-									{l.toUpperCase()}
+									<span className="lz-top-full">{l === "en" ? "English" : "Deutsch"}</span>
+									<span className="lz-top-short">{l.toUpperCase()}</span>
 								</button>
 							))}
 						</div>

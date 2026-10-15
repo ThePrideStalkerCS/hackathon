@@ -1,5 +1,5 @@
 /**
- * Building blocks of the Laufzettel identity (docs/redesign/LAUFZETTEL.md):
+ * Building blocks of the Laufzettel identity (docs/DESIGN.md):
  *
  *   Mark       the "Wegmarke": the flag read as a route (two stations done, one waiting)
  *   Lockup     mark + "Laufzettel" + endorsement "oesterreich.gv.at 2030"

@@ -1,7 +1,7 @@
 /**
  * Walkthrough → Laufzettel. Pure mapping from the engine's steps to the rows ("stations") of the
  * routing slip. The engine does not know about the slip; this file is the only translation.
- * The table in docs/redesign/LAUFZETTEL.md ("How the engine maps onto the slip") describes it.
+ * The table in docs/DESIGN.md ("How the engine maps onto the slip") describes it.
  *
  * 👉 EXTEND HERE: give each service its own register name on the round stamps (e.g. "ZMR" for the
  * Meldezettel, "Passregister" for passports) instead of the generic stampRegisterRing text.

@@ -25,11 +25,9 @@ function toolNameOf(part: AnyPart): string | null {
 /** Text of a message (reasoning and tool parts left out). */
 export function messageText(message: UIMessage | undefined): string {
 	if (!message) return "";
-	return message.parts
-		.filter((p: AnyPart) => p.type === "text")
-		.map((p: AnyPart) => p.text)
-		.join("")
-		.trim();
+	// Only the final answer counts: text the model writes before a tool call is thinking aloud.
+	const texts = message.parts.filter((p: AnyPart) => p.type === "text" && p.text.trim()).map((p: AnyPart) => p.text as string);
+	return (texts.at(-1) ?? "").replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 }
 
 /** Label of the tool the assistant is running right now, if any. */

@@ -38,11 +38,14 @@ const ENGLISH_HINTS = /\b(and|the|i'm|i've|you|your|is|not|please|my|we|have|nee
 /** Questions about the citizen's own data ("Is my passport still valid?", "Which address do you have?"). */
 const OWN_DATA_WORDS = ["gültig", "valid", "läuft ab", "lauft ab", "expire", "adresse", "address", "on file", "gespeichert", "meine daten", "my data", "gemeldet"];
 
+/** Questions about facts of a service (fees, deadlines, documents): answered from src/knowledge, never from memory. */
+const FACT_WORDS = ["kost", "gebühr", "preis", "wie viel", "wieviel", "frist", "unterlagen", "dokumente", "mitbringen", "wie lange", "cost", "fee", "price", "how much", "deadline", "documents", "bring", "how long"];
+
 export type Route = {
 	/** Services with a clear keyword match. */
 	candidates: string[];
 	/** Tool the model's first step must call (null = model decides). */
-	forceTool: "start_guided_walkthrough" | "get_my_profile" | null;
+	forceTool: "start_guided_walkthrough" | "get_my_profile" | "get_service_info" | null;
 	/** true = force start_guided_walkthrough as the first step. */
 	forceWalkthrough: boolean;
 	/** Language the citizen wrote in (falls back to the session language). */
@@ -71,9 +74,11 @@ export function routeIntent(text: string, walkthroughActive: boolean, fallbackLa
 	const forceWalkthrough = !walkthroughActive && candidates.length > 0 && wantsAction;
 	// A question about their own data is answered from the profile, not from the model's imagination.
 	const asksOwnData = !forceWalkthrough && text.trim().endsWith("?") && OWN_DATA_WORDS.some((w) => lower.includes(w));
+	// A question about fees, deadlines or documents of a known service is answered from the official facts.
+	const asksFacts = !forceWalkthrough && !asksOwnData && candidates.length > 0 && FACT_WORDS.some((w) => lower.includes(w));
 	return {
 		candidates,
-		forceTool: forceWalkthrough ? "start_guided_walkthrough" : asksOwnData ? "get_my_profile" : null,
+		forceTool: forceWalkthrough ? "start_guided_walkthrough" : asksOwnData ? "get_my_profile" : asksFacts ? "get_service_info" : null,
 		forceWalkthrough,
 		language: detectLanguage(text, fallbackLanguage),
 	};

@@ -36,8 +36,8 @@ export type ToolContext = {
 
 /** What the assistant says after opening a walkthrough. Fixed, so it is never wrong or in the wrong language. */
 const START_SENTENCE: Record<Language, string> = {
-	de: "Alles klar, das erledigen wir jetzt gemeinsam. Ich zeige Ihnen jeden Schritt.",
-	en: "Sure, let's do this together. I will show you every step.",
+	de: "Ihr Laufzettel ist geöffnet. Die Ämter füllen aus, was sie wissen.",
+	en: "Your routing slip is open. The offices fill in what they know.",
 };
 
 /**

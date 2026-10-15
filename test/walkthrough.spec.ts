@@ -233,6 +233,7 @@ describe("router", () => {
 		expect(routeIntent("mia ham a baby kriagt, kriag i do a göd?", false, "de")).toMatchObject({ forceTool: "start_guided_walkthrough", candidates: ["childcare-subsidy"] });
 		expect(routeIntent("Ist mein Reisepass noch gültig?", false, "de").forceTool).toBe("get_my_profile");
 		expect(routeIntent("Ich möchte einen Hund anmelden.", false, "de").forceTool).toBeNull();
+		expect(routeIntent("How much does a new passport cost?", false, "en").forceTool).toBe("get_service_info");
 		expect(routeIntent("Mein Reisepass is abgloffen.", true, "de").forceTool).toBeNull(); // walkthrough already open
 	});
 });
@@ -296,10 +297,21 @@ describe("Stempelpass and time saved", () => {
 		expect(done.areas.find((a) => a.id === "travel")?.status).toBe("done");
 		expect(done.timeSavedMin).toBe(30);
 		expect(done.stamps[0]).toMatchObject({ lines: ["Reisepass", "beantragt"], source: "submitted" });
+
+		// A submitted change of residence updates the residence on file to the new town, with the date.
+		const lena = await gov.getCitizenProfile(env, "lena-huber");
+		const moved = buildOverview(
+			lena,
+			[],
+			[{ id: "a2", citizenId: "lena-huber", serviceId: "change-of-residence", status: "submitted", data: { new_address: "Florianigasse 18/5, 1080 Wien" }, referenceNumber: "MEL-1", createdAt: "", submittedAt: "2026-10-15T09:00:00Z" }],
+			today,
+			"en",
+		);
+		expect(moved.stamps.find((s) => s.id === "record-home")).toMatchObject({ lines: ["Residence", "Wien"], date: "15.10.2026" });
 	});
 });
 
-describe("voice of the texts (docs/redesign/LAUFZETTEL.md)", () => {
+describe("voice of the texts (docs/DESIGN.md)", () => {
 	it("speaks without exclamation marks or prototype labels, in every case and language", async () => {
 		const texts: string[] = [];
 		for (const persona of ["lena-huber", "josef-gruber", "amira-haddad", "thomas-berger", "sofia-rossi", "david-novak"])

@@ -108,7 +108,12 @@ export function LetterSheet({ t, lang, letter, paid, onPay, onClose, onHuman }: 
 								</div>
 							)}
 						</div>
-						<p className="lz-letter-label">{t.lzOriginal}</p>
+						<p className="lz-letter-label">
+							{t.lzOriginal} ·{" "}
+							<a href={letter.sourceUrl} target="_blank" rel="noreferrer">
+								{t.lzLetterSource}
+							</a>
+						</p>
 					</article>
 
 					<section className="lz-letter-plain" aria-label={t.lzPlainWords}>
