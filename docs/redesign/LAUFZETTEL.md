@@ -95,11 +95,15 @@ How the motifs are drawn (banknote engraving, not clip art):
   the crown, in rock cracks); full-strength ink, no pale tints;
 - burin lines are filled shapes (`swell`), not strokes, so they taper like a real cut;
 - white forms (edelweiss bracts, snow) need ink around them: an engraved sky or a hatched face behind;
-- the 48 px slip head gets a **solid silhouette** of the same scene (hatching would turn to mush).
+- below about 96 px (the 48 px slip head, the 68 px desk card on a phone) the emblem shows a **solid
+  silhouette** of the same scene (hatching would turn to mush: the edelweiss read as a pale pink disc
+  at 68 px). `brand.css` picks the cut by the emblem's rendered width with a container query, so an
+  emblem shrunk by CSS switches by itself.
   Check it for faces and figures: a round crown over a mountain line read as a head and shoulders,
   and a broad white river under the sun read as a mouth. Pointed, tiered, rooted shapes are safe;
 - judged at 250 px (hero), 200 px (desk card, confirmation), 68 px (desk card on a phone) and 48 px
-  (slip head). Close-ups of the small cut: `media/laufzettel/emblem-48px-*.png`.
+  (slip head). Close-ups of the small cut: `media/laufzettel/emblem-48px-*.png`,
+  `media/laufzettel/emblems-68px-phone-desk.png`.
 - An emblem without a label is decorative (`aria-hidden`); give it a label where it is the only
   carrier of the progress (hero, sticky head once the hero has scrolled away, collection).
 

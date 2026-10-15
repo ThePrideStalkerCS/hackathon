@@ -5,7 +5,9 @@
  *               move      → stone pine (Zirbe) on a rocky ridge, mountains behind
  *               passport  → peaks with an ibex, the Danube running towards you
  *               child     → edelweiss with a bud
- *             the 48 px slip head gets a solid silhouette (the pine as a young, conical Zirbe)
+ *             below about 96 px (the 48 px slip head, the 68 px desk card on phones) a solid
+ *             silhouette replaces the engraving, whose fine lines would blur into a flat tone;
+ *             brand.css picks the cut by the emblem's rendered width (container query)
  *   Wreath    one leaf per station, two branches growing up from the bottom; a leaf is inked
  *             when its station is stamped
  *   Edge      an uneven, hand-pressed ring; the slip number sits small at the bottom
@@ -105,7 +107,18 @@ export function Emblem({ motif, done, total, label, serial = "", size = "lg", cl
 				})}
 				<circle r={SCENE_R + 1.6} className="em-line em-frame" />
 				<g clipPath={`url(#${uid}s)`} className="em-motif">
-					<Engraving motif={motif} cut={small ? "silhouette" : "full"} />
+					{small ? (
+						<Engraving motif={motif} cut="silhouette" />
+					) : (
+						<>
+							<g className="em-cut-full">
+								<Engraving motif={motif} cut="full" />
+							</g>
+							<g className="em-cut-small">
+								<Engraving motif={motif} cut="silhouette" />
+							</g>
+						</>
+					)}
 				</g>
 				{serial && !small && size !== "sm" && (
 					<text className="em-serial">
