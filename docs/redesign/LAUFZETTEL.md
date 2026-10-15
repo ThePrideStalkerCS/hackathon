@@ -72,7 +72,7 @@ Close-ups: `media/laufzettel/stamp-move.png`, `stamp-passport.png`, `stamp-child
 
 | Life event (service) | Motif | Why |
 |---|---|---|
-| Move (`change-of-residence`) | **Stone pine (Zirbe)** with its dense upright crown on a rocky ridge, mountains behind; at 48 px a **young Zirbe**, still conical: three tiers to a point on a free-standing trunk | puts down roots in a new place, survives on rock |
+| Move (`change-of-residence`) | **Stone pine (Zirbe)** on a rocky ridge, mountains behind: a conifer whose crown is laid in tiers of flat needle layers narrowing to a point (a round crown read as a broad-leaved tree); at 48 px three tiers to a point on a free-standing trunk | puts down roots in a new place, survives on rock |
 | Passport (`passport-renewal`) | **Peaks with an ibex** on the shoulder, the **Danube** running towards you (at 48 px a thin winding line) | going out into the world, coming home |
 | Child (`childcare-subsidy`) | **Edelweiss** with a bud, white against an engraved sky | a small new life, cared for |
 

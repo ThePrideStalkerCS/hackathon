@@ -90,30 +90,6 @@ function needlePad(pl: Plate, [cx, cy, rx, ryT, ryB]: number[], seed: number, da
 	);
 }
 
-/** Needle pads laid over the crown in rows, each row offset and jittered like real growth. */
-function padsFor(crown: Pt[], seed: number): number[][] {
-	const r = rand(seed);
-	const ys = crown.map((p) => p[1]);
-	const top = Math.min(...ys);
-	const bottom = Math.max(...ys);
-	const out: number[][] = [];
-	let row = 0;
-	for (let y = top + 5.5; y < bottom - 2; y += 5.6, row++) {
-		const sp = spans(crown, y)[0];
-		if (!sp) continue;
-		const [xa, xb] = sp;
-		const w = xb - xa;
-		const count = Math.max(1, Math.round(w / 12.5));
-		const step = w / count;
-		for (let i = 0; i < count; i++) {
-			const rx = Math.min(step * 0.62 + 1.6 + r() * 1.6, 11);
-			const cx = xa + step * (i + 0.5) + (r() - 0.5) * 3 + (row % 2 ? 1.6 : -1.6);
-			out.push([cx, y + (r() - 0.5) * 2, rx, 4.6 + r() * 1.6, 2.8 + r() * 0.8]);
-		}
-	}
-	return out;
-}
-
 function pine(): { full: Layer[]; silhouette: Layer[] } {
 	const pl = new Plate();
 
@@ -183,17 +159,31 @@ function pine(): { full: Layer[]; silhouette: Layer[] } {
 	pl.ink(swell(trunkL.slice(), (t) => 0.3 + 0.5 * taper(t)));
 	pl.ink(swell(curve([-6, 26], [-16, 29], [-24, 33]), (t) => 1.4 * (1 - t)));
 	pl.ink(swell(curve([5, 26], [16, 30], [22, 35]), (t) => 1.6 * (1 - t)));
-	pl.ink(swell(curve([-4, 15], [-16, 13], [-25, 8.5]), (t) => 1.7 * (1 - t * 0.8)));
-	pl.ink(swell(curve([-19, 11.4], [-23, 7], [-24, 2.4]), (t) => 0.9 * (1 - t * 0.7)));
-	pl.ink(swell(curve([-25, 8.5], [-29, 8], [-31, 5]), (t) => 0.8 * (1 - t * 0.7)));
 
-	const crown = blob(-2.5, -20, 22, 31, [[0.045, 7, 0.4], [0.03, 12, 1.3], [0.02, 19, 2.1]]).map(([x, y]): Pt => {
-		const h = Math.max(0, (-20 - y) / 31);
-		return [-2.5 + (x + 2.5) * (1 - 0.32 * h * h), y];
-	});
-	pl.ink(pathOf(crown));
-	padsFor(crown, 7).forEach((p, i) => needlePad(pl, p, 101 + i * 17, Math.min(1, Math.max(0, (p[0] + 14) / 30))));
-	const cones: Pt[] = [[-12.5, -36.5], [9, -27], [-3, -16.8]];
+	// A conifer, not a broad-leaved tree: the crown is laid in tiers of flat needle layers that narrow
+	// to a point. Each tier's solid underside is the shadow on the tier below; tiers are drawn from the
+	// bottom up so the upper branches hang over the lower ones.
+	const tiers: [number, number, number][] = [
+		[-52, -40, 6.5],
+		[-45, -31, 11.5],
+		[-36, -21, 16],
+		[-26, -10, 20.5],
+		[-15, 1, 24.5],
+		[-4, 12, 28],
+	];
+	const r2 = rand(7);
+	for (const [k, [top, bottom, hw]] of [...tiers.entries()].reverse()) {
+		pl.ink(pathOf(tier(-1, top, bottom, hw, 2.6)));
+		const count = Math.max(1, Math.round((2 * hw) / 10.5));
+		for (let i = 0; i < count; i++) {
+			const u = count === 1 ? 0 : (i / (count - 1)) * 2 - 1;
+			const cx = -1 + u * hw * 0.72 + (r2() - 0.5) * 2;
+			const cy = bottom - 3 - 1.8 * (1 - u * u) + (r2() - 0.5) * 1.2;
+			const rx = Math.min(hw * 0.95, (2 * hw) / count) * 0.62 + 1.6;
+			needlePad(pl, [cx, cy, rx, 3.6 + r2() * 1, 2.1 + r2() * 0.5], 101 + k * 31 + i * 7, Math.min(1, Math.max(0, (cx + 12) / 30)));
+		}
+	}
+	const cones: Pt[] = [[-3.5, -44], [5, -34.5], [-8.5, -25]];
 	for (const [x, y] of cones) {
 		const c = blob(x, y, 2, 2.7, [[0.05, 5, 0]], 24);
 		pl.paper(pathOf(c));
