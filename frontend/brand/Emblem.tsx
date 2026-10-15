@@ -5,7 +5,7 @@
  *               move      → stone pine (Zirbe) on a rocky ridge, mountains behind
  *               passport  → peaks with an ibex, the Danube running towards you
  *               child     → edelweiss with a bud
- *             the 48 px slip head gets a solid silhouette of the same scene
+ *             the 48 px slip head gets a solid silhouette (the pine as a young, conical Zirbe)
  *   Wreath    one leaf per station, two branches growing up from the bottom; a leaf is inked
  *             when its station is stamped
  *   Edge      an uneven, hand-pressed ring; the slip number sits small at the bottom
@@ -48,7 +48,8 @@ type EmblemProps = {
 	motif: Motif;
 	done: number;
 	total: number;
-	/** Accessible description, e.g. "Seal: 3 of 7 stations stamped". */
+	/** Accessible description, e.g. "Seal: 3 of 7 stations stamped". Empty when the emblem only
+	 *  decorates text that already says the same; it is then hidden from screen readers. */
 	label: string;
 	/** Slip number, set small at the bottom of the edge. */
 	serial?: string;
@@ -75,7 +76,7 @@ export function Emblem({ motif, done, total, label, serial = "", size = "lg", cl
 	const small = size === "xs";
 
 	return (
-		<span className={`lz-emblem is-${size} ${complete ? "is-complete" : ""} ${className}`} role="img" aria-label={label}>
+		<span className={`lz-emblem is-${size} ${complete ? "is-complete" : ""} ${className}`} {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}>
 			<svg viewBox="-100 -100 200 200" aria-hidden="true">
 				<defs>
 					<clipPath id={`${uid}s`}>

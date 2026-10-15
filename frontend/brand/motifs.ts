@@ -201,13 +201,33 @@ function pine(): { full: Layer[]; silhouette: Layer[] } {
 		pl.ink(swell(arc(c, x, y, 330, 160), (t) => 0.3 + 0.7 * taper(t)));
 	}
 
+	return { full: pl.layers, silhouette: youngPine() };
+}
+
+/** One tier of a conifer: concave flanks from the apex, branch tips hanging lower than the middle. */
+function tier(cx: number, top: number, bottom: number, hw: number, droop: number): Pt[] {
+	const n = 16;
+	const flank = (side: 1 | -1, t: number): Pt => [cx + side * hw * Math.pow(t, 1.4), top + (bottom - top) * t];
+	const right = Array.from({ length: n + 1 }, (_, i) => flank(1, i / n));
+	const under = Array.from({ length: n - 1 }, (_, i): Pt => {
+		const u = 1 - (2 * (i + 1)) / n;
+		return [cx + hw * u, bottom - droop * (1 - u * u)];
+	});
+	const left = Array.from({ length: n + 1 }, (_, i) => flank(-1, 1 - i / n));
+	return [...right, ...under, ...left];
+}
+
+/** The 48 px cut: a young Zirbe is still conical, so the silhouette is a pointed, tiered crown on a
+ *  trunk that stands clear of the ground. Nothing round on top, nothing to either side: at this size
+ *  a round crown over a mountain line reads as a head and shoulders. */
+function youngPine(): Layer[] {
 	const sil = new Plate();
-	sil.line(pathOf(far.slice(1, -1), false));
-	sil.ink(pathOf(ridge));
-	sil.ink(pathOf(trunk));
-	sil.ink(swell(curve([-4, 15], [-16, 13], [-25, 8.5]), (t) => 2.6 * (1 - t * 0.7)));
-	sil.ink(pathOf(crown));
-	return { full: pl.layers, silhouette: sil.layers };
+	sil.ink(pathOf([[-66, 37], [-40, 34.6], [-16, 33.2], [0, 32.8], [16, 33.4], [40, 35.2], [66, 38], [66, 66], [-66, 66]]));
+	sil.ink(pathOf([[-3, 6], [3, 6], [3.6, 26], [5, 31], [8.5, 34], [-8.5, 34], [-5, 31], [-3.6, 26]]));
+	sil.ink(pathOf(tier(0, -19, 17, 28, 5.5)));
+	sil.ink(pathOf(tier(0, -36, -4, 20.5, 4.5)));
+	sil.ink(pathOf(tier(0, -51, -24, 12.5, 3.2)));
+	return sil.layers;
 }
 
 /** Alpine ibex (Steinbock), facing left, feet at 0,0. */
@@ -322,9 +342,10 @@ function felt(pl: Plate, base: Pt, angle: number, len: number, width: number, cu
 	const n = axis.length;
 	const half = shadeLeft ? poly.slice(0, n) : [poly[0], ...poly.slice(n).reverse(), poly[n - 1]];
 	const dark = [...half, ...axis.slice().reverse()];
-	pl.ink(hatchShape(dark, { spacing: 1.05, wMin: 0.12, wMax: 0.42 * shade, angle: angle + 90, seed, gaps: 0.15 }));
-	pl.ink(swell(axis.slice(3, -4), (t) => 0.42 * taper(t)));
-	pl.ink(fringe(poly, { every: 1, length: [0.5, 1.3], width: 0.26, seed }));
+	pl.ink(hatchShape(dark, { spacing: 1.05, wMin: 0.18, wMax: 0.62 * shade, angle: angle + 90, seed, gaps: 0.1 }));
+	pl.ink(swell(axis.slice(3, -4), (t) => 0.5 * taper(t)));
+	pl.ink(swell(half.slice(1, -1), (t) => 0.2 + 0.55 * taper(t)));
+	pl.ink(fringe(poly, { every: 1, length: [0.5, 1.3], width: 0.34, seed }));
 }
 
 /** The floret cluster: small domes, densely stippled, darker towards the lower right. */
@@ -334,14 +355,14 @@ function florets(pl: Plate, heads: Pt[], r0: number, seed: number) {
 	for (const [x, y] of heads) {
 		const h = blob(x, y, r0, r0 * 0.94, [[0.06, 5, x]], 30);
 		pl.paper(pathOf(h));
-		pl.ink(swell(arc(h, x, y, 330, 165), (t) => 0.25 + 0.75 * taper(t)));
-		for (let i = 0; i < 22; i++) {
+		pl.ink(swell(arc(h, x, y, 330, 165), (t) => 0.35 + 0.95 * taper(t)));
+		for (let i = 0; i < 26; i++) {
 			const a = r() * Math.PI * 2;
 			const d = Math.sqrt(r()) * r0 * 0.82;
 			const px = x + Math.cos(a) * d;
 			const py = y + Math.sin(a) * d;
 			const lit = (px - x - (py - y)) / (r0 * 1.4);
-			if (r() > 0.45 + lit * 0.5) dots.push(pathOf(blob(px, py, 0.3, 0.3, [], 7)));
+			if (r() > 0.4 + lit * 0.5) dots.push(pathOf(blob(px, py, 0.4, 0.4, [], 7)));
 		}
 	}
 	pl.ink(dots.join(""));
@@ -351,9 +372,12 @@ function edelweiss(): { full: Layer[]; silhouette: Layer[] } {
 	const pl = new Plate();
 	const far: Pt[] = [[-66, 14], [-54, 6], [-44, 9], [-33, 0], [-22, 8], [-8, 4], [8, 10], [22, -2], [34, 5], [48, -1], [66, 8], [66, 66], [-66, 66]];
 	const ridgeLine = far.slice(0, -2);
-	const haze: Pt[] = [...ridgeLine, ...ridgeLine.map(([x, y]): Pt => [x, y + 7]).reverse()];
-	pl.ink(hatchShape(haze, { spacing: 1.9, wMin: 0.1, wMax: 0.3, light: "left", under: 0.9, seed: 5 }));
-	pl.fine(pathOf(ridgeLine, false));
+	// An engraved sky, darker towards the top, so the white bracts stand out against ink.
+	const sky: Pt[] = [[-66, -66], [66, -66], ...ridgeLine.slice().reverse()];
+	pl.ink(hatchShape(sky, { spacing: 1.6, wMin: 0.3, wMax: 0.42, under: -0.9, seed: 2 }));
+	pl.paper(pathOf(far));
+	pl.ink(hatchShape(far, { spacing: 1.35, wMin: 0.32, wMax: 0.95, angle: 58, light: "left", under: 0.4, seed: 5 }));
+	pl.line(pathOf(ridgeLine, false));
 	const rock: Pt[] = [[-66, 42], [-50, 36], [-36, 38], [-20, 33], [-6, 37], [8, 34], [22, 39], [36, 35], [50, 40], [66, 38], [66, 66], [-66, 66]];
 	pl.paper(pathOf(rock));
 	pl.ink(hatchShape(rock, { spacing: 1.6, wMin: 0.3, wMax: 1.15, angle: -24, light: "left", under: 0.8, seed: 9, gaps: 0.05 }));
@@ -365,8 +389,8 @@ function edelweiss(): { full: Layer[]; silhouette: Layer[] } {
 		pl.ink(swell(curve(a, c, b), (t) => w * taper(t)));
 	pl.line(pathOf(rock.slice(0, -2), false));
 
-	pl.ink(swell(curve([-6, -8], [4, 16], [0, 44]), (t) => 2.6 - 1 * t));
-	pl.ink(swell(curve([30, 6], [22, 28], [2, 40]), (t) => 1.6 - 0.5 * t));
+	pl.ink(swell(curve([-6, -8], [4, 16], [0, 44]), (t) => 3.3 - 1.1 * t));
+	pl.ink(swell(curve([30, 6], [22, 28], [2, 40]), (t) => 2 - 0.6 * t));
 	const leaves: [Pt, number, number, number, number][] = [
 		[[2.6, 14], 198, 18, 5.4, -22],
 		[[3.6, 22], -16, 20, 5.6, 22],
@@ -388,8 +412,10 @@ function edelweiss(): { full: Layer[]; silhouette: Layer[] } {
 	florets(pl, [[-6, -16], [-0.6, -19], [-10.8, -19.6], [-11.4, -12.2], [-5.4, -10.2], [0.2, -12.8], [-6.4, -22.4]], 3.5, 55);
 
 	const sil = new Plate();
-	sil.line(pathOf(rock.slice(0, -2), false));
-	sil.ink(swell(curve([-6, -8], [4, 16], [0, 44]), (t) => 4.2 - 1.4 * t));
+	sil.ink(pathOf(rock));
+	sil.ink(swell(curve([-6, -8], [4, 16], [0, 44]), (t) => 5 - 1.4 * t));
+	sil.ink(swell(curve([30, 6], [22, 28], [2, 40]), (t) => 3 - 0.8 * t));
+	for (const a of [-90, -30, 30, 90, 150, 210]) sil.ink(pathOf(lance(bud, a, 9.5, 5.6, 0).poly));
 	for (const [b, a, l, w, c] of leaves) sil.ink(pathOf(lance(b, a, l, w * 1.3, c).poly));
 	for (const [a, l, w] of bracts) sil.ink(pathOf(lance(centre, a, l, w * 1.1, 0).poly));
 	sil.paper(pathOf(blob(-6, -16, 9, 9, [[0.08, 6, 0]], 40)));
