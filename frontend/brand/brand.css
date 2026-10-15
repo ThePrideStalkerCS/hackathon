@@ -1521,6 +1521,9 @@ h3 {
 .lz-hero-form span {
 	color: #3a3c49;
 }
+.lz-hero-form.lz-hero-next {
+	margin-top: 4px;
+}
 .lz-hero-seal {
 	gap: 12px;
 }

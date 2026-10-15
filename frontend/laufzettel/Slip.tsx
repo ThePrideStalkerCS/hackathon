@@ -97,6 +97,11 @@ export function Slip({ w, t, actions, citizenName, queueNext, showSeal = true }:
 					<p className="lz-hero-form">
 						{t.lzOfficialForm} <span>{w.portalTitle}</span>
 					</p>
+					{queueNext && (
+						<p className="lz-hero-form lz-hero-next">
+							{t.lzAfterThis} <span>{queueNext}</span>
+						</p>
+					)}
 				</div>
 				{showSeal && (
 					<figure className="lz-hero-seal" ref={heroSealRef}>
