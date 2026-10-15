@@ -31,12 +31,13 @@ Open tasks are in [docs/WORK_PACKAGES.md](docs/WORK_PACKAGES.md). Ask the team a
 - `src/walkthrough/`: the core. `engine.ts` (pure step logic), `controller.ts` (backend I/O, submit), `guides.ts` (plain-language texts), `proactive.ts` (suggestions from the profile).
 - `src/shared/walkthrough.ts`: walkthrough types shared with the frontend.
 - `src/shared/stamps.ts` + `src/walkthrough/overview.ts`: reward layer (Stempelpass, time saved, life-areas ring), `getOverview` callable. `frontend/laufzettel/Desk.tsx` renders it (stamp collection, time kept, emblem wreath via `frontend/brand/Emblem.tsx`).
-- `src/voice/elevenlabs.ts`: `/api/voice/tts|stt|status` (ElevenLabs, key in `.dev.vars` / wrangler secret).
+- `src/voice/elevenlabs.ts`: `/api/voice/tts|stt|status` (ElevenLabs, key in `.dev.vars` / wrangler secret). German terms inside English narration are spoken in German: `src/shared/pronounce.ts` splits the text into language runs.
+- `src/gov/data/mail.ts`: the citizen's digital mailbox (fictional letters, `GET /api/gov/citizens/:id/mail`); the demo's parking fine arrives during the change of residence.
 - `src/gov/service.ts`: business logic, used by both the Hono routes and the tools. Add new backend features here first.
 - `src/gov/db.ts`: D1 schema + lazy seeding. After changing the schema or personas, call `POST /api/gov/admin/reset`.
 - `src/gov/data/`: personas, services (forms, eligibility rules), human contact.
 - `src/knowledge/index.ts`: service facts with source URLs.
-- `frontend/`: React (Vite). `App.tsx` (layout + playback loop), `laufzettel/` (`Slip` = the routing slip as main window, `Desk` = start page, `CaptionBar` = spoken captions + mic, `HoldSeal` = hold to sign, `stations.ts` = walkthrough steps → slip rows), `brand/` (`Brand.tsx` lockup + stamps, `Emblem.tsx` + `motifs.ts` + `engrave.ts` = engraved life-event emblems, `brand.css`), `walkthrough/Answers.tsx` (answer widgets: `AskInput`, `SlotPicker`, plus `WalkthroughActions`), `walkthrough/AddressInput.tsx`, `goals/` (personal goals tracker), `components.tsx` (ProfileMenu, HandoffSheet, MicButton), `icons.tsx`, `voice.ts` (TTS/STT with browser fallback). Texts are in `frontend/i18n.ts` (German + English, keep both in sync). Design principles: docs/CORE.md.
+- `frontend/`: React (Vite). `App.tsx` (layout + playback loop), `laufzettel/` (`Slip` = the routing slip as main window, `Desk` = start page, `CaptionBar` = spoken captions + mic, `HoldSeal` = hold to sign, `Postfach` = mailbox + letter, `stations.ts` = walkthrough steps → slip rows), `brand/` (`Brand.tsx` lockup + stamps, `Emblem.tsx` + `motifs.ts` + `engrave.ts` = engraved life-event emblems, `brand.css`), `walkthrough/Answers.tsx` (answer widgets: `AskInput`, `SlotPicker`, plus `WalkthroughActions`), `walkthrough/AddressInput.tsx`, `goals/` (personal goals tracker), `components.tsx` (ProfileMenu, HandoffSheet, MicButton), `icons.tsx`, `voice.ts` (TTS/STT with browser fallback). Texts are in `frontend/i18n.ts` (German + English, keep both in sync). Design principles: docs/CORE.md.
 - `evals/`: scenarios (`scenarios.json`) + runner (`run.ts`).
 
 ## Rules for new code

@@ -11,6 +11,51 @@ This file is the single source of truth for the redesign. **If you are the next 
 first, then continue at the first unchecked box in [Build checklist](#build-checklist).** Update the
 checkboxes as you go, so the agent after you knows where to start.
 
+## The core demo (16 Oct, Paul: "everything on ONE walkthrough")
+
+Everything is tuned to one story that is presented: **Lena registers her new address in Vienna**
+(change of residence, the Meldezettel). The other personas still work, but nothing is built for them.
+
+**The two-minute script** (English, the DE switch shown once):
+
+1. **Desk.** An official notice, not a dashboard: flag and "A routing slip for you", the date, Lena's
+   name. "Register your new address": the landlord Karl Steiner already confirmed the move in his
+   own app. Deadline 3 days after moving in (Meldegesetz) with the days left. The route shows what is
+   ahead: 6 rows the offices fill, 2 questions, her seal. One button: "Start this slip". A person is one
+   click away. Optional: say the request in dialect instead ("I bin grad nach Wien zogn").
+2. **Slip.** The offices stamp row after row while the captions speak one short sentence each.
+   German official words (Meldezettel, Hauptwohnsitz, Florianigasse) are spoken in German inside the
+   English voice. Lena answers "main residence" (marker, big buttons, or by voice).
+3. **The letter.** Right after her first answer a parking fine arrives in her new **mailbox** (toast,
+   badge). She opens it: the German original (Organstrafverfügung) next to plain words: what
+   happened, €36 by 28 October, if nothing is paid it lapses and a more expensive one follows, no
+   appeal against the ticket itself, and the link to the move: with the new Hauptwohnsitz she can get
+   a Parkpickerl for the district. She pays with one tap (mock) or chooses "Later". The slip waits.
+4. **Sign.** One more question (deregister Graz), then she holds her red seal: submitted. The
+   confirmation carries the full emblem, the reference number and "Time you kept: 45 min" (estimate).
+5. **Back at the desk.** The finished emblem and the time kept; if the fine is unpaid it waits under
+   "Mailbox · Needs you · Pay by 28 October".
+
+**Challenge fit** (challenge-brief.md):
+
+| The brief asks for | Where the core demo shows it |
+|---|---|
+| Colloquial input (dialect, half sentences) | say-it line on the desk, voice answers in the slip (router + `extractAnswer` before the LLM) |
+| Amtsdeutsch into plain language | every row (official term on the form + plain explanation), the parking fine (original next to plain words) |
+| Guide through a workflow, verify prerequisites | the slip: requirements row, rows filled from registers and the landlord, two questions, seal |
+| Proactive, the state comes to the citizen | landlord confirmation → notice with the legal deadline; the letter arrives on its own |
+| Structured administrative output | confirmation with reference number, authority, date, stations |
+| German and English | EN/DE switch everywhere; German terms keep German pronunciation in English |
+| Accessibility for all | captions for everything spoken, voice in and out, keyboard (hold Space to sign), 44 px+ targets, text size, reduced motion, phone layout |
+| Human contact point | "Talk to a person" in the top bar, on the notice and in the letter; the handoff carries the step |
+| Uncertainty and guardrails | the AI never submits or pays; deadlines and fines come with a source and are marked for checking |
+| Impact on the administration | the offices fill 6 of 9 rows; no counter visit; fewer reminders because deadlines are met |
+
+**Voice rules for this demo:** one short sentence per step, no "I'll now show you", no exclamation
+marks, numbers and dates as people say them. German terms are split into their own language run
+(`src/shared/pronounce.ts`, list `GERMAN_TERMS` + street names); ElevenLabs gets one request per run
+with the neighbouring text as context, the browser voice one utterance per run.
+
 ## Reference material
 
 | What | Where |
@@ -147,17 +192,19 @@ The nudge is the slip itself: you see how little is left for you and how much th
 
 | Where | What the citizen sees |
 |---|---|
-| Desk, open slip | the reason in plain words ("Your landlord Karl Steiner confirmed that you moved…"), then "The offices fill in 6 of 9 rows. You answer 2 questions, then you sign. About 45 min you keep (estimate)." |
+| Desk, the notice | the reason in plain words ("Your landlord Karl Steiner confirmed that you moved…"), the legal deadline with the days left (a fact from the Meldegesetz, shown calmly), the route (6 by the offices, 2 questions, your seal), "About 45 min you keep (estimate)." |
 | Every slip screen | the sticky slip head: small emblem + "3 of 9 stamped · 2 answers left, then you sign · about 45 min you keep (estimate)"; on a phone one line, "3 of 9 · 2 left · about 45 min kept" (screen readers still get the full sentence) |
-| Slip hero | "The seal only shows your progress. Only you see it. No points, no ranking." |
 | Each row | the stamp of whoever did it, the narration names the same source |
 | Confirmation | complete emblem, red seal, "time you kept" (labelled as an estimate) |
 | Desk, collection | finished emblems and stamps on file, time kept in total: private, on this device |
+| The letter | "Pay €36 by 28 October": the real legal deadline, marked once; after paying "Paid. It stays at €36." |
 
 Rules: **voluntary** (profile menu → "Show seal and time kept", stored on the device only; off hides
 the emblems, the collection and the time line), **private** (nothing is compared with other people),
 **only positive** (no streaks, no loss, no countdown pressure), **only official errands**, **explained
-openly** (the line above, estimates labelled as estimates).
+openly** (estimates labelled as estimates; the switch is in the profile menu). The explanatory line under
+the seal was removed on 16 Oct (Paul: "unnecessary"). Deadlines and costs of a fine are legal facts,
+not our pressure.
 
 ## How the engine maps onto the slip
 
@@ -190,25 +237,28 @@ Nothing in the engine's flow changes for the view. The slip is a different *view
 | File | What it is |
 |---|---|
 | `frontend/brand/brand.css` | tokens + all Laufzettel styles (v1 layer, then the "v2 · warm paper" layer at the end) |
-| `frontend/brand/Brand.tsx` | `Mark`, `Lockup`, `Stamp` (hand-pressed SVG + sprig), `Seal` (v1 rosette, unused now), `Band`, `InkFilter` |
+| `frontend/brand/Brand.tsx` | `Mark`, `Lockup`, `Stamp` (hand-pressed SVG + sprig), `Band`, `InkFilter` |
 | `frontend/brand/Emblem.tsx` | the citizen's emblem (edge, wreath, serial, vignette) |
 | `frontend/brand/motifs.ts` | the engraved motifs, their 48 px silhouettes and the stamp sprigs (pure, cached) |
 | `frontend/brand/engrave.ts` | engraving geometry: swelling lines, form-following hatching, organic outlines |
-| `frontend/brand/print.ts` | canvas drawing: guilloche band (and the v1 seal rosette) |
+| `frontend/brand/print.ts` | canvas drawing: guilloche band |
 | `frontend/laufzettel/stations.ts` | walkthrough → stations mapping (pure) |
 | `frontend/laufzettel/Slip.tsx` | the Laufzettel view of a running walkthrough + confirmation |
-| `frontend/laufzettel/Desk.tsx` | the start page ("your desk"): one open slip, further suggestions, say-it line, private collection |
+| `frontend/laufzettel/Desk.tsx` | the start page ("your desk"): the official notice for the open slip (deadline, route, start), letters that need the citizen, say-it line, private collection |
+| `frontend/laufzettel/Postfach.tsx` | the mailbox: top-bar button with badge, arrival toast, the letter (original + plain words, pay, talk to a person) |
+| `frontend/walkthrough/Answers.tsx` | the answer widgets inside a slip row (`AskInput`, `SlotPicker`) and `WalkthroughActions` |
+| `src/gov/data/mail.ts` + `src/shared/mail.ts` | the letters of the mock backend (`GET /api/gov/citizens/:id/mail`), arrival during an errand |
+| `src/shared/pronounce.ts` | language runs: German terms inside English narration (tests in `test/pronounce.spec.ts`) |
 | `frontend/laufzettel/CaptionBar.tsx` | narration subtitles (rolling; `compact` = two lines on phones while the citizen acts), talk dots, pause/replay, keyboard, mic |
 | `frontend/laufzettel/HoldSeal.tsx` | hold to sign |
 | `src/gov/data/confirmations.ts` | third-party confirmations (landlord) of the mock backend |
 | `src/gov/data/offices.ts` | mock appointment offices with their region, `nearbyFirst` |
 
-Old visual layer, still in the repo but no longer used by the main flow:
-`frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `HoldToConfirm.tsx`, `frontend/reward.tsx` (AmtsRing,
-StampPass), `Dock` and `CommandBar` in `components.tsx`, the glass parts of `styles.css`. `Coach.tsx`
-stays: its `AskInput` and `SlotPicker` are reused inside the slip rows. Elizaveta's goals pages
-(`frontend/goals/*`, `#/goals`) keep their markup and get the slip's look from the scoped block at the
-end of `brand.css`.
+The old v1 layer (Portal, Progress, HoldToConfirm, reward.tsx, Dock, CommandBar, the guilloche Seal)
+was deleted on 16 Oct, and `styles.css` keeps only rules a live component can match (verified with
+computed-style snapshots of 14 screens before and after). Elizaveta's goals pages (`frontend/goals/*`)
+are still reachable at `#/goals` and get the slip's look from the scoped block in `brand.css`; their
+link left the top bar to keep the demo on one errand.
 
 ## Build checklist
 
@@ -224,18 +274,22 @@ Keep this list honest: tick only what is done **and** checked in the browser.
 - [x] 8. i18n: all new texts in EN and DE (`lz*` and `stamp*` keys in `frontend/i18n.ts`)
 - [x] 9. Verified in the browser (last pass 15 Oct, 02:55 to 03:20 Vienna, own sessions, mock backend reset after each), end to end including hold-to-sign and the confirmation: Lena EN + DE desktop and EN + DE at 390 px; Josef (passport, appointment at BH Linz-Land) EN + DE; Thomas (childcare, IBAN) EN desktop and 390 px; Amira (childcare) DE; a combined request typed on Thomas's desk ("We just moved and we had a baby", EN and DE): the move slip names the childcare slip in its hero ("After this one: …"), its confirmation offers "Next slip", and that slip starts. Keyboard only (3 Tabs to the slip, focus lands on each question, hold Space on the seal signs, 4 landmarks, h1 on the confirmation). Text at 140 % at 390 px. Screenshots in the Project store, `media/laufzettel/`
 - [x] 10. Type checks (Worker + frontend) clean, `pnpm test` 30/30 green, `pnpm evals` 9/9 (15 Oct, 03:18 Vienna)
-- [ ] 11. Remove the unused old layer. (`docs/CORE.md` design principles and the `AGENTS.md` map already describe the Laufzettel.) No longer imported by the app: `frontend/walkthrough/Portal.tsx`, `Progress.tsx`, `HoldToConfirm.tsx`, `frontend/reward.tsx`, the v1 `Seal` + `drawSeal`, and in `components.tsx` `Dock` + `CommandBar`. `VoiceMark` is still used by `Coach.tsx` and `goals/shared.tsx`. Then strip the glass rules from `styles.css` (keep what Coach widgets, ProfileMenu, HandoffSheet, AddressInput and goals need) and fold the v1 rules of `brand.css` into the v2 layer
+- [x] 11. Remove the unused old layer (16 Oct): Portal, Progress, HoldToConfirm, reward.tsx, Dock, CommandBar, the v1 Seal and `drawSeal`, 48 unused texts; `Coach.tsx` became `Answers.tsx`; 1079 dead lines of `styles.css` removed. Computed styles of 14 screens (desk, menu, handoff, slip at question/slots/review, confirmation, goals, phone) identical before and after
+- [ ] 11b. Optional cleanup: fold the v1 rules of `brand.css` into the v2 layer (one rule per selector). Purely internal; verify with the same computed-style snapshots (see "How to verify")
 - [x] 12. Landlord confirmation as a live third party + proactive "Register your new address" slip on Lena's desk (engine test in `test/walkthrough.spec.ts`)
 - [x] 13. Identity v2: warm paper, soft forms, Fraunces + Atkinson, sticky slip head with the nudge line, one open slip on the desk
 - [x] 14. Engraved emblems per life event (pine, peaks, edelweiss) with 48 px silhouettes; wreath progress; serial at the bottom
 - [x] 15. Hand-pressed office stamps with calm type and the motif sprig; calm hero (life event title, form name once, one big emblem)
 - [x] 16. Seal and time kept can be switched off (profile menu, stored on the device)
+- [x] 21. Core demo (16 Oct): official notice on the desk (flag, date, legal deadline with days left, route of the slip), one walkthrough in focus (goals link and example chips gone, seal explanation removed), shorter narration, German terms spoken in German, parking fine arriving in the new mailbox with plain words and consequences. Checked headless end to end: EN desktop (pay and "later" paths, sign, confirmation, desk afterwards), DE at 390 px (desk, toast, letter), no horizontal overflow, 33 tests green
 - [ ] 17. Optional: Bezirk coalition card (aggregates only, voluntary), lock-screen style notification for the proactive slip
 - [x] 18. Phones (design check 3): desk card stacked with a small emblem beside the title, top bar on one row with a short visible word for "Talk to a person", one-line slip head, two caption lines while the citizen acts, question title never under the sticky head. Checked at 390 px (EN, DE) and 360 px (DE), no horizontal overflow
 - [x] 19. 48 px cuts that cannot read as a person: a conical young Zirbe, the passport river as a thin line, the edelweiss with bud and ground; the edelweiss full cut with an engraved sky. Decorative emblems hidden from screen readers
 - [x] 20. Goals pages (`#/goals`, Elizaveta's feature) in the slip's look with scoped CSS at the end of `brand.css`: errands as rows on one paper sheet, the slip's red route as progress, steps on the route, a red seal on the completion sheet; "simulation" and "demo" labels removed from their copy; one primary button (the errand furthest along). Markup and logic otherwise unchanged
 
 ### Known issues (fix in this order)
+
+0. **Before the demo:** check the parking-fine facts on wien.gv.at (36 € Organstrafverfügung, two weeks, Anonymverfügung, Parkpickerl needs the Hauptwohnsitz in the district) and set `verified: true` in `src/gov/data/mail.ts`. Listen once to the English narration with ElevenLabs: each German term is a separate request, so check that the joins sound natural.
 
 1. The goals pages are a separate, manual tracker (the citizen ticks steps off) next to the slip, where the offices stamp. Folding them into the desk (each goal as a slip or a line in the collection) would make one journey instead of two; an open question for the team. They still show percentages, which the slip avoids.
 2. Old layer still in the repo (checklist item 11).
