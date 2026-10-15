@@ -5,7 +5,6 @@
  *   Lockup     mark + "Laufzettel" + endorsement "oesterreich.gv.at 2030"
  *   Stamp      an office stamp in Stempelblau (or the citizen's red seal), one hand-pressed shape per
  *              kind of office, with a small sprig of the errand's motif
- *   Seal       the reward: guilloche rosette, one ring per station, done rings red
  *   Band       the security-print band at the head of documents
  *   InkFilter  SVG filter that gives stamps their uneven ink (render once per page)
  *
@@ -13,7 +12,7 @@
  */
 import { useEffect, useId, useRef, type CSSProperties } from "react";
 import { sprigLayers, type Motif } from "./motifs";
-import { drawBand, drawSeal } from "./print";
+import { drawBand } from "./print";
 
 export function Mark({ size = 30, title, className = "" }: { size?: number; title?: string; className?: string }) {
 	return (
@@ -214,19 +213,6 @@ function useCanvas(draw: (c: HTMLCanvasElement) => void, deps: unknown[]) {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, deps);
 	return ref;
-}
-
-export function Seal({ done, total, caption, label, size = "lg" }: { done: number; total: number; caption: string; label: string; size?: "sm" | "md" | "lg" }) {
-	const ref = useCanvas((c) => drawSeal(c, done, total), [done, total]);
-	return (
-		<div className={`lz-seal is-${size}`} role="img" aria-label={label}>
-			<canvas ref={ref} aria-hidden="true" />
-			<div className="lz-seal-count" aria-hidden="true">
-				<b>{done}</b>
-				<span>{caption}</span>
-			</div>
-		</div>
-	);
 }
 
 export function Band({ className = "" }: { className?: string }) {

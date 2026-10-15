@@ -39,7 +39,7 @@ Browser (React)                                     Worker (Cloudflare)
 │ App.tsx  layout + playback loop      │  WebSocket │ CitizenAssistant (Durable Object, 1/session)│
 │  ├ laufzettel/Slip.tsx  the slip     │◄──state────│  state = { personaId, language,             │
 │  ├ laufzettel/Desk.tsx  start page   │            │            walkthrough, queue }             │
-│  ├ walkthrough/Coach  answer widgets │──callable─►│  @callable advance/answer/submit/…          │
+│  ├ walkthrough/Answers  answer UI   │──callable─►│  @callable advance/answer/submit/…          │
 │  ├ laufzettel/CaptionBar  captions   │──chat─────►│  onChatMessage:                             │
 │  └ voice.ts      TTS / STT           │            │    1. extractAnswer (deterministic)         │
 └──────────┬───────────────────────────┘            │    2. routeIntent  (keywords → force tool)  │

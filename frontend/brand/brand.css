@@ -621,7 +621,7 @@ h3 {
 	font-weight: 600;
 }
 
-/* the question that needs the citizen, with the answer widgets from Coach.tsx */
+/* the question that needs the citizen, with the answer widgets from walkthrough/Answers.tsx */
 .lz-ask {
 	outline: none;
 }

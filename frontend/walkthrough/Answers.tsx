@@ -1,15 +1,13 @@
 /**
- * The assistant's card, attached right below the element it is about (see Portal.tsx).
- * It appears ONLY when the citizen has to do something: answer a question, pick an appointment,
- * confirm, or decide what to do when blocked. Everything else plays by itself, narrated in the dock.
- *
- * One question, big answer targets, the official term explained in plain words. Nothing else.
+ * The answer widgets inside the slip row that needs the citizen (Slip.tsx):
+ *   AskInput    yes/no, choices, text, date, and the address input with suggestions
+ *   SlotPicker  three appointments at a time, more on request
+ * Plus the callables the slip uses (WalkthroughActions). Big answer targets, one question at a time.
  *
  * 👉 EXTEND HERE: pictograms per question, "explain it even simpler" (ask the model), sign language video.
  */
 import { useEffect, useRef, useState } from "react";
 import type { PortalField, Walkthrough, WalkthroughStep } from "../../src/shared/walkthrough";
-import { VoiceMark } from "../components";
 import { ADDRESS_FIELDS, AddressInput } from "./AddressInput";
 import { Icon } from "../icons";
 import { tpl, type UIText } from "../i18n";
@@ -24,92 +22,6 @@ export type WalkthroughActions = {
 	startNext: () => void;
 	askHuman: () => void;
 };
-
-type Props = { w: Walkthrough; t: UIText; actions: WalkthroughActions; queueNext?: string };
-
-/** Which steps get a card at all. */
-export function needsCoach(step: WalkthroughStep | undefined): boolean {
-	return Boolean(step && ["ask", "appointment", "review", "done", "blocked"].includes(step.kind));
-}
-
-export function Coach({ w, t, actions, queueNext }: Props) {
-	const step = w.steps[w.current];
-	const ref = useRef<HTMLDivElement>(null);
-	const field = step?.fieldId ? w.fields.find((f) => f.id === step.fieldId) : undefined;
-
-	// Keyboard and screen-reader users land on the question (without jumping the page).
-	useEffect(() => {
-		ref.current?.focus({ preventScroll: true });
-	}, [step?.id]);
-
-	if (!step || !needsCoach(step)) return null;
-
-	const title = step.kind === "review" ? t.reviewTitle : step.kind === "done" ? t.doneTitle : step.title;
-	const problem = field?.problem ?? w.error;
-
-	return (
-		<div className={`coach coach-${step.kind}`} ref={ref} tabIndex={-1} role="group" aria-labelledby="coach-title">
-			{/* On the confirmation page the page itself says "submitted": the card only offers what's next. */}
-			<div className={`coach-head ${step.kind === "done" ? "visually-hidden" : ""}`}>
-				<span className="coach-label">
-					<VoiceMark state="idle" size="sm" /> {t.assistant}
-				</span>
-				<h3 id="coach-title">{title}</h3>
-			</div>
-
-			{step.kind === "ask" && step.plainExplanation && <p className="coach-help">{step.plainExplanation}</p>}
-			{step.kind === "ask" && step.officialTerm && step.officialTerm !== step.title && (
-				<p className="coach-official">
-					{t.onTheForm} <strong>{step.officialTerm}</strong>
-				</p>
-			)}
-
-			{problem && (
-				<p className="coach-problem" role="alert">
-					<Icon name="alert" size={20} /> {problem}
-				</p>
-			)}
-
-			{step.kind === "ask" && field && <AskInput key={step.id} field={field} step={step} t={t} actions={actions} language={w.language} />}
-
-			{step.kind === "appointment" && <SlotPicker w={w} step={step} t={t} actions={actions} />}
-
-			{step.kind === "review" && (
-				<>
-					<p className="coach-text">{t.reviewHint}</p>
-					<p className="coach-text strong">
-						<Icon name="arrowDown" size={18} /> {t.reviewGo}
-					</p>
-					<p className="coach-fine">{t.reviewOnlyYou}</p>
-				</>
-			)}
-
-			{step.kind === "done" && (
-				<div className="coach-actions">
-					{queueNext && (
-						<button type="button" className="btn primary" onClick={actions.startNext}>
-							{tpl(t.upNext, { name: queueNext })} <Icon name="arrowRight" size={20} />
-						</button>
-					)}
-					<button type="button" className={`btn ${queueNext ? "ghost" : "primary"}`} onClick={actions.close}>
-						{t.finish}
-					</button>
-				</div>
-			)}
-
-			{step.kind === "blocked" && (
-				<div className="coach-actions">
-					<button type="button" className="btn primary" onClick={actions.askHuman}>
-						<Icon name="headset" /> {t.humanLong}
-					</button>
-					<button type="button" className="btn ghost" onClick={actions.close}>
-						{t.toStart}
-					</button>
-				</div>
-			)}
-		</div>
-	);
-}
 
 export function AskInput(props: { field: PortalField; step: WalkthroughStep; t: UIText; actions: WalkthroughActions; language: "de" | "en" }) {
 	const { field, step, t, actions } = props;

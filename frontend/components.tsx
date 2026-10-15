@@ -1,8 +1,7 @@
 /**
  * Building blocks of the assistant layer:
  *   VoiceMark    the assistant's sign: the red-white-red stripes, moving like a sound level when it speaks
- *   Dock         voice bar at the bottom: voice mark (pause), captions, keyboard, microphone
- *   CommandBar   the big "what do you need?" field on the start page
+ *   MicButton    push to talk (used by the caption bar and the desk's say-it line)
  *   ProfileMenu  everything secondary (test person, language, text size, voice) behind one button
  *   HandoffSheet confirmation when a person takes over
  */
@@ -73,125 +72,6 @@ export function MicButton({ recorder, t, big }: { recorder: Recorder; t: UIText;
 		>
 			{listening ? <span className="stop-square" aria-hidden="true" /> : <Icon name="mic" size={big ? 26 : 22} />}
 		</button>
-	);
-}
-
-export function Dock(props: {
-	t: UIText;
-	caption: string;
-	voice: VoiceState;
-	paused: boolean;
-	busy: boolean;
-	recorder: Recorder;
-	onTogglePause: () => void;
-	onReplay: () => void;
-	onSend: (text: string) => void;
-}) {
-	const { t, recorder } = props;
-	const [typing, setTyping] = useState(false);
-	const [text, setText] = useState("");
-
-	const status =
-		recorder.state === "listening"
-			? t.listening
-			: recorder.state === "transcribing"
-				? t.transcribing
-				: recorder.state === "unavailable"
-					? t.micUnavailable
-					: props.paused
-						? t.paused
-						: props.caption;
-
-	return (
-		<div className="dock" role="region" aria-label={t.assistant}>
-			<button type="button" className="voice-button" onClick={props.onTogglePause} aria-label={props.paused ? t.play : t.pause} title={props.paused ? t.play : t.pause}>
-				<VoiceMark state={props.voice} />
-				<span className="voice-badge" aria-hidden="true">
-					<Icon name={props.paused ? "play" : "pause"} size={12} strokeWidth={3} />
-				</span>
-			</button>
-
-			{typing ? (
-				<form
-					className="dock-input"
-					onSubmit={(e) => {
-						e.preventDefault();
-						if (!text.trim() || props.busy) return;
-						props.onSend(text.trim());
-						setText("");
-						setTyping(false);
-					}}
-				>
-					<label htmlFor="dock-text" className="visually-hidden">
-						{t.typeHere}
-					</label>
-					<input
-						id="dock-text"
-						autoFocus
-						value={text}
-						placeholder={t.typeHere}
-						autoComplete="off"
-						onChange={(e) => setText(e.target.value)}
-						onKeyDown={(e) => e.key === "Escape" && setTyping(false)}
-					/>
-					<button type="submit" className="round-button" disabled={!text.trim() || props.busy} aria-label={t.send}>
-						<Icon name="arrowUp" />
-					</button>
-				</form>
-			) : (
-				<div className="captions">
-					<p aria-live="polite">{status}</p>
-					<button type="button" className="icon-button" onClick={props.onReplay} aria-label={t.replay} title={t.replay}>
-						<Icon name="replay" size={18} />
-					</button>
-				</div>
-			)}
-
-			{typing ? (
-				<button type="button" className="icon-button" onClick={() => setTyping(false)} aria-label={t.close} title={t.close}>
-					<Icon name="close" />
-				</button>
-			) : (
-				<button type="button" className="icon-button" onClick={() => setTyping(true)} aria-label={t.keyboard} title={t.keyboard}>
-					<Icon name="keyboard" />
-				</button>
-			)}
-			<MicButton recorder={recorder} t={t} />
-		</div>
-	);
-}
-
-export function CommandBar({ t, recorder, busy, onSend }: { t: UIText; recorder: Recorder; busy: boolean; onSend: (text: string) => void }) {
-	const [text, setText] = useState("");
-	const listening = recorder.state === "listening";
-	return (
-		<form
-			className={`command ${listening ? "is-listening" : ""}`}
-			onSubmit={(e) => {
-				e.preventDefault();
-				if (!text.trim() || busy) return;
-				onSend(text.trim());
-				setText("");
-			}}
-		>
-			<label htmlFor="command-input" className="visually-hidden">
-				{t.homeQuestion}
-			</label>
-			<input
-				id="command-input"
-				value={text}
-				placeholder={listening ? t.listening : recorder.state === "transcribing" ? t.transcribing : t.placeholder}
-				autoComplete="off"
-				onChange={(e) => setText(e.target.value)}
-			/>
-			{text.trim() ? (
-				<button type="submit" className="round-button big" disabled={busy} aria-label={t.send}>
-					<Icon name="arrowUp" size={24} />
-				</button>
-			) : (
-				<MicButton recorder={recorder} t={t} big />
-			)}
-		</form>
 	);
 }
 

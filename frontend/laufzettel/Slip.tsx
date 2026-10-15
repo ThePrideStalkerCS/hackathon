@@ -20,7 +20,7 @@ import { Band, Lockup, Stamp } from "../brand/Brand";
 import { Emblem, motifFor } from "../brand/Emblem";
 import { formatSlot, tpl, type UIText } from "../i18n";
 import { Icon } from "../icons";
-import { AskInput, SlotPicker, type WalkthroughActions } from "../walkthrough/Coach";
+import { AskInput, SlotPicker, type WalkthroughActions } from "../walkthrough/Answers";
 import { HoldSeal } from "./HoldSeal";
 import { buildStations, initials, slipNumber, type Station } from "./stations";
 

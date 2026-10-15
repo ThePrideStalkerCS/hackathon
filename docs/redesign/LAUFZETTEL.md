@@ -171,7 +171,7 @@ Nothing in the engine's flow changes for the view. The slip is a different *view
 | `autofill` (source `profile`) | field row, value shown, "From the register" | circle "Filled", register around the edge |
 | `autofill` (source `confirmed`) | field row, "Confirmed by Karl Steiner" | pillow "Confirmed", "Landlord · K. Steiner" |
 | `autofill` (source `assistant`/`draft`) | field row, value shown, "Suggested from your data" | pillow "Prefilled" |
-| `ask` | field row, the question with the **marker**, inline answer (Coach widgets) | rectangle "Received" |
+| `ask` | field row, the question with the **marker**, inline answer (`AskInput` from `walkthrough/Answers.tsx`) | rectangle "Received" |
 | `appointment` | row with the slot picker (offices in the citizen's region first) | ellipse "Reserved" |
 | `review` | last row "You": hold-to-sign seal (only the citizen submits) | red seal with initials |
 | `done` | the slip turns into the **confirmation document** with the complete emblem | |
@@ -217,7 +217,7 @@ Keep this list honest: tick only what is done **and** checked in the browser.
 - [x] 1. Fonts in `index.html` (v2: Fraunces, Atkinson Hyperlegible Next + Mono; Archivo kept for the v1 rules), light only, `brand.css` with tokens
 - [x] 2. Brand components (`Mark`, `Lockup`, `Stamp`, `Band`, `InkFilter`) + canvas drawing (`print.ts`)
 - [x] 3. Top bar: lockup, "Talk to a person", goals link, EN/DE, profile menu (with the seal switch)
-- [x] 4. `stations.ts` mapping + `Slip.tsx` running walkthrough (rows, stamps, marker, inline answers via Coach's `AskInput`/`SlotPicker`)
+- [x] 4. `stations.ts` mapping + `Slip.tsx` running walkthrough (rows, stamps, marker, inline answers via `AskInput`/`SlotPicker` in `walkthrough/Answers.tsx`)
 - [x] 5. Hold-to-sign row (`HoldSeal.tsx`) → `submit`; confirmation document with complete emblem, red seal, reference number, time kept, next steps, next slip button
 - [x] 6. `CaptionBar` replaces the dock (captions roll up while spoken, talk dots, pause, replay, keyboard, mic)
 - [x] 7. `Desk.tsx` start page: greeting, one open slip, further suggestions, say-it line, private collection

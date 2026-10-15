@@ -32,7 +32,7 @@ import { GoalCelebration } from "./goals/GoalCelebration";
 import { GoalDetail } from "./goals/GoalDetail";
 import { GoalsOverview } from "./goals/GoalsOverview";
 import { useNarrator, useRecorder } from "./voice";
-import type { WalkthroughActions } from "./walkthrough/Coach";
+import type { WalkthroughActions } from "./walkthrough/Answers";
 
 function getSessionId(reset = false): string {
 	let id = localStorage.getItem("sessionId");
